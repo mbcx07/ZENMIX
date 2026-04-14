@@ -8,123 +8,110 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
+<meta name="description" content="Hipnosis subliminal con frecuencias binaurales y efectos de estudio profesional">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root{--bg:#0a0a1a;--card:#1a1a2e;--border:#222;--accent:#a78bfa;--accent2:#7c3aed;--text:#e0e0e0;--dim:#888;--nav:#111}
-.light{--bg:#f5f5f5;--card:#fff;--border:#ddd;--accent:#7c3aed;--accent2:#6d28d9;--text:#222;--dim:#666;--nav:#fff}
+.light{--bg:#f0f0f8;--card:#fff;--border:#ddd;--accent:#7c3aed;--accent2:#6d28d9;--text:#222;--dim:#666;--nav:#fff}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow-x:hidden;transition:background .3s,color .3s}
-
-.nav{display:flex;align-items:center;padding:10px 12px;background:var(--nav);border-bottom:1px solid var(--border);gap:6px;position:sticky;top:0;z-index:100}
-.nav h1{font-size:1em;color:var(--accent);flex:1}
-.nav h1 span{color:var(--accent2)}
-.tab{padding:5px 8px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--dim);font-size:.65em;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav{display:flex;align-items:center;padding:10px 10px;background:var(--nav);border-bottom:1px solid var(--border);gap:4px;position:sticky;top:0;z-index:100}
+.nav h1{font-size:1em;color:var(--accent);flex:1;white-space:nowrap}.nav h1 span{color:var(--accent2)}
+.tab{padding:5px 7px;border:1px solid var(--border);border-radius:14px;background:transparent;color:var(--dim);font-size:.6em;cursor:pointer;transition:all .2s;white-space:nowrap}
 .tab.active{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:.9em;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:.8em;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-.screen{display:none;flex-direction:column;height:calc(100vh - 46px);height:calc(100dvh - 46px);overflow-y:auto;padding:14px;gap:10px;-webkit-overflow-scrolling:touch;animation:fadeIn .2s}
+.screen{display:none;flex-direction:column;height:calc(100vh - 44px);height:calc(100dvh - 44px);overflow-y:auto;padding:12px;gap:10px;-webkit-overflow-scrolling:touch;animation:fadeIn .2s}
 .screen.active{display:flex}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-.card{background:var(--card);border-radius:14px;padding:14px;cursor:pointer;border:1px solid var(--border);transition:all .2s;position:relative}
-.card:hover{border-color:var(--accent)}
-.card:active{transform:scale(.98)}
-.card h3{font-size:.9em;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:6px}
-.card p{font-size:.75em;color:var(--dim);line-height:1.3}
-.tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
-.tag{padding:2px 7px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);border-radius:8px;font-size:.6em}
-.fav-star{position:absolute;top:10px;right:10px;font-size:1.1em;cursor:pointer;opacity:.3;transition:opacity .2s}
-.fav-star.active{opacity:1}
+.card{background:var(--card);border-radius:12px;padding:12px;cursor:pointer;border:1px solid var(--border);transition:all .2s;position:relative}
+.card:hover{border-color:var(--accent)}.card:active{transform:scale(.98)}
+.card h3{font-size:.85em;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.card p{font-size:.7em;color:var(--dim);line-height:1.3}
+.tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.tag{padding:1px 6px;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);border-radius:8px;font-size:.55em}
+.fav-star{position:absolute;top:8px;right:8px;font-size:1em;cursor:pointer;opacity:.3;transition:opacity .2s}.fav-star.active{opacity:1}
+.session-color{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px}
 
-/* SESSION */
-.session{align-items:center;justify-content:center;text-align:center;gap:12px}
-.session-title{font-size:1.15em;color:var(--text)}
-.session-sub{font-size:.78em;color:var(--dim)}
-.breathe{width:120px;height:120px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:2.5em;animation:breathe 4s ease-in-out infinite;transition:all .3s}
-@keyframes breathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.06);opacity:1}}
-.breathe.playing{border-color:var(--accent2);box-shadow:0 0 25px color-mix(in srgb,var(--accent2) 40%,transparent)}
-.timer{font-size:2em;color:var(--accent);font-weight:300}
-.controls{display:flex;gap:12px;align-items:center}
-.play-btn{width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:1.4em;cursor:pointer}
-.play-btn:active{transform:scale(.95)}
-.stop-btn{width:40px;height:40px;border-radius:50%;border:2px solid #555;background:transparent;color:var(--dim);font-size:1em;cursor:pointer}
-.dl-btn{padding:8px 16px;border:1px solid var(--accent);border-radius:10px;background:transparent;color:var(--accent);font-size:.75em;cursor:pointer;transition:all .2s;width:100%}
-
-/* PROGRESS BAR */
-.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;cursor:pointer}
-.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .1s linear;width:0}
-
-/* CANVAS VIZ */
-#vizCanvas{width:100%;height:60px;border-radius:10px;display:none}
-
-/* CONTROLS */
-.stitle{font-size:.75em;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
+.stitle{font-size:.7em;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:4px}
 .srow{display:flex;align-items:center;gap:6px;width:100%}
-.srow label{font-size:.7em;color:var(--dim);min-width:65px}
-.srow input[type=range]{flex:1;accent-color:var(--accent);height:3px}
-.srow span{font-size:.68em;color:#666;min-width:28px;text-align:right}
-.srow select{flex:1;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:.75em}
+.srow label{font-size:.68em;color:var(--dim);min-width:62px}.srow input[type=range]{flex:1;accent-color:var(--accent);height:3px}
+.srow span{font-size:.66em;color:#666;min-width:26px;text-align:right}
+.srow select{flex:1;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 6px;font-size:.72em}
 
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0}
-.toggle-row label{font-size:.75em;color:var(--text)}
-.toggle{width:40px;height:22px;background:#333;border-radius:11px;position:relative;cursor:pointer;transition:background .2s}
-.toggle.on{background:var(--accent2)}
-.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}
-.toggle.on::after{left:20px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.toggle-row label{font-size:.72em;color:var(--text)}
+.toggle{width:38px;height:20px;background:#333;border-radius:10px;position:relative;cursor:pointer;transition:background .2s}
+.toggle.on{background:var(--accent2)}.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}.toggle.on::after{left:20px}
 
-/* VOICE GRID */
-.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.vcard{background:var(--card);border-radius:8px;padding:6px 2px;text-align:center;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.vcard{background:var(--card);border-radius:8px;padding:5px 2px;text-align:center;border:2px solid transparent;cursor:pointer;transition:all .15s}
 .vcard.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-.vcard .nm{font-size:.75em;color:var(--text);font-weight:500}
-.vcard .inf{font-size:.55em;color:var(--dim)}
-.vcard .dp{font-size:.5em;color:var(--accent2)}
+.vcard .nm{font-size:.7em;color:var(--text);font-weight:500}.vcard .inf{font-size:.5em;color:var(--dim)}.vcard .dp{font-size:.45em;color:var(--accent2)}
 
-.speed-opts{display:flex;gap:5px;flex-wrap:wrap}
-.sopt{padding:6px 10px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--dim);font-size:.7em;cursor:pointer;transition:all .2s}
+.speed-opts{display:flex;gap:4px;flex-wrap:wrap}
+.sopt{padding:5px 9px;border:1px solid var(--border);border-radius:14px;background:transparent;color:var(--dim);font-size:.65em;cursor:pointer;transition:all .2s}
 .sopt.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
 
-/* PRESETS */
-.preset-grid{display:flex;gap:6px;flex-wrap:wrap}
-.preset-btn{padding:6px 12px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--dim);font-size:.72em;cursor:pointer;transition:all .2s}
-.preset-btn.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.preset-grid{display:flex;gap:5px;flex-wrap:wrap}
+.preset-btn{padding:5px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--dim);font-size:.65em;cursor:pointer;transition:all .2s}
+.preset-btn.sel{border-color:var(--accent);color:var(--accent)}
 
-/* BINAURAL */
-.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.bcard{background:var(--card);border-radius:10px;padding:10px 4px;text-align:center;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.bcard{background:var(--card);border-radius:10px;padding:8px 4px;text-align:center;border:1px solid var(--border);cursor:pointer;transition:all .2s}
 .bcard.active{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 10%,transparent)}
-.bcard .ic{font-size:1.4em}
-.bcard .nm{font-size:.7em;color:var(--text);margin-top:2px}
-.bcard .fr{font-size:.55em;color:var(--dim)}
+.bcard .ic{font-size:1.3em}.bcard .nm{font-size:.65em;color:var(--text);margin-top:1px}.bcard .fr{font-size:.5em;color:var(--dim)}
 
-/* RECORD */
-.rec-btn{width:72px;height:72px;border-radius:50%;border:3px solid #f44336;background:transparent;color:#f44336;font-size:1.8em;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.rec-btn.recording{background:#f44336;color:#fff;animation:pulse 1s infinite}
-.rec-btn.paused{border-color:#ff9800;color:#ff9800}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-.rec-time{font-size:1.1em;color:#f44336;font-weight:500;margin-top:6px}
-.rec-actions{display:flex;gap:8px;margin-top:8px;justify-content:center}
-.rec-sm-btn{padding:6px 14px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--dim);font-size:.72em;cursor:pointer}
-
-/* TIMER */
-.timer-input{display:flex;gap:6px;align-items:center}
-.timer-input input{width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:.8em;text-align:center}
-.timer-input button{padding:5px 10px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:.72em;cursor:pointer}
-
-.gen-btn{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.9em;font-weight:600;cursor:pointer}
+.breathe{width:100px;height:100px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:2em;animation:breathe 4s ease-in-out infinite;margin:0 auto}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.08);opacity:1}}
+.breathe.playing{border-color:var(--accent2);box-shadow:0 0 20px color-mix(in srgb,var(--accent2) 40%,transparent)}
+.timer{font-size:1.8em;color:var(--accent);font-weight:300;text-align:center}
+.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;cursor:pointer;margin:4px 0}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .1s linear;width:0}
+.controls{display:flex;gap:10px;align-items:center;justify-content:center}
+.play-btn{width:48px;height:48px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:1.3em;cursor:pointer}
+.play-btn:active{transform:scale(.95)}
+.stop-btn{width:38px;height:38px;border-radius:50%;border:2px solid #555;background:transparent;color:var(--dim);font-size:.9em;cursor:pointer}
+.dl-btn{padding:8px 14px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:.7em;cursor:pointer;width:100%;margin-top:4px}
+.gen-btn{width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.85em;font-weight:600;cursor:pointer}
 .gen-btn:disabled{opacity:.5}
-.loading{display:none;align-items:center;gap:8px;color:var(--accent);font-size:.8em;margin-top:8px;justify-content:center}
+.loading{display:none;align-items:center;gap:8px;color:var(--accent);font-size:.75em;justify-content:center}
 .loading.active{display:flex}
-.spinner{width:16px;height:16px;border:2px solid color-mix(in srgb,var(--accent) 30%,transparent);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.spinner{width:14px;height:14px;border:2px solid color-mix(in srgb,var(--accent) 30%,transparent);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:.82em;outline:none;min-height:90px;resize:vertical;font-family:inherit}
+textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:.78em;outline:none;min-height:80px;resize:vertical;font-family:inherit}
 
-/* MANDALA VIZ */
-#mandalaCanvas{width:100%;height:150px;border-radius:14px;margin:4px 0;display:none}
+.rec-btn{width:64px;height:64px;border-radius:50%;border:3px solid #f44336;background:transparent;color:#f44336;font-size:1.5em;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rec-btn.recording{background:#f44336;color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.rec-time{font-size:1em;color:#f44336;font-weight:500}
+.rec-actions{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.rec-sm-btn{padding:4px 10px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--dim);font-size:.65em;cursor:pointer}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.stat-card{background:var(--card);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)}
+.stat-card .num{font-size:1.4em;color:var(--accent);font-weight:700}.stat-card .lbl{font-size:.6em;color:var(--dim)}
+
+/* ONBOARD */
+.onboard{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;color:#fff}
+.onboard h2{font-size:1.4em;color:var(--accent);margin-bottom:10px}.onboard p{font-size:.85em;color:#ccc;margin:6px 0;line-height:1.4}
+.onboard-btn{padding:12px 30px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:1em;cursor:pointer;margin-top:20px}
+
+canvas.viz{width:100%;height:80px;border-radius:10px;margin:4px 0}
 </style>
 </head>
 <body>
+
+<!-- ONBOARDING -->
+<div class="onboard" id="onboard" style="display:none">
+  <div style="font-size:4em;margin-bottom:10px">🧘</div>
+  <h2>ZENMIX</h2>
+  <p>Hipnosis subliminal con efectos de estudio profesional</p>
+  <p>🎧 15 voces · 🎚️ Reverb profesional · 🧠 Binaurales<br>🎤 Grabadora de voz · 🎵 Sonidos ambientales · 📱 App instalable</p>
+  <button class="onboard-btn" onclick="closeOnboard()">Comenzar ✨</button>
+</div>
 
 <div class="nav">
   <h1>ZEN<span>MIX</span></h1>
@@ -132,6 +119,7 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10
   <button class="tab" onclick="showTab(1)">🎤</button>
   <button class="tab" onclick="showTab(2)">✨</button>
   <button class="tab" onclick="showTab(3)">🧠</button>
+  <button class="tab" onclick="showTab(4)">📊</button>
   <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
 </div>
 
@@ -141,101 +129,91 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10
 <!-- RECORD -->
 <div class="screen" id="recordScreen">
   <div class="stitle">🎤 Grabadora de Voz</div>
-  <div style="text-align:center;padding:8px 0">
+  <div style="text-align:center;padding:6px 0">
     <button class="rec-btn" id="recBtn" onclick="toggleRecord()">🎙️</button>
     <div class="rec-time" id="recTime">00:00</div>
-    <p style="font-size:.65em;color:var(--dim);margin-top:3px">Toca para grabar</p>
     <div class="rec-actions" id="recActions" style="display:none">
-      <button class="rec-sm-btn" id="pauseBtn" onclick="pauseRecord()">⏸ Pausar</button>
-      <button class="rec-sm-btn" id="doneBtn" onclick="stopAndSave()">✅ Guardar</button>
+      <button class="rec-sm-btn" id="pauseBtn" onclick="pauseRecord()">⏸</button>
+      <button class="rec-sm-btn" onclick="stopAndSave()">✅</button>
     </div>
   </div>
-  <div id="takesList" style="display:none">
-    <div class="stitle">📋 Tomas</div>
-    <div id="takesGrid"></div>
-  </div>
+  <div id="takesList" style="display:none"><div class="stitle">📋 Tomas</div><div id="takesGrid"></div></div>
   <div id="recResult" style="display:none">
-    <audio id="recAudio" controls style="width:100%;margin:6px 0"></audio>
+    <audio id="recAudio" controls style="width:100%;margin:4px 0"></audio>
     <div class="stitle">✂️ Recortar (segundos)</div>
     <div class="srow"><label>Inicio</label><input type="range" min="0" max="60" value="0" id="trimStart"><span id="trimStartVal">0s</span></div>
     <div class="srow"><label>Fin</label><input type="range" min="0" max="120" value="0" id="trimEnd"><span id="trimEndVal">0s</span></div>
-    <div class="stitle">🎚️ Efectos de Estudio</div>
+    <div class="stitle">🗣️ Voz</div>
     <div class="vgrid" id="recVoiceGrid"></div>
-    <div class="stitle" style="margin-top:6px">🐌 Velocidad</div>
-    <div class="speed-opts" id="recSpeedOpts">
-      <button class="sopt" data-rate="-50%">Muy lenta</button>
-      <button class="sopt sel" data-rate="-30%">Lenta</button>
-      <button class="sopt" data-rate="-15%">Media</button>
-      <button class="sopt" data-rate="+0%">Normal</button>
-    </div>
-    <div class="stitle" style="margin-top:6px">🎚️ Mezcla</div>
-    <div class="stitle">Presets</div>
-    <div class="preset-grid" id="recPresets"></div>
+    <div class="stitle">🐌 Velocidad</div>
+    <div class="speed-opts" id="recSpeedOpts"><button class="sopt" data-rate="-50%">Muy lenta</button><button class="sopt sel" data-rate="-30%">Lenta</button><button class="sopt" data-rate="-15%">Media</button><button class="sopt" data-rate="+0%">Normal</button></div>
+    <div class="stitle">Presets</div><div class="preset-grid" id="recPresets"></div>
     <div class="srow"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="recReverb"><span id="recReverbVal">50%</span></div>
     <div class="srow"><label>🔈 Eco</label><input type="range" min="0" max="100" value="10" id="recEcho"><span id="recEchoVal">10%</span></div>
     <div class="srow"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="recBass"><span id="recBassVal">30%</span></div>
     <div class="srow"><label>🎚 Tono</label><input type="range" min="-8" max="4" value="-3" id="recPitch"><span id="recPitchVal">-3</span></div>
-    <button class="gen-btn" onclick="processRecording()" style="margin-top:10px">🎚️ Aplicar Efectos</button>
+    <button class="gen-btn" onclick="processRecording()" style="margin-top:8px">🎚️ Aplicar Efectos</button>
     <div class="loading" id="procRecLoading"><div class="spinner"></div><span>Procesando...</span></div>
-    <div id="procRecResult" style="display:none;margin-top:10px">
-      <audio id="procRecAudio" controls style="width:100%"></audio>
-      <button class="dl-btn" onclick="dlProcessed()" style="margin-top:6px">⬇️ Descargar MP3</button>
-    </div>
+    <div id="procRecResult" style="display:none;margin-top:8px"><audio id="procRecAudio" controls style="width:100%"></audio><button class="dl-btn" onclick="dlProcessed()">⬇️ Descargar MP3</button></div>
   </div>
-  <div id="noRec" style="text-align:center;padding:16px;color:#555;font-size:.8em">Graba tu voz para editarla con efectos</div>
+  <div id="noRec" style="text-align:center;padding:14px;color:#555;font-size:.75em">Graba tu voz para editarla</div>
 </div>
 
 <!-- CUSTOM -->
 <div class="screen" id="customScreen">
+  <div class="stitle">✨ Sesión Personalizada por IA</div>
+  <p style="font-size:.7em;color:var(--dim);margin:2px 0 8px">Describe tu problema y la IA genera un guión de hipnosis</p>
+  <textarea id="aiTopic" placeholder="Ej: insomnio crónico, miedo a hablar en público, estrés laboral..." style="min-height:50px"></textarea>
+  <button class="gen-btn" id="aiGenBtn" onclick="generateAIScript()" style="margin:6px 0">🧠 Generar Guión con IA</button>
+  <div class="loading" id="aiLoading"><div class="spinner"></div><span>Generando guión...</span></div>
   <div class="stitle">🗣️ Voz</div>
   <div class="vgrid" id="voiceGrid"></div>
-  <div class="stitle" style="margin-top:6px">🐌 Velocidad</div>
-  <div class="speed-opts" id="speedOpts">
-    <button class="sopt" data-rate="-50%">Muy lenta</button>
-    <button class="sopt sel" data-rate="-40%">Lenta</button>
-    <button class="sopt" data-rate="-15%">Media</button>
-    <button class="sopt" data-rate="+0%">Normal</button>
-  </div>
-  <div class="stitle" style="margin-top:6px">🎚️ Tono</div>
-  <div class="srow"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="pitchSlider"><span id="pitchVal">-8Hz</span></div>
-  <div class="stitle">Presets</div>
-  <div class="preset-grid" id="customPresets"></div>
+  <div class="stitle" style="margin-top:4px">🐌 Velocidad</div>
+  <div class="speed-opts" id="speedOpts"><button class="sopt" data-rate="-50%">Muy lenta</button><button class="sopt sel" data-rate="-40%">Lenta</button><button class="sopt" data-rate="-15%">Media</button><button class="sopt" data-rate="+0%">Normal</button></div>
+  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="pitchSlider"><span id="pitchVal">-8Hz</span></div>
+  <div class="stitle">Presets</div><div class="preset-grid" id="customPresets"></div>
   <div class="srow"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="reverbSlider"><span id="reverbVal">50%</span></div>
   <div class="srow"><label>🔈 Eco</label><input type="range" min="0" max="100" value="10" id="echoSlider"><span id="echoVal">10%</span></div>
   <div class="srow"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="bassSlider"><span id="bassVal">30%</span></div>
-  <div class="stitle" style="margin-top:6px">📝 Guion</div>
-  <textarea id="customScript" placeholder="Escribe tu guion de hipnosis..."></textarea>
+  <div class="stitle">📝 Guion</div>
+  <textarea id="customScript" placeholder="Escribe o genera con IA..."></textarea>
+  <div class="stitle">🎚️ Nivel de inducción</div>
+  <div class="speed-opts" id="inductionOpts"><button class="sopt" data-level="superficial">Superficial</button><button class="sopt sel" data-level="medio">Medio</button><button class="sopt" data-level="profundo">Profundo</button></div>
   <button class="gen-btn" id="generateBtn" onclick="generateCustom()">🎙️ Generar Audio</button>
   <div class="loading" id="generating"><div class="spinner"></div><span>Generando...</span></div>
-  <div id="customResult" style="display:none;margin-top:10px">
-    <audio id="customAudio" controls style="width:100%"></audio>
-    <button class="dl-btn" onclick="dlCustom()" style="margin-top:6px">⬇️ Descargar MP3</button>
-  </div>
+  <div id="customResult" style="display:none;margin-top:8px"><audio id="customAudio" controls style="width:100%"></audio><button class="dl-btn" onclick="dlCustom()">⬇️ Descargar MP3</button></div>
 </div>
 
 <!-- BINAURAL -->
 <div class="screen" id="binauralScreen">
   <div class="stitle">🧠 Frecuencias Binaurales</div>
   <div class="bgrid" id="binauralGrid"></div>
-  <div id="binControls" style="display:none;margin-top:10px">
+  <div id="binControls" style="display:none;margin-top:8px">
     <div class="srow"><label>🔊 Vol</label><input type="range" min="0" max="100" value="30" id="binVolume"><span id="binVolVal">30%</span></div>
-    <div class="stitle">⏱️ Iniciar antes de la voz</div>
-    <div class="srow"><label>Antes</label><input type="range" min="0" max="60" value="10" id="binStart"><span id="binStartVal">10s</span></div>
-    <div class="stitle">⏱️ Continuar después de la voz</div>
-    <div class="srow"><label>Después</label><input type="range" min="0" max="120" value="30" id="binEnd"><span id="binEndVal">30s</span></div>
   </div>
   <div class="stitle" style="margin-top:10px">🎵 Sonidos Ambientales</div>
   <div class="bgrid" id="ambientGrid"></div>
-  <div id="ambControls" style="display:none;margin-top:10px">
+  <div id="ambControls" style="display:none;margin-top:8px">
     <div class="srow"><label>🔊 Vol</label><input type="range" min="0" max="100" value="25" id="ambVolume"><span id="ambVolVal">25%</span></div>
-    <div class="srow"><label>⏱ Antes</label><input type="range" min="0" max="60" value="5" id="ambStart"><span id="ambStartVal">5s</span></div>
-    <div class="srow"><label>⏱ Después</label><input type="range" min="0" max="120" value="30" id="ambEnd"><span id="ambEndVal">30s</span></div>
   </div>
-  <div id="binPlaying" style="display:none;text-align:center;margin-top:14px">
-    <canvas id="mandalaCanvas" width="400" height="200"></canvas>
-    <div class="breathe" style="width:80px;height:80px;font-size:1.5em;margin:8px auto" id="binCircle">🧠</div>
-    <p style="font-size:.75em;color:var(--accent)" id="binLabel">Theta 6Hz</p>
-    <button class="stop-btn" onclick="stopAllAudio()" style="margin-top:6px;width:44px;height:44px;border-radius:50%;border:2px solid #555;background:transparent;color:var(--dim);font-size:1em;cursor:pointer">⏹</button>
+  <div id="binPlaying" style="display:none;text-align:center;margin-top:10px">
+    <canvas id="mandalaCanvas" width="400" height="160" class="viz"></canvas>
+    <div class="breathe" style="margin:8px auto" id="binCircle">🧠</div>
+    <p style="font-size:.7em;color:var(--accent)" id="binLabel">Theta 6Hz</p>
+    <button class="stop-btn" onclick="stopAllAudio()" style="margin-top:4px">⏹</button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="screen" id="statsScreen">
+  <div class="stitle">📊 Mis Estadísticas</div>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="stitle">📅 Racha</div>
+  <div id="streakInfo" style="text-align:center;padding:10px;font-size:.85em;color:var(--accent)"></div>
+  <div class="stitle">🏆 Sesiones Completadas</div>
+  <div id="sessionCounts"></div>
+  <div style="margin-top:16px;text-align:center">
+    <button class="dl-btn" onclick="shareApp()" style="max-width:200px;margin:0 auto">📤 Compartir ZENMIX</button>
   </div>
 </div>
 
@@ -243,38 +221,35 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10
 <div class="screen session" id="sessionScreen">
   <h2 class="session-title" id="sessionTitle">Insomnio</h2>
   <p class="session-sub" id="sessionSub">Hipnosis profunda</p>
-  <canvas id="mandalaCanvas2" width="400" height="200"></canvas>
+  <canvas id="vizCanvas" width="400" height="80" class="viz"></canvas>
   <div class="breathe" id="breatheCircle">🌙</div>
   <div class="timer" id="timer">00:00</div>
   <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
-  <div class="timer-input">
-    <label style="font-size:.7em;color:var(--dim)">⏱ Apagar en</label>
-    <input type="number" id="autoStopMin" placeholder="min" min="1" max="120">
-    <button onclick="setAutoStop()">⏲</button>
-    <span id="autoStopLabel" style="font-size:.65em;color:var(--dim)"></span>
+  <div style="display:flex;gap:6px;align-items:center;justify-content:center">
+    <label style="font-size:.65em;color:var(--dim)">⏱ Auto</label>
+    <input type="number" id="autoStopMin" placeholder="min" min="1" max="120" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.75em;text-align:center">
+    <button onclick="setAutoStop()" style="padding:3px 8px;border:1px solid var(--accent);border-radius:6px;background:transparent;color:var(--accent);font-size:.65em;cursor:pointer">⏲</button>
+    <span id="autoStopLabel" style="font-size:.6em;color:var(--dim)"></span>
   </div>
   <div class="stitle">🗣️ Voz</div>
   <div class="vgrid" id="sessionVoiceGrid"></div>
-  <div class="speed-opts" id="sessionSpeedOpts">
-    <button class="sopt" data-rate="-50%">Muy lenta</button>
-    <button class="sopt sel" data-rate="-40%">Lenta</button>
-    <button class="sopt" data-rate="-15%">Media</button>
-    <button class="sopt" data-rate="+0%">Normal</button>
-  </div>
-  <div class="srow" style="margin-top:6px"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="sessionPitch"><span id="sessionPitchVal">-8Hz</span></div>
-  <div class="stitle">Presets</div>
-  <div class="preset-grid" id="sessionPresets"></div>
+  <div class="speed-opts" id="sessionSpeedOpts"><button class="sopt" data-rate="-50%">Muy lenta</button><button class="sopt sel" data-rate="-40%">Lenta</button><button class="sopt" data-rate="-15%">Media</button><button class="sopt" data-rate="+0%">Normal</button></div>
+  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="sessionPitch"><span id="sessionPitchVal">-8Hz</span></div>
+  <div class="stitle">🎚️ Nivel</div>
+  <div class="speed-opts" id="sessionInduction"><button class="sopt" data-level="superficial">Superficial</button><button class="sopt sel" data-level="medio">Medio</button><button class="sopt" data-level="profundo">Profundo</button></div>
+  <div class="stitle">Presets</div><div class="preset-grid" id="sessionPresets"></div>
   <div class="srow"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="sessionReverb"><span id="sessionReverbVal">50%</span></div>
   <div class="srow"><label>🔈 Eco</label><input type="range" min="0" max="100" value="10" id="sessionEcho"><span id="sessionEchoVal">10%</span></div>
   <div class="srow"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="sessionBass"><span id="sessionBassVal">30%</span></div>
-  <div class="stitle">🧠 Binaural + Ambiental</div>
-  <div class="srow"><label>Tipo</label><select id="sessionBinType"><option value="">Sin binaural</option><option value="delta">Delta 2Hz</option><option value="theta" selected>Theta 6Hz</option><option value="alpha">Alfa 10Hz</option><option value="sigma">Sigma 14Hz</option><option value="gamma">Gamma 40Hz</option></select></div>
+  <div class="stitle">🧠 + 🎵</div>
+  <div class="srow"><label>Binaural</label><select id="sessionBinType"><option value="">Sin binaural</option><option value="delta">Delta 2Hz</option><option value="theta" selected>Theta 6Hz</option><option value="alpha">Alfa 10Hz</option><option value="sigma">Sigma 14Hz</option><option value="gamma">Gamma 40Hz</option></select></div>
   <div class="srow"><label>Ambiente</label><select id="sessionAmbType"><option value="pad" selected>Pad suave</option><option value="rain">🌧 Lluvia</option><option value="ocean">🌊 Océano</option><option value="forest">🌲 Bosque</option><option value="fire">🔥 Fuego</option><option value="wind">💨 Viento</option></select></div>
   <div class="srow"><label>🗣 Vol</label><input type="range" min="0" max="100" value="80" id="sessionVoiceVol"><span id="sessionVoiceVolVal">80%</span></div>
   <div class="srow"><label>🧠 Vol</label><input type="range" min="0" max="100" value="40" id="sessionBinVol"><span id="sessionBinVolVal">40%</span></div>
   <div class="srow"><label>🎵 Vol</label><input type="range" min="0" max="100" value="25" id="sessionAmbVol"><span id="sessionAmbVolVal">25%</span></div>
   <div class="srow"><label>⏱ Antes</label><input type="range" min="0" max="60" value="10" id="sessionBinStart"><span id="sessionBinStartVal">10s</span></div>
   <div class="srow"><label>⏱ Después</label><input type="range" min="0" max="120" value="30" id="sessionBinEnd"><span id="sessionBinEndVal">30s</span></div>
+  <div class="toggle-row"><label>🖥️ Pantalla completa</label><div class="toggle" id="fullscreenToggle" onclick="this.classList.toggle('on');toggleFullscreen()"></div></div>
   <div class="controls">
     <button class="stop-btn" onclick="stopSession()">⏹</button>
     <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
@@ -284,499 +259,187 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10
 
 <script>
 const S=window.location.origin;
-let curSession=null,playing=false,sAudio=null,timerInt=null,secs=0,autoStopTimer=null;
+let curSession=null,playing=false,sAudio=null,timerInt=null,secs=0,autoStopTimer=null,selLevel='medio';
 let selVoice='es-ES-AlvaroNeural',selRate='-40%',selPitch='-8Hz';
 let favorites=JSON.parse(localStorage.getItem('zenmix_favs')||'[]');
+let stats=JSON.parse(localStorage.getItem('zenmix_stats')||'{"sessions":0,"totalMinutes":0,"streak":0,"lastDate":null,"perSession":{}}');
 
-const sessions={
-  insomnio:{title:'Insomnio',sub:'Hipnosis profunda para dormir',emoji:'🌙',tags:['30 min','Sueño']},
-  ansiedad:{title:'Ansiedad',sub:'Calma tu mente y cuerpo',emoji:'😌',tags:['20 min','Calma']},
-  migrania:{title:'Migraña',sub:'Alivio con frecuencias',emoji:'🤕',tags:['25 min','Alivio']},
-  autoestima:{title:'Autoestima',sub:'Confianza interior',emoji:'💪',tags:['20 min','Confianza']},
-  'dejar-fumar':{title:'Dejar de Fumar',sub:'Libérate del tabaco',emoji:'🚭',tags:['25 min','Libertad']},
-  peso:{title:'Control de Peso',sub:'Hábitos saludables',emoji:'⚖️',tags:['20 min','Salud']},
-  focus:{title:'Concentración',sub:'Enfoque mental',emoji:'🎯',tags:['15 min','Mente']}
-};
+// Onboarding
+if(!localStorage.getItem('zenmix_onboard')){document.getElementById('onboard').style.display='flex';}
+function closeOnboard(){document.getElementById('onboard').style.display='none';localStorage.setItem('zenmix_onboard','1');}
 
-const voices=[
-  {id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'🇪🇸',g:'M',deep:true},
-  {id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽',g:'M',deep:true},
-  {id:'es-AR-TomasNeural',name:'Tomás',lang:'🇦🇷',g:'M',deep:true},
-  {id:'es-CO-GonzaloNeural',name:'Gonzalo',lang:'🇨🇴',g:'M',deep:true},
-  {id:'es-VE-SebastianNeural',name:'Sebastián',lang:'🇻🇪',g:'M',deep:true},
-  {id:'es-CL-LorenzoNeural',name:'Lorenzo',lang:'🇨🇱',g:'M',deep:true},
-  {id:'es-PE-AlexNeural',name:'Alex',lang:'🇵🇪',g:'M',deep:true},
-  {id:'es-US-AlonsoNeural',name:'Alonso',lang:'🇺🇸',g:'M',deep:true},
-  {id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽',g:'F',deep:false},
-  {id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸',g:'F',deep:false},
-  {id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸',g:'F',deep:false},
-  {id:'es-AR-ElenaNeural',name:'Elena',lang:'🇦🇷',g:'F',deep:false},
-  {id:'es-CO-SalomeNeural',name:'Salomé',lang:'🇨🇴',g:'F',deep:false},
-  {id:'es-PE-CamilaNeural',name:'Camila',lang:'🇵🇪',g:'F',deep:false},
-  {id:'es-US-PalomaNeural',name:'Paloma',lang:'🇺🇸',g:'F',deep:false},
-];
+const sessions={insomnio:{title:'Insomnio',sub:'Hipnosis profunda para dormir',emoji:'🌙',tags:['30 min','Sueño'],color:'#4a6cf7'},ansiedad:{title:'Ansiedad',sub:'Calma tu mente y cuerpo',emoji:'😌',tags:['20 min','Calma'],color:'#10b981'},migrania:{title:'Migraña',sub:'Alivio con frecuencias',emoji:'🤕',tags:['25 min','Alivio'],color:'#8b5cf6'},autoestima:{title:'Autoestima',sub:'Confianza interior',emoji:'💪',tags:['20 min','Confianza'],color:'#f59e0b'},'dejar-fumar':{title:'Dejar de Fumar',sub:'Libérate del tabaco',emoji:'🚭',tags:['25 min','Libertad'],color:'#ef4444'},peso:{title:'Control de Peso',sub:'Hábitos saludables',emoji:'⚖️',tags:['20 min','Salud'],color:'#06b6d4'},focus:{title:'Concentración',sub:'Enfoque mental',emoji:'🎯',tags:['15 min','Mente'],color:'#a855f7'}};
 
-const binaurals=[
-  {id:'delta',freq:2,name:'Delta',emoji:'😴',desc:'Sueño profundo'},
-  {id:'theta',freq:6,name:'Theta',emoji:'🧠',desc:'Meditación'},
-  {id:'alpha',freq:10,name:'Alfa',emoji:'✨',desc:'Relajación'},
-  {id:'sigma',freq:14,name:'Sigma',emoji:'💡',desc:'Enfoque'},
-  {id:'gamma',freq:40,name:'Gamma',emoji:'⚡',desc:'Concentración'},
-  {id:'beta',freq:20,name:'Beta',emoji:'🔥',desc:'Activación'}
-];
+const voices=[{id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'🇪🇸',g:'M',deep:true},{id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽',g:'M',deep:true},{id:'es-AR-TomasNeural',name:'Tomás',lang:'🇦🇷',g:'M',deep:true},{id:'es-CO-GonzaloNeural',name:'Gonzalo',lang:'🇨🇴',g:'M',deep:true},{id:'es-VE-SebastianNeural',name:'Sebastián',lang:'🇻🇪',g:'M',deep:true},{id:'es-CL-LorenzoNeural',name:'Lorenzo',lang:'🇨🇱',g:'M',deep:true},{id:'es-PE-AlexNeural',name:'Alex',lang:'🇵🇪',g:'M',deep:true},{id:'es-US-AlonsoNeural',name:'Alonso',lang:'🇺🇸',g:'M',deep:true},{id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽',g:'F',deep:false},{id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸',g:'F',deep:false},{id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸',g:'F',deep:false},{id:'es-AR-ElenaNeural',name:'Elena',lang:'🇦🇷',g:'F',deep:false},{id:'es-CO-SalomeNeural',name:'Salomé',lang:'🇨🇴',g:'F',deep:false},{id:'es-PE-CamilaNeural',name:'Camila',lang:'🇵🇪',g:'F',deep:false},{id:'es-US-PalomaNeural',name:'Paloma',lang:'🇺🇸',g:'F',deep:false}];
 
-const ambients=[
-  {id:'pad',name:'Pad',emoji:'🎵',desc:'Ambiente suave'},
-  {id:'rain',name:'Lluvia',emoji:'🌧',desc:'Lluvia suave'},
-  {id:'ocean',name:'Océano',emoji:'🌊',desc:'Olas del mar'},
-  {id:'forest',name:'Bosque',emoji:'🌲',desc:'Pájaros y naturaleza'},
-  {id:'fire',name:'Fuego',emoji:'🔥',desc:'Chasquido de leña'},
-  {id:'wind',name:'Viento',emoji:'💨',desc:'Brisa suave'}
-];
-
+const binaurals=[{id:'delta',freq:2,name:'Delta',emoji:'😴',desc:'Sueño'},{id:'theta',freq:6,name:'Theta',emoji:'🧠',desc:'Meditación'},{id:'alpha',freq:10,name:'Alfa',emoji:'✨',desc:'Relajación'},{id:'sigma',freq:14,name:'Sigma',emoji:'💡',desc:'Enfoque'},{id:'gamma',freq:40,name:'Gamma',emoji:'⚡',desc:'Concentración'},{id:'beta',freq:20,name:'Beta',emoji:'🔥',desc:'Activación'}];
+const ambients=[{id:'pad',name:'Pad',emoji:'🎵',desc:'Ambiente'},{id:'rain',name:'Lluvia',emoji:'🌧',desc:'Lluvia'},{id:'ocean',name:'Océano',emoji:'🌊',desc:'Olas'},{id:'forest',name:'Bosque',emoji:'🌲',desc:'Naturaleza'},{id:'fire',name:'Fuego',emoji:'🔥',desc:'Leña'},{id:'wind',name:'Viento',emoji:'💨',desc:'Brisa'}];
 const presets={estudio:{reverb:50,echo:10,bass:30},cueva:{reverb:80,echo:40,bass:60},bosque:{reverb:30,echo:5,bass:20},radio:{reverb:15,echo:0,bass:10}};
 
-// ─── THEME ──────────────────────────────────────────────────
+// THEME
 let darkMode=localStorage.getItem('zenmix_theme')!=='light';
-function toggleTheme(){
-  darkMode=!darkMode;
-  document.body.classList.toggle('light',!darkMode);
-  document.getElementById('themeBtn').textContent=darkMode?'🌙':'☀️';
-  localStorage.setItem('zenmix_theme',darkMode?'dark':'light');
-}
+function toggleTheme(){darkMode=!darkMode;document.body.classList.toggle('light',!darkMode);document.getElementById('themeBtn').textContent=darkMode?'🌙':'☀️';localStorage.setItem('zenmix_theme',darkMode?'dark':'light');}
 if(!darkMode){document.body.classList.add('light');document.getElementById('themeBtn').textContent='☀️';}
 
-// ─── TABS ────────────────────────────────────────────────────
-function showTab(i){
-  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));
-  ['homeScreen','recordScreen','customScreen','binauralScreen'].forEach((id,j)=>{
-    document.getElementById(id).classList.toggle('active',j===i);
-  });
-  document.getElementById('sessionScreen').classList.remove('active');
-}
+// TABS
+function showTab(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));['homeScreen','recordScreen','customScreen','binauralScreen','statsScreen'].forEach((id,j)=>document.getElementById(id).classList.toggle('active',j===i));document.getElementById('sessionScreen').classList.remove('active');if(i===4)loadStatsUI();}
 
-// ─── VOICES ──────────────────────────────────────────────────
-function renderV(cid){
-  const c=document.getElementById(cid);c.innerHTML='';
-  voices.forEach(v=>{
-    const d=document.createElement('div');d.className='vcard'+(selVoice===v.id?' sel':'');
-    d.innerHTML=`<div class="nm">${v.name}</div><div class="inf">${v.lang} ${v.g}</div>${v.deep?'<div class="dp">🎙️</div>':''}`;
-    d.onclick=()=>{selVoice=v.id;['voiceGrid','sessionVoiceGrid','recVoiceGrid'].forEach(renderV);};
-    c.appendChild(d);
-  });
-}
+// VOICES
+function renderV(cid){const c=document.getElementById(cid);c.innerHTML='';voices.forEach(v=>{const d=document.createElement('div');d.className='vcard'+(selVoice===v.id?' sel':'');d.innerHTML=`<div class="nm">${v.name}</div><div class="inf">${v.lang} ${v.g}</div>${v.deep?'<div class="dp">🎙️</div>':''}`;d.onclick=()=>{selVoice=v.id;['voiceGrid','sessionVoiceGrid','recVoiceGrid'].forEach(renderV);};c.appendChild(d);});}
 ['voiceGrid','sessionVoiceGrid','recVoiceGrid'].forEach(renderV);
 
-// ─── SPEED ──────────────────────────────────────────────────
-function initSpd(cid){
-  const c=document.getElementById(cid);
-  c.querySelectorAll('.sopt').forEach(b=>b.onclick=()=>{c.querySelectorAll('.sopt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selRate=b.dataset.rate;});
-}
+// SPEED
+function initSpd(cid){const c=document.getElementById(cid);c.querySelectorAll('.sopt').forEach(b=>b.onclick=()=>{c.querySelectorAll('.sopt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selRate=b.dataset.rate;});}
 ['speedOpts','sessionSpeedOpts','recSpeedOpts'].forEach(initSpd);
 
-// ─── PRESETS ─────────────────────────────────────────────────
-function renderPresets(cid,onChange){
-  const c=document.getElementById(cid);c.innerHTML='';
-  Object.entries(presets).forEach(([k,v])=>{
-    const b=document.createElement('button');b.className='preset-btn';b.textContent=v.name||k;
-    b.onclick=()=>{onChange(v);c.querySelectorAll('.preset-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};
-    c.appendChild(b);
-  });
-}
-function applyPresetToSliders(v,rId,eId,bId){
-  if(rId){document.getElementById(rId).value=v.reverb;document.getElementById(rId.replace('Slider','Val')||rId).textContent=v.reverb+'%';}
-  const rEl=document.getElementById(rId),eEl=document.getElementById(eId),bEl=document.getElementById(bId);
-  if(rEl){rEl.value=v.reverb;const rl=document.getElementById(rId.replace('Slider','Val')||rId.replace('Reverb','ReverbVal').replace('sessionReverb','sessionReverbVal'));if(rl)rl.textContent=v.reverb+'%';}
-  if(eEl){eEl.value=v.echo;const el=document.getElementById(eId.replace('Slider','Val')||eId.replace('Echo','EchoVal').replace('sessionEcho','sessionEchoVal'));if(el)el.textContent=v.echo+'%';}
-  if(bEl){bEl.value=v.bass;const bl=document.getElementById(bId.replace('Slider','Val')||bId.replace('Bass','BassVal').replace('sessionBass','sessionBassVal'));if(bl)bl.textContent=v.bass+'%';}
-}
-renderPresets('customPresets',v=>applyPresetToSliders(v,'reverbSlider','echoSlider','bassSlider'));
-renderPresets('sessionPresets',v=>{
-  document.getElementById('sessionReverb').value=v.reverb;document.getElementById('sessionReverbVal').textContent=v.reverb+'%';
-  document.getElementById('sessionEcho').value=v.echo;document.getElementById('sessionEchoVal').textContent=v.echo+'%';
-  document.getElementById('sessionBass').value=v.bass;document.getElementById('sessionBassVal').textContent=v.bass+'%';
-});
-renderPresets('recPresets',v=>{
-  document.getElementById('recReverb').value=v.reverb;document.getElementById('recReverbVal').textContent=v.reverb+'%';
-  document.getElementById('recEcho').value=v.echo;document.getElementById('recEchoVal').textContent=v.echo+'%';
-  document.getElementById('recBass').value=v.bass;document.getElementById('recBassVal').textContent=v.bass+'%';
-});
+// INDUCTION LEVEL
+function initInduction(cid,cb){const c=document.getElementById(cid);c.querySelectorAll('.sopt').forEach(b=>b.onclick=()=>{c.querySelectorAll('.sopt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');if(cb)cb(b.dataset.level);});}
+initInduction('inductionOpts',l=>selLevel=l);
+initInduction('sessionInduction',l=>selLevel=l);
 
-// ─── SLIDERS ────────────────────────────────────────────────
+// PRESETS
+function renderPresets(cid,onChange){const c=document.getElementById(cid);c.innerHTML='';Object.entries(presets).forEach(([k,v])=>{const b=document.createElement('button');b.className='preset-btn';b.textContent=k.charAt(0).toUpperCase()+k.slice(1);b.onclick=()=>{onChange(v);c.querySelectorAll('.preset-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};c.appendChild(b);});}
+function applyPreset(v,rId,eId,bId){
+  const r=document.getElementById(rId),e=document.getElementById(eId),b=document.getElementById(bId);
+  if(r){r.value=v.reverb;}const rl=document.getElementById(rId.replace('Reverb','ReverbVal').replace('sessionReverb','sessionReverbVal'));if(rl)rl.textContent=v.reverb+'%';
+  if(e){e.value=v.echo;}const el=document.getElementById(eId.replace('Echo','EchoVal').replace('sessionEcho','sessionEchoVal'));if(el)el.textContent=v.echo+'%';
+  if(b){b.value=v.bass;}const bl=document.getElementById(bId.replace('Bass','BassVal').replace('sessionBass','sessionBassVal'));if(bl)bl.textContent=v.bass+'%';
+}
+renderPresets('customPresets',v=>applyPreset(v,'reverbSlider','echoSlider','bassSlider'));
+renderPresets('sessionPresets',v=>{document.getElementById('sessionReverb').value=v.reverb;document.getElementById('sessionReverbVal').textContent=v.reverb+'%';document.getElementById('sessionEcho').value=v.echo;document.getElementById('sessionEchoVal').textContent=v.echo+'%';document.getElementById('sessionBass').value=v.bass;document.getElementById('sessionBassVal').textContent=v.bass+'%';});
+renderPresets('recPresets',v=>{document.getElementById('recReverb').value=v.reverb;document.getElementById('recReverbVal').textContent=v.reverb+'%';document.getElementById('recEcho').value=v.echo;document.getElementById('recEchoVal').textContent=v.echo+'%';document.getElementById('recBass').value=v.bass;document.getElementById('recBassVal').textContent=v.bass+'%';});
+
+// SLIDERS
 document.querySelectorAll('input[type=range]').forEach(s=>{
-  const l=document.querySelector('#'+s.id+'Val')||document.querySelector('span[style]');//approx
-  // Wire all sliders by ID convention
+  const span=document.getElementById(s.id+'Val')||s.nextElementSibling;
+  if(span&&!s.oninput)s.oninput=()=>{if(s.id==='pitchSlider'||s.id==='sessionPitch')span.textContent=s.value+'Hz';else if(s.id==='recPitch')span.textContent=s.value;else if(s.id.includes('Start')||s.id.includes('End'))span.textContent=s.value+'s';else span.textContent=s.value+'%';};
 });
-// Manual wiring
-function ws(id,vf){const s=document.getElementById(id),l=document.getElementById(id+'Val')||document.getElementById(id.replace(/Slider$/,'Val'));
-if(!s)return;s.oninput=()=>{const t=l||s.nextElementSibling;if(t)t.textContent=vf(s.value);};}
-ws('pitchSlider',v=>v+'Hz');ws('reverbSlider',v=>v+'%');ws('echoSlider',v=>v+'%');ws('bassSlider',v=>v+'%');
-ws('sessionPitch',v=>v+'Hz');ws('sessionReverb',v=>v+'%');ws('sessionEcho',v=>v+'%');ws('sessionBass',v=>v+'%');
-ws('sessionBinVol',v=>v+'%');ws('sessionBinStart',v=>v+'s');ws('sessionBinEnd',v=>v+'s');
-ws('sessionVoiceVol',v=>v+'%');ws('sessionAmbVol',v=>v+'%');
-ws('recReverb',v=>v+'%');ws('recEcho',v=>v+'%');ws('recBass',v=>v+'%');ws('recPitch',v=>v);
-ws('binVolume',v=>v+'%');ws('binStart',v=>v+'s');ws('binEnd',v=>v+'s');
-ws('trimStart',v=>v+'s');ws('trimEnd',v=>v+'s');
-ws('ambVolume',v=>v+'%');ws('ambStart',v=>v+'s');ws('ambEnd',v=>v+'s');
 
-// ─── HOME SCREEN ─────────────────────────────────────────────
-function renderHome(){
-  const c=document.getElementById('homeScreen');c.innerHTML='';
-  Object.entries(sessions).forEach(([id,s])=>{
-    const d=document.createElement('div');d.className='card';d.onclick=()=>startSession(id);
-    const isFav=favorites.includes(id);
-    d.innerHTML=`<div class="fav-star ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav('${id}')">${isFav?'⭐':'☆'}</div><h3>${s.emoji} ${s.title}</h3><p>${s.sub}</p><div class="tags">${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>`;
-    c.appendChild(d);
-  });
-}
+// HOME
+function renderHome(){const c=document.getElementById('homeScreen');c.innerHTML='';Object.entries(sessions).forEach(([id,s])=>{
+  const d=document.createElement('div');d.className='card';d.onclick=()=>startSession(id);
+  const isFav=favorites.includes(id);
+  d.innerHTML=`<div class="session-color" style="background:${s.color}"></div><div class="fav-star ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav('${id}')">${isFav?'⭐':'☆'}</div><h3>${s.emoji} ${s.title}</h3><p>${s.sub}</p><div class="tags">${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>`;
+  c.appendChild(d);});}
 renderHome();
 
-function toggleFav(id){
-  const i=favorites.indexOf(id);
-  if(i>=0)favorites.splice(i,1);else favorites.push(id);
-  localStorage.setItem('zenmix_favs',JSON.stringify(favorites));
-  renderHome();
-}
+function toggleFav(id){const i=favorites.indexOf(id);if(i>=0)favorites.splice(i,1);else favorites.push(id);localStorage.setItem('zenmix_favs',JSON.stringify(favorites));renderHome();}
 
-// ─── BINAURAL ────────────────────────────────────────────────
+// BINAURAL
 let bCtx=null,bOsc=null,bGain=null,activeBin=null;
 const bg=document.getElementById('binauralGrid');
-binaurals.forEach(b=>{
-  const d=document.createElement('div');d.className='bcard';d.id='bin-'+b.id;
-  d.innerHTML=`<div class="ic">${b.emoji}</div><div class="nm">${b.name}</div><div class="fr">${b.desc}</div>`;
-  d.onclick=()=>toggleBin(b.id,d);
-  bg.appendChild(d);
-});
+binaurals.forEach(b=>{const d=document.createElement('div');d.className='bcard';d.id='bin-'+b.id;d.innerHTML=`<div class="ic">${b.emoji}</div><div class="nm">${b.name}</div><div class="fr">${b.desc}</div>`;d.onclick=()=>toggleBin(b.id,d);bg.appendChild(d);});
 
-function toggleBin(id,el){
-  if(activeBin===id){stopAllAudio();return;}
-  stopAllAudio();
-  const b=binaurals.find(x=>x.id===id);
-  bCtx=new(window.AudioContext||window.webkitAudioContext)();
-  const oL=bCtx.createOscillator(),oR=bCtx.createOscillator();
-  const mg=bCtx.createChannelMerger(2);
-  bGain=bCtx.createGain();
-  bGain.gain.value=document.getElementById('binVolume').value/100*0.3;
-  oL.frequency.value=200+b.freq;oR.frequency.value=200;
-  oL.connect(bGain);oR.connect(bGain);
-  bGain.connect(mg,0,0);bGain.connect(mg,0,1);
-  mg.connect(bCtx.destination);
-  oL.start();oR.start();
-  bOsc={oL,oR};activeBin=id;
-  document.querySelectorAll('.bcard').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('binControls').style.display='block';
-  document.getElementById('binPlaying').style.display='block';
-  document.getElementById('binCircle').textContent=b.emoji;
-  document.getElementById('binLabel').textContent=b.name+' '+b.freq+'Hz — '+b.desc;
-  document.getElementById('mandalaCanvas').style.display='block';
-  startMandala('mandalaCanvas');
-}
+function toggleBin(id,el){if(activeBin===id){stopAllAudio();return;}stopAllAudio();const b=binaurals.find(x=>x.id===id);bCtx=new(window.AudioContext||window.webkitAudioContext)();
+const oL=bCtx.createOscillator(),oR=bCtx.createOscillator(),mg=bCtx.createChannelMerger(2);bGain=bCtx.createGain();bGain.gain.value=document.getElementById('binVolume').value/100*0.3;
+oL.frequency.value=200+b.freq;oR.frequency.value=200;oL.connect(bGain);oR.connect(bGain);bGain.connect(mg,0,0);bGain.connect(mg,0,1);mg.connect(bCtx.destination);oL.start();oR.start();
+bOsc={oL,oR};activeBin=id;document.querySelectorAll('.bcard').forEach(c=>c.classList.remove('active'));el.classList.add('active');
+document.getElementById('binControls').style.display='block';document.getElementById('binPlaying').style.display='block';document.getElementById('binCircle').textContent=b.emoji;document.getElementById('binLabel').textContent=b.name+' '+b.freq+'Hz';startMandala('mandalaCanvas');}
 document.getElementById('binVolume').oninput=e=>{if(bGain)bGain.gain.value=e.target.value/100*0.3;};
 
-// ─── AMBIENT ──────────────────────────────────────────────────
-let activeAmb=null,ambCtx=null,ambNodes={};
+// AMBIENT
+let activeAmb=null,ambAudio=null;
 const ag=document.getElementById('ambientGrid');
-ambients.forEach(a=>{
-  const d=document.createElement('div');d.className='bcard';d.id='amb-'+a.id;
-  d.innerHTML=`<div class="ic">${a.emoji}</div><div class="nm">${a.name}</div><div class="fr">${a.desc}</div>`;
-  d.onclick=()=>toggleAmb(a.id,d);
-  ag.appendChild(d);
-});
+ambients.forEach(a=>{const d=document.createElement('div');d.className='bcard';d.id='amb-'+a.id;d.innerHTML=`<div class="ic">${a.emoji}</div><div class="nm">${a.name}</div><div class="fr">${a.desc}</div>`;d.onclick=()=>toggleAmb(a.id,d);ag.appendChild(d);});
+function toggleAmb(id,el){if(activeAmb===id){stopAmb();return;}stopAmb();activeAmb=id;document.querySelectorAll('#ambientGrid .bcard').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.getElementById('ambControls').style.display='block';
+ambAudio=new Audio(S+'/api/ambient/'+id+'?duration=300');ambAudio.volume=document.getElementById('ambVolume').value/100;ambAudio.loop=true;ambAudio.play();}
+function stopAmb(){if(ambAudio){ambAudio.pause();ambAudio=null;}activeAmb=null;document.querySelectorAll('#ambientGrid .bcard').forEach(c=>c.classList.remove('active'));document.getElementById('ambControls').style.display='none';}
+document.getElementById('ambVolume').oninput=e=>{if(ambAudio)ambAudio.volume=e.target.value/100;};
 
-function toggleAmb(id,el){
-  if(activeAmb===id){stopAmb();return;}
-  stopAmb();
-  activeAmb=id;
-  document.querySelectorAll('#ambientGrid .bcard').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('ambControls').style.display='block';
-  // Play ambient from server
-  const dur=300;
-  ambNodes.audio=new Audio(S+'/api/ambient/'+id+'?duration='+dur);
-  ambNodes.audio.volume=document.getElementById('ambVolume').value/100;
-  ambNodes.audio.loop=true;
-  ambNodes.audio.play();
-}
-function stopAmb(){
-  if(ambNodes.audio){ambNodes.audio.pause();ambNodes.audio=null;}
-  activeAmb=null;
-  document.querySelectorAll('#ambientGrid .bcard').forEach(c=>c.classList.remove('active'));
-  document.getElementById('ambControls').style.display='none';
-}
-document.getElementById('ambVolume').oninput=e=>{if(ambNodes.audio)ambNodes.audio.volume=e.target.value/100;};
+function stopAllAudio(){if(bOsc){bOsc.oL.stop();bOsc.oR.stop();}if(bCtx)bCtx.close();bOsc=null;bCtx=null;activeBin=null;stopAmb();document.querySelectorAll('.bcard').forEach(c=>c.classList.remove('active'));document.getElementById('binControls').style.display='none';document.getElementById('ambControls').style.display='none';document.getElementById('binPlaying').style.display='none';stopMandala();}
 
-function stopAllAudio(){
-  if(bOsc){bOsc.oL.stop();bOsc.oR.stop();}
-  if(bCtx)bCtx.close();
-  bOsc=null;bCtx=null;activeBin=null;
-  stopAmb();
-  document.querySelectorAll('.bcard').forEach(c=>c.classList.remove('active'));
-  document.getElementById('binControls').style.display='none';
-  document.getElementById('ambControls').style.display='none';
-  document.getElementById('binPlaying').style.display='none';
-  document.getElementById('mandalaCanvas').style.display='none';
-  stopMandala();
-}
-
-// ─── MANDALA VISUALIZATION ───────────────────────────────────
-let mandalaRAF=null,mandalaAngle=0;
-function startMandala(canvasId){
-  const cv=document.getElementById(canvasId);if(!cv)return;
-  cv.style.display='block';
-  const ctx=cv.getContext('2d');
-  const w=cv.width,h=cv.height,cx=w/2,cy=h/2;
-  function draw(){
-    mandalaAngle+=0.01;
-    ctx.clearRect(0,0,w,h);
-    ctx.fillStyle=document.body.classList.contains('light')?'rgba(245,245,245,0.1)':'rgba(10,10,26,0.15)';
-    ctx.fillRect(0,0,w,h);
-    const colors=['#a78bfa','#7c3aed','#4ecdc4','#f093fb','#ffd700'];
-    for(let ring=0;ring<4;ring++){
-      const r=20+ring*22;
-      const n=6+ring*3;
-      ctx.beginPath();
-      for(let i=0;i<n;i++){
-        const a=mandalaAngle*(ring%2?1:-1.3)+(Math.PI*2/n)*i;
-        const x=cx+Math.cos(a)*r;
-        const y=cy+Math.sin(a)*r;
-        ctx.moveTo(x,y);
-        ctx.arc(x,y,3+ring*1.5,0,Math.PI*2);
-      }
-      ctx.fillStyle=colors[ring%colors.length]+'60';
-      ctx.fill();
-    }
-    mandalaRAF=requestAnimationFrame(draw);
-  }
-  draw();
-}
+// MANDALA
+let mandalaRAF=null;
+function startMandala(cid){const cv=document.getElementById(cid);if(!cv)return;cv.style.display='block';const ctx=cv.getContext('2d'),w=cv.width,h=cv.height,cx=w/2,cy=h/2;let angle=0;
+const colors=['#a78bfa','#7c3aed','#4ecdc4','#f093fb','#ffd700'];
+function draw(){angle+=0.008;ctx.fillStyle=document.body.classList.contains('light')?'rgba(245,245,245,0.12)':'rgba(10,10,26,0.12)';ctx.fillRect(0,0,w,h);
+for(let ring=0;ring<5;ring++){const r=12+ring*14,n=6+ring*2;ctx.beginPath();for(let i=0;i<n;i++){const a=angle*(ring%2?1:-1.3)+(Math.PI*2/n)*i;const x=cx+Math.cos(a)*r;const y=cy+Math.sin(a)*r;ctx.moveTo(x,y);ctx.arc(x,y,2+ring,0,Math.PI*2);}ctx.fillStyle=colors[ring%colors.length]+'50';ctx.fill();}mandalaRAF=requestAnimationFrame(draw);}draw();}
 function stopMandala(){if(mandalaRAF){cancelAnimationFrame(mandalaRAF);mandalaRAF=null;}}
 
-// ─── SESSION ─────────────────────────────────────────────────
-function startSession(id){
-  const s=sessions[id];if(!s)return;
-  curSession=id;
-  document.getElementById('sessionTitle').textContent=s.title;
-  document.getElementById('sessionSub').textContent=s.sub;
-  document.getElementById('breatheCircle').textContent=s.emoji;
-  document.getElementById('timer').textContent='00:00';secs=0;
-  document.getElementById('progressFill').style.width='0%';
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('sessionScreen').classList.add('active');
-  document.getElementById('mandalaCanvas2').style.display='block';
-  startMandala('mandalaCanvas2');
-}
+// SESSION
+function startSession(id){const s=sessions[id];if(!s)return;curSession=id;
+document.getElementById('sessionTitle').textContent=s.emoji+' '+s.title;document.getElementById('sessionSub').textContent=s.sub;
+document.getElementById('breatheCircle').textContent=s.emoji;document.getElementById('breatheCircle').style.borderColor=s.color;
+document.getElementById('timer').textContent='00:00';secs=0;document.getElementById('progressFill').style.width='0%';
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById('sessionScreen').classList.add('active');startMandala('vizCanvas');}
 
-async function togglePlay(){
-  if(playing){
-    playing=false;document.getElementById('playBtn').textContent='▶';
-    document.getElementById('breatheCircle').classList.remove('playing');
-    if(sAudio)sAudio.pause();clearInterval(timerInt);return;
-  }
-  playing=true;document.getElementById('playBtn').textContent='⏸';
-  document.getElementById('breatheCircle').classList.add('playing');
-  timerInt=setInterval(()=>{secs++;document.getElementById('timer').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
-    if(sAudio&&sAudio.duration)document.getElementById('progressFill').style.width=(sAudio.currentTime/sAudio.duration*100)+'%';
-  },1000);
+async function togglePlay(){if(playing){playing=false;document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');if(sAudio)sAudio.pause();clearInterval(timerInt);return;}
+playing=true;document.getElementById('playBtn').textContent='⏸';document.getElementById('breatheCircle').classList.add('playing');
+timerInt=setInterval(()=>{secs++;document.getElementById('timer').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');if(sAudio&&sAudio.duration)document.getElementById('progressFill').style.width=(sAudio.currentTime/sAudio.duration*100)+'%';},1000);
+if(!sAudio){const voice=selVoice,rate=selRate,pitch=document.getElementById('sessionPitch').value+'Hz';
+const reverb=document.getElementById('sessionReverb').value,echo=document.getElementById('sessionEcho').value,bass=document.getElementById('sessionBass').value;
+try{const url=`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&level=${selLevel}`;
+const res=await fetch(url);if(res.ok){const blob=await res.blob();sAudio=new Audio(URL.createObjectURL(blob));sAudio.volume=document.getElementById('sessionVoiceVol').value/100;sAudio.loop=true;sAudio.onended=()=>{playing=false;document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');recordStats();};sAudio.play();}}catch(e){console.error(e);}}else sAudio.play();}
 
-  if(!sAudio){
-    const voice=selVoice,rate=selRate;
-    const pitch=document.getElementById('sessionPitch').value+'Hz';
-    const reverb=document.getElementById('sessionReverb').value;
-    const echo=document.getElementById('sessionEcho').value;
-    const bass=document.getElementById('sessionBass').value;
-    try{
-      const url=`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}`;
-      const res=await fetch(url);
-      if(res.ok){const blob=await res.blob();sAudio=new Audio(URL.createObjectURL(blob));
-      sAudio.volume=document.getElementById('sessionVoiceVol').value/100;
-      sAudio.onended=()=>{playing=false;document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');};
-      sAudio.play();}
-    }catch(e){console.error(e);}
-  }else sAudio.play();
-}
-
-// Progress bar click to seek
-document.getElementById('progressBar').onclick=e=>{
-  if(!sAudio)return;
-  const r=e.target.getBoundingClientRect();
-  const pct=(e.clientX-r.left)/r.width;
-  sAudio.currentTime=pct*sAudio.duration;
-};
-
-// Auto stop timer
-function setAutoStop(){
-  const min=parseInt(document.getElementById('autoStopMin').value);
-  if(!min||min<1)return;
-  if(autoStopTimer)clearTimeout(autoStopTimer);
-  autoStopTimer=setTimeout(()=>{stopSession();document.getElementById('autoStopLabel').textContent='⏲ Apagado';},min*60000);
-  document.getElementById('autoStopLabel').textContent='⏲ '+min+' min';
-}
-
-function stopSession(){
-  playing=false;if(sAudio){sAudio.pause();sAudio.currentTime=0;sAudio=null;}
-  clearInterval(timerInt);secs=0;
-  if(autoStopTimer){clearTimeout(autoStopTimer);autoStopTimer=null;}
-  document.getElementById('playBtn').textContent='▶';
-  document.getElementById('breatheCircle').classList.remove('playing');
-  document.getElementById('sessionScreen').classList.remove('active');
-  document.getElementById('homeScreen').classList.add('active');
-  document.getElementById('mandalaCanvas2').style.display='none';
-  stopMandala();
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
-  document.getElementById('autoStopLabel').textContent='';
-}
-
-function downloadSession(){
-  const voice=selVoice,rate=selRate;
-  const pitch=document.getElementById('sessionPitch').value+'Hz';
-  const reverb=document.getElementById('sessionReverb').value;
-  const echo=document.getElementById('sessionEcho').value;
-  const bass=document.getElementById('sessionBass').value;
-  window.open(`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&download=true`,'_blank');
-}
-
-// Real-time volume
+document.getElementById('progressBar').onclick=e=>{if(!sAudio)return;const r=e.target.getBoundingClientRect();sAudio.currentTime=((e.clientX-r.left)/r.width)*sAudio.duration;};
 document.getElementById('sessionVoiceVol').oninput=e=>{document.getElementById('sessionVoiceVolVal').textContent=e.target.value+'%';if(sAudio)sAudio.volume=e.target.value/100;};
 
-// ─── CUSTOM TTS ──────────────────────────────────────────────
-async function generateCustom(){
-  const script=document.getElementById('customScript').value.trim();
-  if(!script){alert('Escribe un guion');return;}
-  const voice=selVoice,rate=selRate;
-  const pitch=document.getElementById('pitchSlider').value+'Hz';
-  const reverb=document.getElementById('reverbSlider').value;
-  const echo=document.getElementById('echoSlider').value;
-  const bass=document.getElementById('bassSlider').value;
-  document.getElementById('generateBtn').disabled=true;
-  document.getElementById('generating').classList.add('active');
-  document.getElementById('customResult').style.display='none';
-  try{
-    const res=await fetch(S+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass})});
-    if(res.ok){const blob=await res.blob();document.getElementById('customAudio').src=URL.createObjectURL(blob);document.getElementById('customResult').style.display='block';}
-  }catch(e){alert('Error: '+e.message);}
-  document.getElementById('generateBtn').disabled=false;
-  document.getElementById('generating').classList.remove('active');
-}
+function setAutoStop(){const min=parseInt(document.getElementById('autoStopMin').value);if(!min||min<1)return;if(autoStopTimer)clearTimeout(autoStopTimer);autoStopTimer=setTimeout(()=>{stopSession();document.getElementById('autoStopLabel').textContent='⏲ Apagado';},min*60000);document.getElementById('autoStopLabel').textContent='⏲ '+min+' min';}
 
-function dlCustom(){
-  const script=document.getElementById('customScript').value.trim();
-  const voice=selVoice,rate=selRate;
-  const pitch=document.getElementById('pitchSlider').value+'Hz';
-  const reverb=document.getElementById('reverbSlider').value;
-  const echo=document.getElementById('echoSlider').value;
-  const bass=document.getElementById('bassSlider').value;
-  fetch(S+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass,download:true})})
-  .then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='zenmix_custom.mp3';a.click();});
-}
+function stopSession(){playing=false;if(sAudio){sAudio.pause();sAudio.currentTime=0;sAudio=null;}clearInterval(timerInt);secs=0;if(autoStopTimer){clearTimeout(autoStopTimer);autoStopTimer=null;}
+document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');document.getElementById('sessionScreen').classList.remove('active');document.getElementById('homeScreen').classList.add('active');stopMandala();document.getElementById('vizCanvas').style.display='none';document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));document.getElementById('autoStopLabel').textContent='';}
 
-// ─── VOICE RECORDER ──────────────────────────────────────────
-let mediaRec=null,audioChunks=[],recording=false,recSec=0,recInt=null,uploadedId=null;
-let takes=[];
+function recordStats(){stats.sessions++;stats.totalMinutes+=1;const today=new Date().toISOString().slice(0,10);const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);stats.streak=(stats.lastDate===yesterday)?stats.streak+1:1;stats.lastDate=today;if(curSession)stats.perSession[curSession]=(stats.perSession[curSession]||0)+1;localStorage.setItem('zenmix_stats',JSON.stringify(stats));}
 
-async function toggleRecord(){
-  const btn=document.getElementById('recBtn');
-  if(recording){
-    stopAndSave();
-  }else{
-    try{
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'});
-      audioChunks=[];
-      mediaRec.ondataavailable=e=>audioChunks.push(e.data);
-      mediaRec.onstop=async()=>{
-        stream.getTracks().forEach(t=>t.stop());
-        const blob=new Blob(audioChunks,{type:'audio/webm'});
-        const fd=new FormData();fd.append('audio',blob,'take_'+takes.length+'.webm');
-        try{
-          const res=await fetch(S+'/api/upload-voice',{method:'POST',body:fd});
-          const data=await res.json();
-          takes.push({id:data.id,blob,url:URL.createObjectURL(blob),size:data.size});
-          uploadedId=data.id;
-          document.getElementById('recAudio').src=URL.createObjectURL(blob);
-          document.getElementById('recResult').style.display='block';
-          document.getElementById('noRec').style.display='none';
-          renderTakes();
-        }catch(e){alert('Error: '+e.message);}
-      };
-      recording=true;btn.classList.add('recording');btn.textContent='⏹';
-      recSec=0;document.getElementById('recTime').textContent='00:00';
-      recInt=setInterval(()=>{recSec++;document.getElementById('recTime').textContent=String(Math.floor(recSec/60)).padStart(2,'0')+':'+String(recSec%60).padStart(2,'0');},1000);
-      document.getElementById('recActions').style.display='flex';
-      mediaRec.start();
-    }catch(e){alert('Micrófono no disponible: '+e.message);}
-  }
-}
+function downloadSession(){const voice=selVoice,rate=selRate,pitch=document.getElementById('sessionPitch').value+'Hz',reverb=document.getElementById('sessionReverb').value,echo=document.getElementById('sessionEcho').value,bass=document.getElementById('sessionBass').value;
+window.open(`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&level=${selLevel}&download=true`,'_blank');}
 
-function pauseRecord(){
-  if(!mediaRec)return;
-  const btn=document.getElementById('pauseBtn');
-  if(mediaRec.state==='recording'){
-    mediaRec.pause();btn.textContent='▶ Reanudar';
-    document.getElementById('recBtn').classList.add('paused');
-  }else if(mediaRec.state==='paused'){
-    mediaRec.resume();btn.textContent='⏸ Pausar';
-    document.getElementById('recBtn').classList.remove('paused');
-  }
-}
+// FULLSCREEN
+function toggleFullscreen(){if(!document.fullscreenElement){document.documentElement.requestFullscreen().catch(()=>{});}else{document.exitFullscreen();}}
 
-function stopAndSave(){
-  if(!mediaRec||!recording)return;
-  recording=false;
-  document.getElementById('recBtn').classList.remove('recording','paused');
-  document.getElementById('recBtn').textContent='🎙️';
-  document.getElementById('recActions').style.display='none';
-  clearInterval(recInt);
-  mediaRec.stop();
-}
+// STATS
+function loadStatsUI(){const g=document.getElementById('statsGrid');g.innerHTML=`<div class="stat-card"><div class="num">${stats.sessions}</div><div class="lbl">Sesiones</div></div><div class="stat-card"><div class="num">${stats.totalMinutes}</div><div class="lbl">Minutos</div></div><div class="stat-card"><div class="num">${stats.streak}</div><div class="lbl">Racha 🔥</div></div>`;
+document.getElementById('streakInfo').textContent=stats.lastDate?`Última sesión: ${stats.lastDate}`:'¡Empieza tu primera sesión!';
+const c=document.getElementById('sessionCounts');c.innerHTML='';Object.entries(sessions).forEach(([id,s])=>{const count=stats.perSession[id]||0;if(count>0){const d=document.createElement('div');d.className='card';d.innerHTML=`<h3>${s.emoji} ${s.title}: ${count} veces</h3>`;c.appendChild(d);}});}
 
-function renderTakes(){
-  const c=document.getElementById('takesGrid');c.innerHTML='';
-  if(takes.length===0){document.getElementById('takesList').style.display='none';return;}
-  document.getElementById('takesList').style.display='block';
-  takes.forEach((t,i)=>{
-    const d=document.createElement('div');d.className='card';
-    d.innerHTML=`<h3>🎙️ Toma ${i+1}</h3><p>${(t.size/1024).toFixed(1)}KB</p>`;
-    d.onclick=()=>{uploadedId=t.id;document.getElementById('recAudio').src=t.url;document.getElementById('recResult').style.display='block';};
-    c.appendChild(d);
-  });
-}
+function shareApp(){if(navigator.share){navigator.share({title:'ZENMIX — Hipnosis Subliminal',text:'Prueba ZENMIX: hipnosis con frecuencias binaurales y efectos de estudio',url:S}).catch(()=>{});}else{navigator.clipboard.writeText(S);alert('Link copiado: '+S);}}
 
-async function processRecording(){
-  if(!uploadedId){alert('Graba tu voz primero');return;}
-  const reverb=document.getElementById('recReverb').value;
-  const echo=document.getElementById('recEcho').value;
-  const bass=document.getElementById('recBass').value;
-  const pitch=document.getElementById('recPitch').value;
-  const trimStart=document.getElementById('trimStart').value;
-  const trimEnd=document.getElementById('trimEnd').value;
-  document.getElementById('processRecBtn')&&(document.querySelector('#recordScreen .gen-btn').disabled=true);
-  document.getElementById('procRecLoading').classList.add('active');
-  document.getElementById('procRecResult').style.display='none';
-  try{
-    const res=await fetch(S+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedId,echo,reverb,bass,pitch,trimStart,trimEnd})});
-    if(res.ok){const blob=await res.blob();document.getElementById('procRecAudio').src=URL.createObjectURL(blob);document.getElementById('procRecResult').style.display='block';}
-    else{const err=await res.json();alert('Error: '+err.error);}
-  }catch(e){alert('Error: '+e.message);}
-  document.querySelector('#recordScreen .gen-btn').disabled=false;
-  document.getElementById('procRecLoading').classList.remove('active');
-}
+// AI SCRIPT GENERATOR
+async function generateAIScript(){const topic=document.getElementById('aiTopic').value.trim();if(!topic){alert('Escribe tu tema');return;}
+document.getElementById('aiGenBtn').disabled=true;document.getElementById('aiLoading').classList.add('active');
+try{const res=await fetch(S+'/api/generate-script',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,level:selLevel})});
+const data=await res.json();document.getElementById('customScript').value=data.script;}catch(e){alert('Error: '+e.message);}
+document.getElementById('aiGenBtn').disabled=false;document.getElementById('aiLoading').classList.remove('active');}
 
-function dlProcessed(){
-  if(!uploadedId)return;
-  const reverb=document.getElementById('recReverb').value;
-  const echo=document.getElementById('recEcho').value;
-  const bass=document.getElementById('recBass').value;
-  const pitch=document.getElementById('recPitch').value;
-  fetch(S+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedId,echo,reverb,bass,pitch,download:true})})
-  .then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='zenmix_voz_editada.mp3';a.click();});
-}
+// CUSTOM TTS
+async function generateCustom(){const script=document.getElementById('customScript').value.trim();if(!script){alert('Escribe un guion');return;}
+const voice=selVoice,rate=selRate,pitch=document.getElementById('pitchSlider').value+'Hz',reverb=document.getElementById('reverbSlider').value,echo=document.getElementById('echoSlider').value,bass=document.getElementById('bassSlider').value;
+document.getElementById('generateBtn').disabled=true;document.getElementById('generating').classList.add('active');document.getElementById('customResult').style.display='none';
+try{const res=await fetch(S+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass,level:selLevel})});
+if(res.ok){const blob=await res.blob();document.getElementById('customAudio').src=URL.createObjectURL(blob);document.getElementById('customResult').style.display='block';}
+}catch(e){alert('Error: '+e.message);}
+document.getElementById('generateBtn').disabled=false;document.getElementById('generating').classList.remove('active');}
 
-// ─── PWA: Register service worker ────────────────────────────
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+function dlCustom(){const script=document.getElementById('customScript').value.trim(),voice=selVoice,rate=selRate,pitch=document.getElementById('pitchSlider').value+'Hz',reverb=document.getElementById('reverbSlider').value,echo=document.getElementById('echoSlider').value,bass=document.getElementById('bassSlider').value;
+fetch(S+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass,level:selLevel,download:true})}).then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='zenmix_custom.mp3';a.click();});}
+
+// VOICE RECORDER
+let mediaRec=null,audioChunks=[],recording=false,recSec=0,recInt=null,uploadedId=null,takes=[];
+async function toggleRecord(){const btn=document.getElementById('recBtn');if(recording){stopAndSave();}else{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'});audioChunks=[];
+mediaRec.ondataavailable=e=>audioChunks.push(e.data);mediaRec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(audioChunks,{type:'audio/webm'});const fd=new FormData();fd.append('audio',blob,'take_'+takes.length+'.webm');
+try{const res=await fetch(S+'/api/upload-voice',{method:'POST',body:fd});const data=await res.json();takes.push({id:data.id,url:URL.createObjectURL(blob)});uploadedId=data.id;document.getElementById('recAudio').src=URL.createObjectURL(blob);document.getElementById('recResult').style.display='block';document.getElementById('noRec').style.display='none';renderTakes();}catch(e){alert('Error: '+e.message);}};
+recording=true;btn.classList.add('recording');btn.textContent='⏹';recSec=0;document.getElementById('recTime').textContent='00:00';
+recInt=setInterval(()=>{recSec++;document.getElementById('recTime').textContent=String(Math.floor(recSec/60)).padStart(2,'0')+':'+String(recSec%60).padStart(2,'0');},1000);
+document.getElementById('recActions').style.display='flex';mediaRec.start();}catch(e){alert('Micrófono: '+e.message);}}}
+
+function pauseRecord(){if(!mediaRec)return;const btn=document.getElementById('pauseBtn');if(mediaRec.state==='recording'){mediaRec.pause();btn.textContent='▶';}else if(mediaRec.state==='paused'){mediaRec.resume();btn.textContent='⏸';}}
+function stopAndSave(){if(!mediaRec||!recording)return;recording=false;document.getElementById('recBtn').classList.remove('recording');document.getElementById('recBtn').textContent='🎙️';document.getElementById('recActions').style.display='none';clearInterval(recInt);mediaRec.stop();}
+function renderTakes(){const c=document.getElementById('takesGrid');c.innerHTML='';if(!takes.length){document.getElementById('takesList').style.display='none';return;}document.getElementById('takesList').style.display='block';takes.forEach((t,i)=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<h3>🎙️ Toma ${i+1}</h3>`;d.onclick=()=>{uploadedId=t.id;document.getElementById('recAudio').src=t.url;document.getElementById('recResult').style.display='block';};c.appendChild(d);});}
+
+async function processRecording(){if(!uploadedId){alert('Graba primero');return;}
+const reverb=document.getElementById('recReverb').value,echo=document.getElementById('recEcho').value,bass=document.getElementById('recBass').value,pitch=document.getElementById('recPitch').value;
+document.querySelector('#recordScreen .gen-btn').disabled=true;document.getElementById('procRecLoading').classList.add('active');document.getElementById('procRecResult').style.display='none';
+try{const res=await fetch(S+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedId,echo,reverb,bass,pitch})});
+if(res.ok){const blob=await res.blob();document.getElementById('procRecAudio').src=URL.createObjectURL(blob);document.getElementById('procRecResult').style.display='block';}
+}catch(e){alert('Error: '+e.message);}
+document.querySelector('#recordScreen .gen-btn').disabled=false;document.getElementById('procRecLoading').classList.remove('active');}
+
+function dlProcessed(){if(!uploadedId)return;const reverb=document.getElementById('recReverb').value,echo=document.getElementById('recEcho').value,bass=document.getElementById('recBass').value,pitch=document.getElementById('recPitch').value;
+fetch(S+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedId,echo,reverb,bass,pitch,download:true})}).then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='zenmix_voz_editada.mp3';a.click();});}
+
+// PWA
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
