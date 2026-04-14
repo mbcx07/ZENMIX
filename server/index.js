@@ -8,21 +8,17 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// ─── Multer for voice recording uploads ─────────────────────
-const upload = multer({
-  dest: '/tmp/zenmix_uploads/',
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
-});
+const upload = multer({ dest: '/tmp/zenmix_uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-// ─── Hypnosis Scripts ────────────────────────────────────────
+// ─── Extended Hypnosis Scripts (Progressive Induction) ───────
 const scripts = {
-  insomnio: `Respira... profundamente... Siente cómo el aire... entra por tu nariz... lentamente... y sale... suavemente por tu boca... Con cada respiración... tu cuerpo se relaja... más y más... Siente cómo tus pies... se hunden en la cama... tus piernas... se vuelven pesadas... tu abdomen... se relaja completamente... tus brazos... descansan pesadamente... tu cuello... se suaviza... y tu mente... se aquieta... Eres paz... eres tranquilidad... eres sueño... Deja que el sueño... te abrace... te envuelva... te lleve... a un lugar de descanso profundo... Mañana despertarás... renovado... lleno de energía... listo para un nuevo día... Ahora... simplemente... duerme... duerme... duerme...`,
-  ansiedad: `Cierra los ojos un momento... Respira profundo... Cuenta hasta cuatro... mientras inhalas... uno... dos... tres... cuatro... Sostén el aire... y ahora... suéltalo lentamente... Siente cómo con cada exhalación... la ansiedad sale de tu cuerpo... como humo que se disipa... Tu mente está en calma... tu corazón late suave... Eres fuerte... eres capaz... La ansiedad es solo temporal... viene y va... como las nubes en el cielo... Tú eres el cielo... inmenso... sereno... en paz...`,
-  migrania: `Relaja tu cuerpo completamente... Imagina una luz azul suave... que entra por la parte superior de tu cabeza... Esta luz azul es fresca... calmante... curativa... Fluye por tu cabeza... por tu frente... por tus sienes... deshaciendo la tensión... liberando el dolor... Siente cómo la frescura... alivia cada célula... El dolor se va haciendo más pequeño... más pequeño... hasta desaparecer... Tu cabeza está libre... ligera... en paz...`,
-  autoestima: `Respira profundamente... Y con cada respiración... siéntete más seguro... más fuerte... más capaz... Tú vales... tú importas... tú eres suficiente... tal como eres... Imagina una luz dorada... que te envuelve... esta luz es tu poder interior... tu confianza... tu valor... Cada día te vuelves más seguro... más decidido... más auténtico... No necesitas la aprobación de otros... tú te apruebas... tú te aceptas... tú te amas...`,
-  'dejar-fumar': `Respira profundo... Siente cómo tus pulmones se llenan... de aire puro... aire limpio... aire fresco... Ya no necesitas el cigarro... tu cuerpo está libre... tu mente está libre... Cada vez que piensas en fumar... sientes rechazo... el olor te molesta... el sabor te desagrada... Eres libre del tabaco... libre de la nicotina... libre de la esclavitud del cigarro...`,
-  peso: `Respira suavemente... y siéntete en control... Tú decides qué comes... cuánto comes... cuándo comes... Tu cuerpo es sabio... te dice cuando tiene hambre de verdad... y cuando es solo un antojo... Escucha a tu cuerpo... respétalo... ámalo... Comes para vivir... no vives para comer... Eres dueño de tus decisiones... de tu cuerpo... de tu salud...`,
-  focus: `Respira profundo... Tu mente es como un rayo láser... enfocada... precisa... poderosa... Cuando te concentras... nada te distrae... nada te detiene... Tu cerebro trabaja con claridad... con velocidad... con precisión... Cada pensamiento es nítido... cada decisión es correcta... cada acción es efectiva... Estás en flujo... en la zona... en tu mejor estado...`
+  insomnio: `Ahora... respira profundamente... Siente cómo el aire entra por tu nariz... lentamente... llenando tus pulmones... y luego... suéltalo suavemente... por la boca... Una vez más... inhala... y exhala... Con cada respiración... tu cuerpo se vuelve más pesado... más relajado... Siente cómo tus pies... se hunden en la cama... como si flotaras en agua tibia... La relajación sube por tus tobillos... tus pantorrillas... tus rodillas... como una ola cálida que recorre tu cuerpo... Tus muslos se relajan... tu abdomen se suaviza... siente cómo la tensión se derrite... como cera de vela... Tu espalda descansa contra la cama... tus hombros caen suavemente... el cuello se suelta... Y ahora... deja que tu mente descienda... como una pluma que cae... suavemente... lentamente... en un lugar de paz profunda... Estás bajando... un escalón... más profundo... dos escalones... más relajado... tres escalones... en el lugar más tranquilo de tu mente... Aquí... solo existe la paz... el silencio... la calma... Eres sueño... eres descanso... eres renovación... Deja que las imágenes del día se desvanezcan... como niebla que se levanta... Tu mente está vacía... serena... abierta al descanso... Y ahora... simplemente... duerme... duerme... duerme... Mañana despertarás renovado... lleno de energía... con una sonrisa en el alma... Duermes... profundamente... en paz...`,
+  ansiedad: `Cierra los ojos... respira profundamente... Siente cómo el aire fresco entra... y el aire caliente sale... Llevando consigo... toda la tensión... todo el estrés... como hojas que el viento se lleva... Cuenta mentalmente... inhala en uno... sostén en dos... exhala en tres... Uno... dos... tres... Siente cómo tu corazón se calma... su ritmo se vuelve suave... constante... como las olas del mar... que van y vienen... sin prisa... sin pausa... La ansiedad es como una nube... que pasa por el cielo de tu mente... Tú eres el cielo... inmenso... sereno... eterno... Las nubes vienen y van... pero el cielo permanece... en calma... en paz... Ahora imagina una luz azul... que envuelve todo tu cuerpo... Esta luz es protección... es seguridad... es calma... Fluye por tu pecho... disolviendo el nudo... por tu estómago... relajando el vacío... por tu garganta... soltando las palabras no dichas... Eres fuerte... eres capaz... eres suficiente... Todo está bien... en este momento... todo está bien... Repite internamente... estoy en calma... estoy seguro... estoy en paz...`,
+  migrania: `Respira suavemente... y con cada exhalación... imagina que el dolor... se hace más pequeño... más pequeño... como un globo que se desinfla lentamente... Ahora... visualiza una luz azul brillante... que entra por la parte superior de tu cabeza... Esta luz es fresca... como agua de manantial... como brisa de montaña... Fluye por tu frente... y siente cómo la presión se alivia... Por tus sienes... y la pulsación se suaviza... Por detrás de tus ojos... y la tensión se libera... La luz azul recorre tu cabeza entera... como un casco fresco y protector... Cada célula... cada fibra... se baña en esta luz curativa... El dolor se reduce... se reduce... hasta que es solo un recuerdo lejano... Tu cabeza está libre... ligera... fresca... como si la hubieras sumergido en agua fresca... Y ahora... la luz azul se convierte en dorada... y llena tu cuerpo de energía renovada... de vitalidad... de bienestar...`,
+  autoestima: `Respira profundamente... y con cada respiración... siéntete más grande... más fuerte... más presente... Imagina que frente a ti... aparece un espejo... y en ese espejo... ves la mejor versión de ti mismo... esa versión que ya existe dentro... esperando ser reconocida... Mírate a los ojos... y dite... tú vales... tú importas... tú eres suficiente... exactamente como eres... Siente cómo esas palabras... resuenan en tu pecho... como un eco que se multiplica... cada vez más fuerte... más verdadero... Ahora... imagina una luz dorada... que emana de tu corazón... Esta luz es tu poder interior... tu confianza... tu valor... Se expande... te envuelve... te transforma... Eres decidido... eres auténtico... eres libre... No necesitas la aprobación de nadie... tú te apruebas... tú te aceptas... tú te amas... profundamente... sin condiciones... Cada día... te vuelves más seguro... más valiente... más tú...`,
+  'dejar-fumar': `Respira profundo... y siente cómo tus pulmones se llenan... de aire puro... aire limpio... aire que te da vida... Ahora... imagina el humo del cigarro... como una cadena gris... que te mantiene atado... Pero mira tus manos... son libres... son tuyas... Y ahora... rompes esa cadena... con facilidad... con decisión... Siente la libertad... de respirar sin peso... sin ataduras... Cada vez que piensas en fumar... tu mente automáticamente... se enfoca en algo más... en algo mejor... El olor del cigarro... te resulta desagradable... El sabor... te desagrada... Tu cuerpo lo rechaza... como rechaza el veneno... Eres libre... libre del tabaco... libre de la nicotina... libre de la esclavitud... Eres dueño de tu respiración... dueño de tu salud... dueño de tu vida... Y cada día que pasa... te sientes más libre... más limpio... más vivo...`,
+  peso: `Respira suavemente... y siéntete en control... Totalmente en control... Tú decides... qué entra a tu cuerpo... cuándo... y cuánto... Tu cuerpo es sabio... escúchalo... Cuando tiene hambre de verdad... te lo dice claramente... Cuando es solo un antojo... es solo una emoción disfrazada... Y tú... puedes distinguir la diferencia... fácilmente... Naturalmente... Imagina que frente a ti... hay dos caminos... Uno... es el de los hábitos que ya no te sirven... El otro... es el de la salud... la energía... la vida plena... Eliges el segundo... sin dudar... con convicción... Comes para nutrirte... para vivir... para brillar... Tu cuerpo es tu templo... y lo tratas con amor... con respeto... con cuidado... Cada decisión alimenticia... es un acto de amor propio...`,
+  focus: `Respira profundo... y siente cómo tu mente se aquieta... como un lago que se calma... cuando cesa el viento... Ahora... imagina un rayo de luz... concentrado... preciso... poderoso... Ese rayo es tu atención... tu enfoque... tu mente en su máximo potencial... Cuando decides concentrarte... nada te distrae... nada te detiene... Tu cerebro trabaja con claridad cristalina... cada pensamiento es nítido... cada decisión es acertada... Ruido... distracciones... interrupciones... todo se desvanece... como estática de radio que apagas... Estás en la zona... en flujo... en tu mejor estado... Y cada vez que necesitas concentrarte... simplemente respiras... y ese rayo de luz se enciende... automáticamente... sin esfuerzo... Eres precisión... eres enfoque... eres poder mental...`
 };
 
 // ─── All Spanish voices ──────────────────────────────────────
@@ -44,30 +40,23 @@ const allVoices = [
   {id:'es-US-PalomaNeural',name:'Paloma',lang:'EE.UU.',gender:'Femenino',deep:false},
 ];
 
-app.get('/api/voices', (req, res) => res.json(allVoices));
+// ─── Effect Presets ──────────────────────────────────────────
+const presets = {
+  estudio: {reverb:50,echo:10,bass:30,name:'Estudio'},
+  cueva: {reverb:80,echo:40,bass:60,name:'Cueva'},
+  bosque: {reverb:30,echo:5,bass:20,name:'Bosque'},
+  radio: {reverb:15,echo:0,bass:10,name:'Radio'},
+};
 
-// ─── Studio-quality audio processing chain ──────────────────
-// Uses: EQ → Compressor → Reverb → Echo → Loudness normalize
-// Returns an array of individual filter strings (NOT comma-joined)
+app.get('/api/voices', (req, res) => res.json(allVoices));
+app.get('/api/presets', (req, res) => res.json(presets));
+
+// ─── Build audio filter array ───────────────────────────────
 function buildAudioFilter(opts = {}) {
-  const {
-    echo = 0,
-    reverb = 50,
-    bassBoost = 30,
-    deEss = true,
-    warm = true,
-    normalize = true
-  } = opts;
-  
+  const {echo=0,reverb=50,bassBoost=30,deEss=true,warm=true,normalize=true,fadeIn=0,fadeOut=0} = opts;
   const filters = [];
-  
-  // 1. Clean up rumble and harshness
-  if (deEss) {
-    filters.push('highpass=f=80');
-    filters.push('lowpass=f=12000');
-  }
-  
-  // 2. Warm EQ: boost low-mids, cut nasal frequencies
+
+  if (deEss) { filters.push('highpass=f=80'); filters.push('lowpass=f=12000'); }
   if (warm) {
     filters.push('equalizer=f=150:t=q:w=1.5:g=3');
     filters.push('equalizer=f=300:t=q:w=1.5:g=2');
@@ -75,416 +64,349 @@ function buildAudioFilter(opts = {}) {
     filters.push('equalizer=f=5000:t=q:w=2:g=-3');
     filters.push('equalizer=f=8000:t=q:w=2:g=-4');
   }
-  
-  // 3. Bass boost for deep voice effect
   if (bassBoost > 0) {
-    const bassGain = 1 + (bassBoost / 100) * 5;
-    filters.push('equalizer=f=80:t=q:w=2:g=' + bassGain.toFixed(1));
-    filters.push('equalizer=f=120:t=q:w=2:g=' + (bassGain * 0.7).toFixed(1));
+    const g = (1 + (bassBoost/100)*5).toFixed(1);
+    filters.push('equalizer=f=80:t=q:w=2:g='+g);
+    filters.push('equalizer=f=120:t=q:w=2:g='+(g*0.7).toFixed(1));
   }
-  
-  // 4. Compressor: even out volume, add warmth
   filters.push('compand=0.3|0.3:1|1:-90/-60|-60/-40|-40/-30|-20/-20:6:0:-90:0.1');
-  
-  // 5. Reverb: multi-tap studio reverb using multiple aecho calls
+
   if (reverb > 0) {
-    const rv = reverb / 100;
-    // Short room reflections
-    const r1 = Math.round(18 + rv * 30);
-    const d1 = (0.25 + rv * 0.45).toFixed(2);
-    filters.push('aecho=0.8:0.88:' + r1 + ':' + d1);
-    // Medium reflections
-    const r2 = Math.round(35 + rv * 60);
-    const d2 = (0.2 + rv * 0.35).toFixed(2);
-    filters.push('aecho=0.7:0.85:' + r2 + ':' + d2);
-    // Long tail
-    const r3 = Math.round(60 + rv * 100);
-    const d3 = (0.15 + rv * 0.25).toFixed(2);
-    filters.push('aecho=0.6:0.82:' + r3 + ':' + d3);
+    const rv = reverb/100;
+    filters.push('aecho=0.8:0.88:'+(18+Math.round(rv*30))+':'+(0.25+rv*0.45).toFixed(2));
+    filters.push('aecho=0.7:0.85:'+(35+Math.round(rv*60))+':'+(0.2+rv*0.35).toFixed(2));
+    filters.push('aecho=0.6:0.82:'+(60+Math.round(rv*100))+':'+(0.15+rv*0.25).toFixed(2));
   }
-  
-  // 6. Simple echo (separate from reverb)
   if (echo > 0) {
-    const ei = echo / 100;
-    const eDecay = (0.3 + ei * 0.4).toFixed(2);
-    const eDelay = 150 + Math.round(ei * 250);
-    const eRet = (parseFloat(eDecay) + 0.1).toFixed(2);
-    filters.push('aecho=' + eDecay + ':' + eRet + ':' + eDelay + ':' + (ei * 0.5).toFixed(2));
+    const ei = echo/100;
+    const d = (0.3+ei*0.4).toFixed(2);
+    filters.push('aecho='+d+':'+(parseFloat(d)+0.1).toFixed(2)+':'+(150+Math.round(ei*250))+':'+(ei*0.5).toFixed(2));
   }
-  
-  // 7. Loudness normalization (EBU R128)
-  if (normalize) {
-    filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
-  }
-  
+
+  if (fadeIn > 0) filters.push('afade=t=in:d='+fadeIn);
+  if (fadeOut > 0) filters.push('afade=t=out:d='+fadeOut);
+
+  if (normalize) filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
   return filters;
 }
 
-// ─── Run ffmpeg with audio filter chain ──────────────────────
-function processAudio(inputFile, outputFile, filterArray) {
-  // filterArray is an array of individual filter strings
-  // Join with commas — this avoids the pipe parsing issue with execFile
-  const audioFilter = Array.isArray(filterArray) ? filterArray.join(',') : filterArray;
-  
+// ─── Run ffmpeg via spawn ────────────────────────────────────
+function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
-    const args = ['-y', '-i', inputFile, '-af', audioFilter, '-ar', '44100', '-ac', '2', '-b:a', '192k', outputFile];
-    const proc = spawn('ffmpeg', args, { timeout: 120000 });
+    const proc = spawn('ffmpeg', args, {timeout:120000});
     let stderr = '';
     proc.stderr.on('data', d => stderr += d.toString());
     proc.on('close', code => {
-      if (code !== 0) {
-        reject(new Error('ffmpeg exit code ' + code + ': ' + stderr.slice(-200)));
-        return;
-      }
-      if (fs.existsSync(outputFile) && fs.statSync(outputFile).size > 0) {
-        resolve(outputFile);
-      } else {
-        reject(new Error('Output file empty or missing'));
-      }
+      if (code !== 0) reject(new Error('ffmpeg exit '+code+': '+stderr.slice(-300)));
+      else resolve();
     });
     proc.on('error', reject);
   });
 }
 
-// ─── Generate hypnosis audio with studio processing ─────────
+function processAudio(inputFile, outputFile, filterArray) {
+  const af = Array.isArray(filterArray) ? filterArray.join(',') : filterArray;
+  return runFfmpeg(['-y','-i',inputFile,'-af',af,'-ar','44100','-ac','2','-b:a','192k',outputFile]);
+}
+
+function getDuration(filePath) {
+  return new Promise(resolve => {
+    execFile('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',filePath],{timeout:10000},(err,stdout)=>{
+      resolve(err ? 60 : parseFloat(stdout.trim()) || 60);
+    });
+  });
+}
+
+// ─── Generate binaural WAV ───────────────────────────────────
+function generateBinauralWav(type, duration, filePath) {
+  const freqs = {delta:{base:100,beat:2},theta:{base:150,beat:6},alpha:{base:200,beat:10},sigma:{base:200,beat:14},gamma:{base:200,beat:40},beta:{base:250,beat:20}};
+  const f = freqs[type] || freqs.theta;
+  const sr = 44100, n = duration * sr;
+  const buf = Buffer.alloc(44 + n * 4);
+  buf.write('RIFF',0); buf.writeUInt32LE(36+n*4,4); buf.write('WAVE',8);
+  buf.write('fmt ',12); buf.writeUInt32LE(16,16); buf.writeUInt16LE(1,20);
+  buf.writeUInt16LE(2,22); buf.writeUInt32LE(sr,24); buf.writeUInt32LE(sr*4,28);
+  buf.writeUInt16LE(4,32); buf.writeUInt16LE(16,34);
+  buf.write('data',36); buf.writeUInt32LE(n*4,40);
+  for(let i=0;i<n;i++){
+    const t=i/sr, fi=Math.min(1,i/(sr*3)), fo=Math.min(1,(n-i)/(sr*3)), v=0.25*fi*fo;
+    const L=(Math.sin(2*Math.PI*f.base*t)*0.6+Math.sin(2*Math.PI*f.base*2*t)*0.25+Math.sin(2*Math.PI*f.base*0.5*t)*0.05)*v;
+    const R=(Math.sin(2*Math.PI*(f.base+f.beat)*t)*0.6+Math.sin(2*Math.PI*(f.base+f.beat)*2*t)*0.25+Math.sin(2*Math.PI*(f.base+f.beat)*0.5*t)*0.05)*v;
+    const off=44+i*4;
+    buf.writeInt16LE(Math.round(Math.max(-1,Math.min(1,L))*32767),off);
+    buf.writeInt16LE(Math.round(Math.max(-1,Math.min(1,R))*32767),off+2);
+  }
+  fs.writeFileSync(filePath, buf);
+}
+
+// ─── Generate ambient sound WAV ──────────────────────────────
+function generateAmbientWav(type, duration, filePath) {
+  const sr = 44100, n = duration * sr;
+  const buf = Buffer.alloc(44 + n * 4);
+  buf.write('RIFF',0); buf.writeUInt32LE(36+n*4,4); buf.write('WAVE',8);
+  buf.write('fmt ',12); buf.writeUInt32LE(16,16); buf.writeUInt16LE(1,20);
+  buf.writeUInt16LE(2,22); buf.writeUInt32LE(sr,24); buf.writeUInt32LE(sr*4,28);
+  buf.writeUInt16LE(4,32); buf.writeUInt16LE(16,34);
+  buf.write('data',36); buf.writeUInt32LE(n*4,40);
+
+  // Use deterministic seed for reproducibility
+  let seed = type.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  function rand(){seed=(seed*16807+0)%2147483647;return(seed&0x7fffffff)/2147483647;}
+
+  for(let i=0;i<n;i++){
+    const t=i/sr;
+    const fi=Math.min(1,i/(sr*2)),fo=Math.min(1,(n-i)/(sr*2));
+    const vol=0.15*fi*fo;
+    let sL=0,sR=0;
+    if(type==='rain'){
+      // White noise filtered - rain sound
+      const noise=(rand()-0.5)*2;
+      const lfo=Math.sin(2*Math.PI*0.3*t)*0.3+0.7;
+      sL=noise*vol*lfo; sR=noise*vol*(1.3-lfo);
+    }else if(type==='ocean'){
+      // Ocean waves with slow LFO
+      const noise=(rand()-0.5)*2;
+      const wave=Math.sin(2*Math.PI*0.08*t)*0.5+0.5;
+      const swell=Math.sin(2*Math.PI*0.02*t)*0.2;
+      sL=noise*vol*(wave+swell)*0.7; sR=noise*vol*(wave+swell)*0.7;
+    }else if(type==='forest'){
+      // Forest: filtered noise + bird chirps
+      const noise=(rand()-0.5)*0.5;
+      const chirp=Math.sin(2*Math.PI*(2000+Math.sin(2*Math.PI*6*t)*500)*t)*(rand()>0.997?1:0);
+      sL=(noise+chirp)*vol; sR=(noise+chirp*0.8)*vol;
+    }else if(type==='fire'){
+      // Fire crackle
+      const noise=(rand()-0.5)*2;
+      const crackle=rand()>0.998?Math.sin(2*Math.PI*800*t)*0.5:0;
+      const base=Math.sin(2*Math.PI*80*t)*0.05;
+      sL=(noise*0.3+crackle+base)*vol; sR=(noise*0.3+crackle*0.8+base)*vol;
+    }else if(type==='wind'){
+      // Wind: slowly modulated noise
+      const noise=(rand()-0.5)*2;
+      const windLfo=Math.sin(2*Math.PI*0.05*t)*0.4+0.6;
+      sL=noise*vol*windLfo; sR=noise*vol*(1.4-windLfo);
+    }else if(type==='pad'){
+      // Ambient pad: slow sine waves
+      sL=(Math.sin(2*Math.PI*110*t)*0.4+Math.sin(2*Math.PI*165*t)*0.3+Math.sin(2*Math.PI*55*t)*0.3)*vol;
+      sR=(Math.sin(2*Math.PI*111*t)*0.4+Math.sin(2*Math.PI*166*t)*0.3+Math.sin(2*Math.PI*55.5*t)*0.3)*vol;
+    }
+    const off=44+i*4;
+    buf.writeInt16LE(Math.round(Math.max(-1,Math.min(1,sL))*32767),off);
+    buf.writeInt16LE(Math.round(Math.max(-1,Math.min(1,sR))*32767),off+2);
+  }
+  fs.writeFileSync(filePath, buf);
+}
+
+// ─── API: Voices ─────────────────────────────────────────────
+app.get('/api/voices', (req, res) => res.json(allVoices));
+
+// ─── API: Presets ────────────────────────────────────────────
+app.get('/api/presets', (req, res) => res.json(presets));
+
+// ─── API: Hypnosis audio with studio processing ─────────────
 app.get('/api/hypnosis/:session', async (req, res) => {
   try {
     const session = req.params.session;
     const text = scripts[session];
-    if (!text) return res.status(404).json({ error: 'Sesión no encontrada' });
-    
-    const voice = req.query.voice || 'es-ES-AlvaroNeural';
-    const rate = req.query.rate || '-40%';
-    const pitch = req.query.pitch || '-8Hz';
-    const echo = parseInt(req.query.echo) || 0;
-    const reverb = parseInt(req.query.reverb) || 50;
-    const bassBoost = parseInt(req.query.bass) || 30;
-    const download = req.query.download === 'true';
-    
-    const id = `hyp_${session}_${Date.now()}`;
-    const ttsFile = `/tmp/zenmix_${id}.mp3`;
-    const outFile = `/tmp/zenmix_${id}_out.mp3`;
-    
-    // Generate TTS
-    await new Promise((resolve, reject) => {
-      execFile('edge-tts', [
-        '--text', text,
-        '--voice', voice,
-        '--rate=' + rate,
-        '--pitch=' + pitch,
-        '--write-media', ttsFile
-      ], { timeout: 120000 }, (err) => {
-        if (err) reject(err); else resolve();
-      });
+    if (!text) return res.status(404).json({error:'Sesión no encontrada'});
+    const voice=req.query.voice||'es-ES-AlvaroNeural';
+    const rate=req.query.rate||'-40%';
+    const pitch=req.query.pitch||'-8Hz';
+    const echo=parseInt(req.query.echo)||0;
+    const reverb=parseInt(req.query.reverb)||50;
+    const bass=parseInt(req.query.bass)||30;
+    const download=req.query.download==='true';
+    const id='hyp_'+session+'_'+Date.now();
+    const ttsFile='/tmp/zenmix_'+id+'.mp3';
+    const outFile='/tmp/zenmix_'+id+'_out.mp3';
+
+    await new Promise((resolve,reject)=>{
+      execFile('edge-tts',['--text',text,'--voice',voice,'--rate='+rate,'--pitch='+pitch,'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());
     });
-    
-    // Apply studio processing
-    const audioFilter = buildAudioFilter({ echo, reverb, bassBoost });
-    await processAudio(ttsFile, outFile, audioFilter);
-    
-    try { fs.unlinkSync(ttsFile); } catch(e) {}
-    
-    const result = fs.readFileSync(outFile);
-    try { fs.unlinkSync(outFile); } catch(e) {}
-    
-    res.set('Content-Type', 'audio/mpeg');
-    if (download) res.set('Content-Disposition', `attachment; filename="zenmix_${session}.mp3"`);
+
+    const filters=buildAudioFilter({echo,reverb,bassBoost:bass,fadeIn:2,fadeOut:3});
+    await processAudio(ttsFile,outFile,filters);
+    try{fs.unlinkSync(ttsFile)}catch(e){}
+
+    const result=fs.readFileSync(outFile);
+    try{fs.unlinkSync(outFile)}catch(e){}
+    res.set('Content-Type','audio/mpeg');
+    if(download) res.set('Content-Disposition','attachment; filename="zenmix_'+session+'.mp3"');
     res.send(result);
-  } catch (e) {
-    console.error('Hypnosis error:', e);
-    res.status(500).json({ error: e.message });
-  }
+  } catch(e) { console.error('Hypnosis error:',e); res.status(500).json({error:e.message}); }
 });
 
-// ─── Custom TTS with studio processing ───────────────────────
+// ─── API: Custom TTS with studio processing ──────────────────
 app.post('/api/tts', async (req, res) => {
   try {
-    const { text, voice, rate, pitch, echo, reverb, bass, download } = req.body;
-    if (!text) return res.status(400).json({ error: 'No text' });
-    
-    const id = `tts_${Date.now()}`;
-    const ttsFile = `/tmp/zenmix_${id}.mp3`;
-    const outFile = `/tmp/zenmix_${id}_out.mp3`;
-    
-    await new Promise((resolve, reject) => {
-      execFile('edge-tts', [
-        '--text', text.substring(0, 5000),
-        '--voice', voice || 'es-ES-AlvaroNeural',
-        '--rate=' + (rate || '-40%'),
-        '--pitch=' + (pitch || '-8Hz'),
-        '--write-media', ttsFile
-      ], { timeout: 120000 }, (err) => {
-        if (err) reject(err); else resolve();
-      });
+    const {text,voice,rate,pitch,echo,reverb,bass,download}=req.body;
+    if(!text) return res.status(400).json({error:'No text'});
+    const id='tts_'+Date.now();
+    const ttsFile='/tmp/zenmix_'+id+'.mp3';
+    const outFile='/tmp/zenmix_'+id+'_out.mp3';
+
+    await new Promise((resolve,reject)=>{
+      execFile('edge-tts',['--text',text.substring(0,5000),'--voice',voice||'es-ES-AlvaroNeural','--rate='+(rate||'-40%'),'--pitch='+(pitch||'-8Hz'),'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());
     });
-    
-    const audioFilter = buildAudioFilter({
-      echo: parseInt(echo) || 0,
-      reverb: parseInt(reverb) || 50,
-      bassBoost: parseInt(bass) || 30
-    });
-    await processAudio(ttsFile, outFile, audioFilter);
-    
-    try { fs.unlinkSync(ttsFile); } catch(e) {}
-    
-    const result = fs.readFileSync(outFile);
-    try { fs.unlinkSync(outFile); } catch(e) {}
-    
-    res.set('Content-Type', 'audio/mpeg');
-    if (download) res.set('Content-Disposition', 'attachment; filename="zenmix_custom.mp3"');
+
+    const filters=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:2,fadeOut:3});
+    await processAudio(ttsFile,outFile,filters);
+    try{fs.unlinkSync(ttsFile)}catch(e){}
+
+    const result=fs.readFileSync(outFile);
+    try{fs.unlinkSync(outFile)}catch(e){}
+    res.set('Content-Type','audio/mpeg');
+    if(download) res.set('Content-Disposition','attachment; filename="zenmix_custom.mp3"');
     res.send(result);
-  } catch (e) {
-    console.error('TTS error:', e);
-    res.status(500).json({ error: e.message });
-  }
+  } catch(e) { console.error('TTS error:',e); res.status(500).json({error:e.message}); }
 });
 
-// ─── Upload voice recording ─────────────────────────────────
+// ─── API: Upload voice recording ─────────────────────────────
 app.post('/api/upload-voice', upload.single('audio'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No audio file' });
-  // Return the file ID for subsequent processing
-  res.json({
-    id: req.file.filename,
-    size: req.file.size,
-    originalName: req.file.originalname || 'recording.webm'
-  });
+  if(!req.file) return res.status(400).json({error:'No audio file'});
+  res.json({id:req.file.filename, size:req.file.size, originalName:req.file.originalname||'recording.webm'});
 });
 
-// ─── Process uploaded voice with effects ────────────────────
+// ─── API: List uploaded recordings ───────────────────────────
+app.get('/api/recordings', (req, res) => {
+  const dir='/tmp/zenmix_uploads';
+  if(!fs.existsSync(dir)) return res.json([]);
+  const files=fs.readdirSync(dir).filter(f=>!f.startsWith('.')).map(f=>{
+    const stat=fs.statSync(path.join(dir,f));
+    return {id:f, size:stat.size, date:stat.mtime};
+  });
+  res.json(files);
+});
+
+// ─── API: Delete recording ───────────────────────────────────
+app.delete('/api/recordings/:id', (req, res) => {
+  const f=path.join('/tmp/zenmix_uploads',req.params.id);
+  if(fs.existsSync(f)){fs.unlinkSync(f);res.json({ok:true});}
+  else res.status(404).json({error:'Not found'});
+});
+
+// ─── API: Process voice with effects ─────────────────────────
 app.post('/api/process-voice', async (req, res) => {
   try {
-    const { fileId, echo, reverb, bass, pitch, download } = req.body;
-    if (!fileId) return res.status(400).json({ error: 'No fileId' });
-    
-    const inputPath = path.join('/tmp/zenmix_uploads', fileId);
-    if (!fs.existsSync(inputPath)) return res.status(404).json({ error: 'File not found' });
-    
-    const id = `proc_${Date.now()}`;
-    const outFile = `/tmp/zenmix_${id}.mp3`;
-    
-    const filterArray = buildAudioFilter({
-      echo: parseInt(echo) || 0,
-      reverb: parseInt(reverb) || 50,
-      bassBoost: parseInt(bass) || 30,
-      normalize: true
-    });
-    
-    // Add pitch shift if requested
-    const pitchVal = parseFloat(pitch) || 0;
+    const {fileId,echo,reverb,bass,pitch,download,trimStart,trimEnd}=req.body;
+    if(!fileId) return res.status(400).json({error:'No fileId'});
+    const inputPath=path.join('/tmp/zenmix_uploads',fileId);
+    if(!fs.existsSync(inputPath)) return res.status(404).json({error:'File not found'});
+    const id='proc_'+Date.now();
+    const trimmedFile='/tmp/zenmix_'+id+'_trim.mp3';
+    const outFile='/tmp/zenmix_'+id+'.mp3';
+
+    // Trim if requested
+    let processFile=inputPath;
+    const ts=parseFloat(trimStart)||0;
+    const te=parseFloat(trimEnd)||0;
+    if(ts>0||te>0){
+      const dur=await getDuration(inputPath);
+      const endTime=te>0?te:dur;
+      await runFfmpeg(['-y','-i',inputPath,'-ss',String(ts),'-to',String(endTime),'-c','copy',trimmedFile]);
+      processFile=trimmedFile;
+    }
+
+    const filterArray=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:1,fadeOut:2});
+    const pitchVal=parseFloat(pitch)||0;
     let fullFilter;
-    if (pitchVal !== 0) {
-      const pitchFactor = Math.pow(2, pitchVal / 12);
-      const pitchFilter = 'asetrate=44100*' + pitchFactor.toFixed(4) + ',aresample=44100';
-      fullFilter = [pitchFilter, ...filterArray];
-    } else {
-      fullFilter = filterArray;
-    }
-    const audioFilterStr = fullFilter.join(',');
-    
-    await new Promise((resolve, reject) => {
-      const proc = spawn('ffmpeg', ['-y', '-i', inputPath, '-af', audioFilterStr, '-ar', '44100', '-ac', '2', '-b:a', '192k', outFile], { timeout: 120000 });
-      proc.on('close', code => { if (code !== 0) reject(new Error('ffmpeg exit ' + code)); else resolve(); });
-      proc.on('error', reject);
-    });
-    
-    if (!fs.existsSync(outFile) || fs.statSync(outFile).size === 0) {
-      return res.status(500).json({ error: 'Processing failed' });
-    }
-    
-    const result = fs.readFileSync(outFile);
-    try { fs.unlinkSync(outFile); } catch(e) {}
-    // Don't delete uploaded file yet (user might re-process)
-    
-    res.set('Content-Type', 'audio/mpeg');
-    if (download) res.set('Content-Disposition', 'attachment; filename="zenmix_voz_editada.mp3"');
+    if(pitchVal!==0){
+      const pf=Math.pow(2,pitchVal/12);
+      fullFilter=['asetrate=44100*'+pf.toFixed(4)+',aresample=44100',...filterArray];
+    }else fullFilter=filterArray;
+
+    await processAudio(processFile,outFile,fullFilter);
+    try{fs.unlinkSync(trimmedFile)}catch(e){}
+    if(!fs.existsSync(outFile)||fs.statSync(outFile).size===0) return res.status(500).json({error:'Processing failed'});
+
+    const result=fs.readFileSync(outFile);
+    try{fs.unlinkSync(outFile)}catch(e){}
+    res.set('Content-Type','audio/mpeg');
+    if(download) res.set('Content-Disposition','attachment; filename="zenmix_voz_editada.mp3"');
     res.send(result);
-  } catch (e) {
-    console.error('Process voice error:', e);
-    res.status(500).json({ error: e.message });
-  }
+  }catch(e){console.error('Process voice error:',e);res.status(500).json({error:e.message});}
 });
 
-// ─── Mix voice + binaural + ambient with timeline control ───
-app.post('/api/mix-final', upload.single('voiceAudio'), async (req, res) => {
-  try {
-    const {
-      binauralType = 'theta',
-      binauralStart = 0,        // seconds before voice
-      binauralEnd = 0,          // seconds after voice
-      ambientStart = 0,         // seconds before voice
-      ambientEnd = 0,          // seconds after voice
-      voiceVolume = 80,         // 0-100
-      binauralVolume = 40,      // 0-100
-      echo = 0,
-      reverb = 50,
-      bass = 30,
-      download = false
-    } = req.body;
-    
-    const voiceFile = req.file ? req.file.path : null;
-    if (!voiceFile) return res.status(400).json({ error: 'No voice audio' });
-    
-    const id = `mix_${Date.now()}`;
-    
-    // 1. Process voice with studio effects first
-    const processedVoice = `/tmp/zenmix_${id}_voice.mp3`;
-    const voiceFilter = buildAudioFilter({ echo: parseInt(echo), reverb: parseInt(reverb), bassBoost: parseInt(bass) });
-    await processAudio(voiceFile, processedVoice, voiceFilter);
-    
-    // Get voice duration
-    const voiceDur = await getDuration(processedVoice);
-    
-    // 2. Generate binaural WAV
-    const binauralFile = `/tmp/zenmix_${id}_binaural.wav`;
-    const totalDur = parseInt(binauralStart) + voiceDur + parseInt(binauralEnd);
-    generateBinauralWav(binauralType, totalDur, binauralFile);
-    
-    // 3. Mix voice + binaural with ffmpeg
-    const outFile = `/tmp/zenmix_${id}_final.mp3`;
-    const vv = (parseInt(voiceVolume) / 100).toFixed(2);
-    const bv = (parseInt(binauralVolume) / 100).toFixed(2);
-    
-    // Voice delayed by binauralStart seconds
-    const voiceDelay = parseInt(binauralStart);
-    
-    await new Promise((resolve, reject) => {
-      const proc = spawn('ffmpeg', [
-        '-y',
-        '-i', binauralFile,
-        '-i', processedVoice,
-        '-filter_complex',
-        '[0:a]volume=' + bv + '[bin];[1:a]adelay=' + (voiceDelay * 1000) + '|' + (voiceDelay * 1000) + ',volume=' + vv + '[vox];[bin][vox]amix=inputs=2:duration=longest',
-        '-b:a', '192k',
-        outFile
-      ], { timeout: 180000 });
-      proc.on('close', code => { if (code !== 0) reject(new Error('ffmpeg exit ' + code)); else resolve(); });
-      proc.on('error', reject);
-    });
-    
-    // Cleanup
-    try { fs.unlinkSync(processedVoice); } catch(e) {}
-    try { fs.unlinkSync(binauralFile); } catch(e) {}
-    
-    if (!fs.existsSync(outFile) || fs.statSync(outFile).size === 0) {
-      return res.status(500).json({ error: 'Mix failed' });
-    }
-    
-    const result = fs.readFileSync(outFile);
-    try { fs.unlinkSync(outFile); } catch(e) {}
-    
-    res.set('Content-Type', 'audio/mpeg');
-    if (download === 'true' || download === true) {
-      res.set('Content-Disposition', 'attachment; filename="zenmix_hipnosis_completa.mp3"');
-    }
-    res.send(result);
-  } catch (e) {
-    console.error('Mix error:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ─── Binaural beat generator (WAV file) ──────────────────────
+// ─── API: Binaural beat WAV ──────────────────────────────────
 app.get('/api/binaural/:type', (req, res) => {
-  const type = req.params.type;
-  const duration = parseInt(req.query.duration) || 300;
-  const download = req.query.download === 'true';
-  
-  const freqs = {
-    delta: { base: 100, beat: 2 },
-    theta: { base: 150, beat: 6 },
-    alpha: { base: 200, beat: 10 },
-    sigma: { base: 200, beat: 14 },
-    gamma: { base: 200, beat: 40 },
-    beta: { base: 250, beat: 20 }
-  };
-  const f = freqs[type];
-  if (!f) return res.status(404).json({ error: 'Tipo no encontrado' });
-  
-  const tmpFile = `/tmp/zenmix_bin_${type}_${Date.now()}.wav`;
-  generateBinauralWav(type, duration, tmpFile);
-  
-  const buffer = fs.readFileSync(tmpFile);
-  try { fs.unlinkSync(tmpFile); } catch(e) {}
-  
-  res.set('Content-Type', 'audio/wav');
-  if (download) res.set('Content-Disposition', `attachment; filename="zenmix_${type}_binaural.wav"`);
+  const type=req.params.type;
+  const duration=parseInt(req.query.duration)||300;
+  const download=req.query.download==='true';
+  const tmpFile='/tmp/zenmix_bin_'+type+'_'+Date.now()+'.wav';
+  generateBinauralWav(type,duration,tmpFile);
+  const buffer=fs.readFileSync(tmpFile);
+  try{fs.unlinkSync(tmpFile)}catch(e){}
+  res.set('Content-Type','audio/wav');
+  if(download) res.set('Content-Disposition','attachment; filename="zenmix_'+type+'_binaural.wav"');
   res.send(buffer);
 });
 
-function generateBinauralWav(type, duration, filePath) {
-  const freqs = {
-    delta: { base: 100, beat: 2 },
-    theta: { base: 150, beat: 6 },
-    alpha: { base: 200, beat: 10 },
-    sigma: { base: 200, beat: 14 },
-    gamma: { base: 200, beat: 40 },
-    beta: { base: 250, beat: 20 }
-  };
-  const f = freqs[type] || freqs.theta;
-  
-  const sampleRate = 44100;
-  const numSamples = duration * sampleRate;
-  const buffer = Buffer.alloc(44 + numSamples * 4);
-  
-  buffer.write('RIFF', 0);
-  buffer.writeUInt32LE(36 + numSamples * 4, 4);
-  buffer.write('WAVE', 8);
-  buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16);
-  buffer.writeUInt16LE(1, 20);
-  buffer.writeUInt16LE(2, 22);
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(sampleRate * 4, 28);
-  buffer.writeUInt16LE(4, 32);
-  buffer.writeUInt16LE(16, 34);
-  buffer.write('data', 36);
-  buffer.writeUInt32LE(numSamples * 4, 40);
-  
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const fadeIn = Math.min(1, i / (sampleRate * 3));
-    const fadeOut = Math.min(1, (numSamples - i) / (sampleRate * 3));
-    const vol = 0.25 * fadeIn * fadeOut;
-    
-    const left = (Math.sin(2 * Math.PI * f.base * t) * 0.6 +
-                  Math.sin(2 * Math.PI * f.base * 2 * t) * 0.25 +
-                  Math.sin(2 * Math.PI * f.base * 3 * t) * 0.1 +
-                  Math.sin(2 * Math.PI * f.base * 0.5 * t) * 0.05) * vol;
-    const right = (Math.sin(2 * Math.PI * (f.base + f.beat) * t) * 0.6 +
-                   Math.sin(2 * Math.PI * (f.base + f.beat) * 2 * t) * 0.25 +
-                   Math.sin(2 * Math.PI * (f.base + f.beat) * 3 * t) * 0.1 +
-                   Math.sin(2 * Math.PI * (f.base + f.beat) * 0.5 * t) * 0.05) * vol;
-    
-    const offset = 44 + i * 4;
-    buffer.writeInt16LE(Math.round(Math.max(-1, Math.min(1, left)) * 32767), offset);
-    buffer.writeInt16LE(Math.round(Math.max(-1, Math.min(1, right)) * 32767), offset + 2);
-  }
-  
-  fs.writeFileSync(filePath, buffer);
-  return filePath;
-}
-
-// ─── Get audio duration ──────────────────────────────────────
-function getDuration(filePath) {
-  return new Promise((resolve) => {
-    execFile('ffprobe', [
-      '-v', 'error',
-      '-show_entries', 'format=duration',
-      '-of', 'default=noprint_wrappers=1:nokey=1',
-      filePath
-    ], { timeout: 10000 }, (err, stdout) => {
-      if (err) { resolve(60); return; }
-      resolve(parseFloat(stdout.trim()) || 60);
-    });
-  });
-}
-
-// SPA fallback
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// ─── API: Ambient sound WAV ──────────────────────────────────
+app.get('/api/ambient/:type', (req, res) => {
+  const type=req.params.type;
+  const duration=parseInt(req.query.duration)||300;
+  const download=req.query.download==='true';
+  const tmpFile='/tmp/zenmix_amb_'+type+'_'+Date.now()+'.wav';
+  generateAmbientWav(type,duration,tmpFile);
+  const buffer=fs.readFileSync(tmpFile);
+  try{fs.unlinkSync(tmpFile)}catch(e){}
+  res.set('Content-Type','audio/wav');
+  if(download) res.set('Content-Disposition','attachment; filename="zenmix_'+type+'.wav"');
+  res.send(buffer);
 });
+
+// ─── API: Full mix (voice + binaural + ambient) ──────────────
+app.post('/api/mix-final', upload.single('voiceAudio'), async (req, res) => {
+  try {
+    const {binauralType='theta',ambientType='pad',binauralStart=10,binauralEnd=30,ambientStart=5,ambientEnd=30,voiceVolume=80,binauralVolume=40,ambientVolume=30,echo=0,reverb=50,bass=30,download=false}=req.body;
+    const voiceFile=req.file?req.file.path:null;
+    if(!voiceFile) return res.status(400).json({error:'No voice audio'});
+    const id='mix_'+Date.now();
+
+    // Process voice with studio effects
+    const processedVoice='/tmp/zenmix_'+id+'_voice.mp3';
+    const voiceFilter=buildAudioFilter({echo:parseInt(echo),reverb:parseInt(reverb),bassBoost:parseInt(bass),fadeIn:2,fadeOut:3});
+    await processAudio(voiceFile,processedVoice,voiceFilter);
+    const voiceDur=await getDuration(processedVoice);
+
+    // Generate binaural
+    const binauralFile='/tmp/zenmix_'+id+'_bin.wav';
+    const totalDur=parseInt(binauralStart)+voiceDur+parseInt(binauralEnd);
+    generateBinauralWav(binauralType,totalDur,binauralFile);
+
+    // Generate ambient
+    const ambientFile='/tmp/zenmix_'+id+'_amb.wav';
+    const ambientDur=parseInt(ambientStart)+voiceDur+parseInt(ambientEnd);
+    generateAmbientWav(ambientType,ambientDur,ambientFile);
+
+    // Mix all
+    const outFile='/tmp/zenmix_'+id+'_final.mp3';
+    const vv=(parseInt(voiceVolume)/100).toFixed(2);
+    const bv=(parseInt(binauralVolume)/100).toFixed(2);
+    const av=(parseInt(ambientVolume)/100).toFixed(2);
+    const vDelay=parseInt(binauralStart);
+    const aDelay=parseInt(ambientStart);
+
+    await runFfmpeg(['-y','-i',binauralFile,'-i',ambientFile,'-i',processedVoice,
+      '-filter_complex',
+      '[0:a]volume='+bv+'[bin];[1:a]volume='+av+'[amb];[2:a]adelay='+vDelay*1000+'|'+vDelay*1000+',volume='+vv+'[vox];[bin][amb]amix=inputs=2:duration=longest[bg];[bg][vox]amix=inputs=2:duration=longest',
+      '-b:a','192k',outFile]);
+
+    try{fs.unlinkSync(processedVoice)}catch(e){}
+    try{fs.unlinkSync(binauralFile)}catch(e){}
+    try{fs.unlinkSync(ambientFile)}catch(e){}
+
+    if(!fs.existsSync(outFile)||fs.statSync(outFile).size===0) return res.status(500).json({error:'Mix failed'});
+    const result=fs.readFileSync(outFile);
+    try{fs.unlinkSync(outFile)}catch(e){}
+    res.set('Content-Type','audio/mpeg');
+    if(download==='true'||download===true) res.set('Content-Disposition','attachment; filename="zenmix_hipnosis_completa.mp3"');
+    res.send(result);
+  }catch(e){console.error('Mix error:',e);res.status(500).json({error:e.message});}
+});
+
+// ─── SPA fallback ────────────────────────────────────────────
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
 const PORT = process.env.PORT || 3003;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🧘 ZENMIX server running on http://0.0.0.0:${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log('🧘 ZENMIX server running on http://0.0.0.0:'+PORT));
