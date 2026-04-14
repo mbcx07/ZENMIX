@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ZENMIX — Hipnosis Subliminal</title>
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { font-family:'Inter',sans-serif; background:#0a0a1a; color:#e0e0e0; height:100vh; height:100dvh; overflow-x:hidden; }
+
+        /* ─── NAV ─── */
+        .nav { display:flex; align-items:center; padding:14px 16px; background:#111; border-bottom:1px solid #222; gap:12px; }
+        .nav h1 { font-size:1.2em; color:#a78bfa; flex:1; }
+        .nav h1 span { color:#7c3aed; }
+        .tab { padding:6px 14px; border:1px solid #333; border-radius:20px; background:transparent; color:#888; font-size:0.75em; cursor:pointer; transition:all .2s; }
+        .tab.active { border-color:#a78bfa; color:#a78bfa; background:#a78bfa15; }
+
+        /* ─── HOME ─── */
+        .screen { display:none; flex-direction:column; height:calc(100vh - 52px); height:calc(100dvh - 52px); overflow-y:auto; padding:20px; gap:16px; }
+        .screen.active { display:flex; }
+        .card { background:#1a1a2e; border-radius:16px; padding:18px; cursor:pointer; transition:all .2s; border:1px solid #222; }
+        .card:hover { border-color:#a78bfa; transform:translateY(-2px); }
+        .card:active { transform:scale(0.98); }
+        .card h3 { font-size:1em; color:#fff; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+        .card p { font-size:0.8em; color:#888; line-height:1.4; }
+        .card .tag { display:inline-block; padding:2px 8px; background:#a78bfa20; color:#a78bfa; border-radius:10px; font-size:0.7em; margin-top:8px; }
+
+        /* ─── SESSION SCREEN ─── */
+        .session { padding:20px; gap:20px; align-items:center; justify-content:center; text-align:center; }
+        .session-title { font-size:1.3em; color:#fff; }
+        .session-subtitle { font-size:0.85em; color:#888; }
+        .timer { font-size:3em; color:#a78bfa; font-weight:300; }
+        .wave-circle { width:180px; height:180px; border-radius:50%; border:3px solid #a78bfa; display:flex; align-items:center; justify-content:center; font-size:4em; animation:breathe 4s ease-in-out infinite; }
+        @keyframes breathe { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.08);opacity:1} }
+        .wave-circle.playing { border-color:#7c3aed; box-shadow:0 0 30px #7c3aed40; }
+
+        .controls { display:flex; gap:16px; align-items:center; }
+        .play-btn { width:64px; height:64px; border-radius:50%; border:none; background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; font-size:1.8em; cursor:pointer; transition:all .2s; }
+        .play-btn:active { transform:scale(0.95); }
+        .stop-btn { width:50px; height:50px; border-radius:50%; border:2px solid #555; background:transparent; color:#888; font-size:1.2em; cursor:pointer; }
+
+        .volume-row { display:flex; align-items:center; gap:10px; width:100%; max-width:300px; }
+        .volume-row label { font-size:0.75em; color:#888; min-width:70px; }
+        .volume-row input[type=range] { flex:1; accent-color:#a78bfa; }
+        .volume-row span { font-size:0.7em; color:#666; min-width:30px; }
+
+        /* ─── MIXER ─── */
+        .sound-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; padding:20px; }
+        .sound-card { background:#1a1a2e; border-radius:14px; padding:14px; text-align:center; border:1px solid #222; transition:all .2s; cursor:pointer; }
+        .sound-card:hover { border-color:#a78bfa; }
+        .sound-card.active { border-color:#7c3aed; background:#7c3aed15; }
+        .sound-card .icon { font-size:2.5em; margin-bottom:8px; }
+        .sound-card .name { font-size:0.8em; color:#ccc; }
+        .sound-card input[type=range] { width:100%; margin-top:8px; accent-color:#a78bfa; }
+
+        /* ─── CUSTOM HYPNOSIS ─── */
+        .form-group { margin-bottom:14px; }
+        .form-group label { display:block; font-size:0.8em; color:#888; margin-bottom:6px; }
+        .form-group textarea, .form-group input, .form-group select { width:100%; padding:12px; border:1px solid #333; border-radius:10px; background:#1a1a2e; color:#fff; font-size:0.9em; outline:none; font-family:inherit; }
+        .form-group textarea { min-height:100px; resize:vertical; }
+        .form-group select { cursor:pointer; }
+        .gen-btn { width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; font-size:1em; font-weight:600; cursor:pointer; }
+        .gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+        .loading { display:none; align-items:center; gap:10px; color:#a78bfa; font-size:0.9em; }
+        .loading.active { display:flex; }
+        .spinner { width:20px; height:20px; border:2px solid #a78bfa30; border-top-color:#a78bfa; border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <h1>ZEN<span>MIX</span></h1>
+    <button class="tab active" id="homeTab">🏠 Inicio</button>
+    <button class="tab" id="mixerTab">🎵 Mezcla</button>
+    <button class="tab" id="customTab">✨ Crear</button>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="homeScreen">
+    <div class="card" onclick="startSession('insomnio')">
+        <h3>🌙 Insomnio</h3>
+        <p>Hipnosis para conciliar el sueño. Relajación profunda con sugestiones subliminales.</p>
+        <span class="tag">30 min</span> <span class="tag">Sueño</span>
+    </div>
+    <div class="card" onclick="startSession('ansiedad')">
+        <h3>😌 Ansiedad</h3>
+        <p>Reduce la ansiedad con respiración guiada y afirmaciones subliminales.</p>
+        <span class="tag">20 min</span> <span class="tag">Calma</span>
+    </div>
+    <div class="card" onclick="startSession('migrania')">
+        <h3>🤕 Migraña</h3>
+        <p>Alivio de migraña con frecuencias binaurales e hipnosis de alivio.</p>
+        <span class="tag">25 min</span> <span class="tag">Alivio</span>
+    </div>
+    <div class="card" onclick="startSession('autoestima')">
+        <h3>💪 Autoestima</h3>
+        <p>Refuerza tu autoestima con afirmaciones subliminales y visualización.</p>
+        <span class="tag">20 min</span> <span class="tag">Confianza</span>
+    </div>
+    <div class="card" onclick="startSession('dejar-fumar')">
+        <h3>🚭 Dejar de Fumar</h3>
+        <p>Hipnosis para liberarte del tabaco. Sugestiones de rechazo al cigarro.</p>
+        <span class="tag">25 min</span> <span class="tag">Liberación</span>
+    </div>
+    <div class="card" onclick="startSession('peso')">
+        <h3>⚖️ Control de Peso</h3>
+        <p>Hipnosis para controlar el apetito y modificar hábitos alimenticios.</p>
+        <span class="tag">20 min</span> <span class="tag">Salud</span>
+    </div>
+    <div class="card" onclick="startSession('focus')">
+        <h3>🎯 Concentración</h3>
+        <p>Frecuencias Theta + hipnosis para enfoque mental y productividad.</p>
+        <span class="tag">15 min</span> <span class="tag">Mente</span>
+    </div>
+</div>
+
+<!-- MIXER -->
+<div class="screen" id="mixerScreen">
+    <div class="sound-grid" id="soundGrid"></div>
+</div>
+
+<!-- CUSTOM HYPNOSIS -->
+<div class="screen" id="customScreen">
+    <h2 style="color:#fff; font-size:1.2em;">✨ Crear Hipnosis Personalizada</h2>
+    <div class="form-group">
+        <label>Título</label>
+        <input id="customTitle" placeholder="Ej: Confianza en entrevistas">
+    </div>
+    <div class="form-group">
+        <label>Guion de hipnosis (lo que dirá la voz)</label>
+        <textarea id="customScript" placeholder="Escribe el guion completo. La IA lo dirá con voz suave y relajante...
+
+Ejemplo: Respira profundo... Siente cómo tu cuerpo se relaja... Eres capaz de lograr todo lo que te propones..."></textarea>
+    </div>
+    <div class="form-group">
+        <label>Voz</label>
+        <select id="customVoice">
+            <option value="es-MX-DaliaNeural">Dalia (México, Femenina)</option>
+            <option value="es-MX-JorgeNeural">Jorge (México, Masculino)</option>
+            <option value="es-ES-ElviraNeural">Elvira (España, Femenina)</option>
+            <option value="es-ES-AlvaroNeural">Álvaro (España, Masculino)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Velocidad de voz</label>
+        <select id="customRate">
+            <option value="-20%">Muy lenta (hipnosis profunda)</option>
+            <option value="-10%" selected>Lenta (relajación)</option>
+            <option value="+0%">Normal</option>
+        </select>
+    </div>
+    <button class="gen-btn" id="generateBtn" onclick="generateCustom()">🎙️ Generar Audio</button>
+    <div class="loading" id="generating">
+        <div class="spinner"></div>
+        <span>Generando audio con edge-tts...</span>
+    </div>
+    <div id="customResult" style="display:none; text-align:center; margin-top:16px;">
+        <audio id="customAudio" controls style="width:100%;"></audio>
+        <p style="font-size:0.8em; color:#888; margin-top:8px;">✅ Audio generado — 100% gratis</p>
+    </div>
+</div>
+
+<!-- SESSION -->
+<div class="screen session" id="sessionScreen">
+    <h2 class="session-title" id="sessionTitle">Insomnio</h2>
+    <p class="session-subtitle" id="sessionSubtitle">Hipnosis para conciliar el sueño</p>
+    <div class="wave-circle" id="waveCircle">🌙</div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="controls">
+        <button class="stop-btn" onclick="stopSession()">⏹</button>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+    </div>
+    <div class="volume-row">
+        <label>🔊 Voz</label>
+        <input type="range" min="0" max="100" value="80" id="voiceVol">
+        <span id="voiceVolLabel">80%</span>
+    </div>
+    <div class="volume-row">
+        <label>🎵 Fondo</label>
+        <input type="range" min="0" max="100" value="40" id="bgVol">
+        <span id="bgVolLabel">40%</span>
+    </div>
+</div>
+
+<script>
+const SERVER = window.location.origin;
+let currentSession = null;
+let isPlaying = false;
+let sessionAudio = null;
+let bgAudio = null;
+let timerInterval = null;
+let seconds = 0;
+
+// ─── TABS ───
+const tabs = { homeTab:'homeScreen', mixerTab:'mixerScreen', customTab:'customScreen' };
+Object.keys(tabs).forEach(id => {
+    document.getElementById(id).onclick = () => {
+        Object.keys(tabs).forEach(t => document.getElementById(t).classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        Object.values(tabs).forEach(s => document.getElementById(s).classList.remove('active'));
+        document.getElementById(tabs[id]).classList.add('active');
+        document.getElementById('sessionScreen').classList.remove('active');
+    };
+});
+
+// ─── SOUNDS ───
+const sounds = [
+    {id:'rain',icon:'🌧️',name:'Lluvia'},
+    {id:'ocean',icon:'🌊',name:'Océano'},
+    {id:'fire',icon:'🔥',name:'Fuego'},
+    {id:'birds',icon:'🐦',name:'Pájaros'},
+    {id:'thunder',icon:'⛈️',name:'Truenos'},
+    {id:'wind',icon:'💨',name:'Viento'},
+    {id:'creek',icon:'💧',name:'Arroyo'},
+    {id:'chimes',icon:'🔔',name:'Campanas'},
+    {id:'theta',icon:'🧠',name:'Theta 6Hz'},
+    {id:'alpha',icon:'✨',name:'Alfa 10Hz'},
+    {id:'delta',icon:'😴',name:'Delta 2Hz'},
+];
+const activeSounds = {};
+
+const grid = document.getElementById('soundGrid');
+sounds.forEach(s => {
+    activeSounds[s.id] = { active:false, volume:50, audio:null };
+    const card = document.createElement('div');
+    card.className = 'sound-card';
+    card.id = 'sc-'+s.id;
+    card.innerHTML = `<div class="icon">${s.icon}</div><div class="name">${s.name}</div><input type="range" min="0" max="100" value="50">`;
+    card.querySelector('.icon').onclick = () => toggleSound(s.id);
+    card.querySelector('input').oninput = (e) => { activeSounds[s.id].volume=+e.target.value; if(activeSounds[s.id].audio) activeSounds[s.id].audio.volume=e.target.value/100; };
+    grid.appendChild(card);
+});
+
+function toggleSound(id) {
+    const s = activeSounds[id];
+    const card = document.getElementById('sc-'+id);
+    if (s.active) {
+        s.active = false;
+        card.classList.remove('active');
+        if (s.audio) { s.audio.pause(); s.audio = null; }
+    } else {
+        s.active = true;
+        card.classList.add('active');
+        // For binaural beats, generate locally
+        if (['theta','alpha','delta'].includes(id)) {
+            s.audio = createBinaural(id);
+            s.audio.volume = s.volume / 100;
+            s.audio.play();
+        }
+        // For nature sounds, we'd need actual audio files
+        // For now, placeholder - will be generated server-side
+    }
+}
+
+function createBinaural(type) {
+    const freqs = {theta:{base:200,beat:6},alpha:{base:200,beat:10},delta:{base:200,beat:2}};
+    const f = freqs[type];
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const merger = ctx.createChannelMerger(2);
+    const oscL = ctx.createOscillator();
+    const oscR = ctx.createOscillator();
+    oscL.frequency.value = f.base;
+    oscR.frequency.value = f.base + f.beat;
+    const gainL = ctx.createGain(); gainL.gain.value = 0.15;
+    const gainR = ctx.createGain(); gainR.gain.value = 0.15;
+    oscL.connect(gainL); gainL.connect(merger,0,0);
+    oscR.connect(gainR); gainR.connect(merger,0,1);
+    merger.connect(ctx.destination);
+    oscL.start(); oscR.start();
+    return { pause:()=>{ oscL.stop(); oscR.stop(); ctx.close(); }, volume:0.15, play:()=>{} };
+}
+
+// ─── SESSIONS ───
+const sessions = {
+    insomnio: { title:'Insomnio', sub:'Hipnosis para conciliar el sueño', emoji:'🌙', duration:30 },
+    ansiedad: { title:'Ansiedad', sub:'Reduce la ansiedad con respiración guiada', emoji:'😌', duration:20 },
+    migrania: { title:'Migraña', sub:'Alivio con frecuencias binaurales', emoji:'🤕', duration:25 },
+    autoestima: { title:'Autoestima', sub:'Refuerza tu confianza interior', emoji:'💪', duration:20 },
+    'dejar-fumar': { title:'Dejar de Fumar', sub:'Libérate del tabaco', emoji:'🚭', duration:25 },
+    peso: { title:'Control de Peso', sub:'Modifica tus hábitos alimenticios', emoji:'⚖️', duration:20 },
+    focus: { title:'Concentración', sub:'Enfoque mental y productividad', emoji:'🎯', duration:15 },
+};
+
+function startSession(id) {
+    const s = sessions[id];
+    if (!s) return;
+    currentSession = id;
+    document.getElementById('sessionTitle').textContent = s.title;
+    document.getElementById('sessionSubtitle').textContent = s.sub;
+    document.getElementById('waveCircle').textContent = s.emoji;
+    document.getElementById('timer').textContent = '00:00';
+    seconds = 0;
+    
+    // Hide all screens, show session
+    Object.values(tabs).forEach(t => document.getElementById(t).classList.remove('active'));
+    Object.keys(tabs).forEach(t => document.getElementById(t).classList.remove('active'));
+    document.getElementById('sessionScreen').classList.add('active');
+    
+    // Auto-play
+    togglePlay();
+}
+
+async function togglePlay() {
+    if (isPlaying) {
+        isPlaying = false;
+        document.getElementById('playBtn').textContent = '▶';
+        document.getElementById('waveCircle').classList.remove('playing');
+        if (sessionAudio) sessionAudio.pause();
+        if (bgAudio) bgAudio.pause();
+        clearInterval(timerInterval);
+        return;
+    }
+    
+    isPlaying = true;
+    document.getElementById('playBtn').textContent = '⏸';
+    document.getElementById('waveCircle').classList.add('playing');
+    timerInterval = setInterval(() => {
+        seconds++;
+        const m = Math.floor(seconds/60).toString().padStart(2,'0');
+        const ss = (seconds%60).toString().padStart(2,'0');
+        document.getElementById('timer').textContent = m+':'+ss;
+    }, 1000);
+    
+    // Generate or fetch hypnosis audio from server
+    if (!sessionAudio) {
+        try {
+            const res = await fetch(SERVER + '/api/hypnosis/' + currentSession);
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                sessionAudio = new Audio(url);
+                sessionAudio.volume = document.getElementById('voiceVol').value / 100;
+                sessionAudio.loop = true;
+                sessionAudio.play();
+            }
+        } catch(e) { console.error('Audio error:', e); }
+    } else {
+        sessionAudio.play();
+    }
+}
+
+function stopSession() {
+    isPlaying = false;
+    if (sessionAudio) { sessionAudio.pause(); sessionAudio.currentTime = 0; sessionAudio = null; }
+    if (bgAudio) { bgAudio.pause(); bgAudio = null; }
+    clearInterval(timerInterval);
+    seconds = 0;
+    document.getElementById('playBtn').textContent = '▶';
+    document.getElementById('waveCircle').classList.remove('playing');
+    document.getElementById('sessionScreen').classList.remove('active');
+    document.getElementById('homeTab').classList.add('active');
+    document.getElementById('homeScreen').classList.add('active');
+}
+
+document.getElementById('voiceVol').oninput = (e) => { 
+    document.getElementById('voiceVolLabel').textContent = e.target.value + '%'; 
+    if(sessionAudio) sessionAudio.volume = e.target.value/100; 
+};
+document.getElementById('bgVol').oninput = (e) => { 
+    document.getElementById('bgVolLabel').textContent = e.target.value + '%'; 
+    if(bgAudio) bgAudio.volume = e.target.value/100; 
+};
+
+// ─── CUSTOM HYPNOSIS ───
+async function generateCustom() {
+    const script = document.getElementById('customScript').value.trim();
+    const voice = document.getElementById('customVoice').value;
+    const rate = document.getElementById('customRate').value;
+    if (!script) { alert('Escribe un guion de hipnosis'); return; }
+    
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('generating').classList.add('active');
+    document.getElementById('customResult').style.display = 'none';
+    
+    try {
+        const res = await fetch(SERVER + '/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: script, voice, rate })
+        });
+        
+        if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const audio = document.getElementById('customAudio');
+            audio.src = url;
+            document.getElementById('customResult').style.display = 'block';
+        } else {
+            alert('Error al generar el audio');
+        }
+    } catch(e) {
+        alert('Error de conexión: ' + e.message);
+    }
+    
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generating').classList.remove('active');
+}
+</script>
+</body>
+</html>
