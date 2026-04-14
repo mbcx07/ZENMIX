@@ -1,423 +1,573 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ZENMIX — Hipnosis Subliminal</title>
-    <meta name="theme-color" content="#0a0a1a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.json">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        body { font-family:'Inter',sans-serif; background:#0a0a1a; color:#e0e0e0; height:100vh; height:100dvh; overflow-x:hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ZENMIX — Hipnosis Subliminal</title>
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:#0a0a1a;color:#e0e0e0;height:100vh;height:100dvh;overflow-x:hidden;overscroll-behavior:none}
 
-        .nav { display:flex; align-items:center; padding:14px 16px; background:#111; border-bottom:1px solid #222; gap:12px; }
-        .nav h1 { font-size:1.2em; color:#a78bfa; flex:1; }
-        .nav h1 span { color:#7c3aed; }
-        .tab { padding:6px 12px; border:1px solid #333; border-radius:20px; background:transparent; color:#888; font-size:0.72em; cursor:pointer; transition:all .2s; }
-        .tab.active { border-color:#a78bfa; color:#a78bfa; background:#a78bfa15; }
+.nav{display:flex;align-items:center;padding:12px 16px;background:#111;border-bottom:1px solid #222;gap:8px;position:sticky;top:0;z-index:100}
+.nav h1{font-size:1.1em;color:#a78bfa;flex:1}
+.nav h1 span{color:#7c3aed}
+.tab{padding:6px 10px;border:1px solid #333;border-radius:20px;background:transparent;color:#888;font-size:0.7em;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{border-color:#a78bfa;color:#a78bfa;background:#a78bfa15}
 
-        .screen { display:none; flex-direction:column; height:calc(100vh - 52px); height:calc(100dvh - 52px); overflow-y:auto; padding:16px; gap:12px; }
-        .screen.active { display:flex; }
+.screen{display:none;flex-direction:column;height:calc(100vh - 50px);height:calc(100dvh - 50px);overflow-y:auto;padding:16px;gap:12px;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
 
-        .card { background:#1a1a2e; border-radius:14px; padding:16px; cursor:pointer; border:1px solid #222; transition:all .2s; }
-        .card:hover { border-color:#a78bfa; }
-        .card:active { transform:scale(0.98); }
-        .card h3 { font-size:0.95em; color:#fff; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
-        .card p { font-size:0.78em; color:#888; line-height:1.3; }
-        .tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-        .tag { padding:2px 8px; background:#a78bfa20; color:#a78bfa; border-radius:10px; font-size:0.65em; }
+.card{background:#1a1a2e;border-radius:14px;padding:16px;cursor:pointer;border:1px solid #222;transition:all .2s}
+.card:hover{border-color:#a78bfa}
+.card:active{transform:scale(0.98)}
+.card h3{font-size:0.95em;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card p{font-size:0.78em;color:#888;line-height:1.3}
+.tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{padding:2px 8px;background:#a78bfa20;color:#a78bfa;border-radius:10px;font-size:0.65em}
 
-        /* ─── SESSION ─── */
-        .session { align-items:center; justify-content:center; text-align:center; gap:16px; }
-        .session-title { font-size:1.2em; color:#fff; }
-        .session-sub { font-size:0.8em; color:#888; }
-        .breathe { width:160px; height:160px; border-radius:50%; border:3px solid #a78bfa; display:flex; align-items:center; justify-content:center; font-size:3.5em; animation:breathe 4s ease-in-out infinite; }
-        @keyframes breathe { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.06);opacity:1} }
-        .breathe.playing { border-color:#7c3aed; box-shadow:0 0 30px #7c3aed40; }
-        .timer { font-size:2.5em; color:#a78bfa; font-weight:300; }
-        .controls { display:flex; gap:14px; align-items:center; }
-        .play-btn { width:60px; height:60px; border-radius:50%; border:none; background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; font-size:1.6em; cursor:pointer; }
-        .play-btn:active { transform:scale(0.95); }
-        .stop-btn { width:46px; height:46px; border-radius:50%; border:2px solid #555; background:transparent; color:#888; font-size:1.1em; cursor:pointer; }
+/* SESSION */
+.session{align-items:center;justify-content:center;text-align:center;gap:14px}
+.session-title{font-size:1.2em;color:#fff}
+.session-sub{font-size:0.8em;color:#888}
+.breathe{width:140px;height:140px;border-radius:50%;border:3px solid #a78bfa;display:flex;align-items:center;justify-content:center;font-size:3em;animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.06);opacity:1}}
+.breathe.playing{border-color:#7c3aed;box-shadow:0 0 30px #7c3aed40}
+.timer{font-size:2.2em;color:#a78bfa;font-weight:300}
+.controls{display:flex;gap:14px;align-items:center}
+.play-btn{width:56px;height:56px;border-radius:50%;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:1.5em;cursor:pointer}
+.play-btn:active{transform:scale(0.95)}
+.stop-btn{width:42px;height:42px;border-radius:50%;border:2px solid #555;background:transparent;color:#888;font-size:1em;cursor:pointer}
+.dl-btn{padding:10px 20px;border:1px solid #a78bfa;border-radius:10px;background:transparent;color:#a78bfa;font-size:0.8em;cursor:pointer;transition:all .2s}
+.dl-btn:hover{background:#a78bfa20}
 
-        .slider-row { display:flex; align-items:center; gap:8px; width:100%; max-width:280px; }
-        .slider-row label { font-size:0.72em; color:#888; min-width:60px; }
-        .slider-row input[type=range] { flex:1; accent-color:#a78bfa; height:4px; }
-        .slider-row span { font-size:0.7em; color:#666; min-width:28px; }
+/* CONTROLS */
+.section-title{font-size:0.8em;color:#a78bfa;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.slider-row{display:flex;align-items:center;gap:8px;width:100%}
+.slider-row label{font-size:0.72em;color:#999;min-width:70px}
+.slider-row input[type=range]{flex:1;accent-color:#a78bfa;height:4px}
+.slider-row span{font-size:0.72em;color:#666;min-width:32px;text-align:right}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.toggle-row label{font-size:0.78em;color:#ccc}
+.toggle{width:44px;height:24px;background:#333;border-radius:12px;position:relative;cursor:pointer;transition:background .2s}
+.toggle.on{background:#7c3aed}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}
+.toggle.on::after{left:22px}
 
-        /* ─── VOICE SELECT ─── */
-        .voice-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-        .voice-card { background:#1a1a2e; border-radius:12px; padding:12px; text-align:center; border:2px solid transparent; cursor:pointer; transition:all .2s; }
-        .voice-card.selected { border-color:#a78bfa; background:#a78bfa10; }
-        .voice-card .name { font-size:0.9em; color:#fff; font-weight:500; }
-        .voice-card .info { font-size:0.7em; color:#888; }
+/* VOICE GRID */
+.voice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.voice-card{background:#1a1a2e;border-radius:10px;padding:8px 4px;text-align:center;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.voice-card.selected{border-color:#a78bfa;background:#a78bfa10}
+.voice-card .name{font-size:0.8em;color:#fff;font-weight:500}
+.voice-card .info{font-size:0.6em;color:#888}
+.voice-card .deep{font-size:0.55em;color:#7c3aed}
 
-        .speed-options { display:flex; gap:8px; flex-wrap:wrap; }
-        .speed-opt { padding:8px 14px; border:1px solid #333; border-radius:20px; background:transparent; color:#888; font-size:0.75em; cursor:pointer; transition:all .2s; }
-        .speed-opt.selected { border-color:#a78bfa; color:#a78bfa; background:#a78bfa15; }
+.speed-options{display:flex;gap:6px;flex-wrap:wrap}
+.speed-opt{padding:7px 12px;border:1px solid #333;border-radius:20px;background:transparent;color:#888;font-size:0.72em;cursor:pointer;transition:all .2s}
+.speed-opt.selected{border-color:#a78bfa;color:#a78bfa;background:#a78bfa15}
 
-        .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
-        .toggle-row label { font-size:0.8em; color:#ccc; }
-        .toggle { width:44px; height:24px; background:#333; border-radius:12px; position:relative; cursor:pointer; transition:background .2s; }
-        .toggle.on { background:#7c3aed; }
-        .toggle::after { content:''; position:absolute; width:20px; height:20px; background:#fff; border-radius:50%; top:2px; left:2px; transition:left .2s; }
-        .toggle.on::after { left:22px; }
+/* BINAURAL */
+.binaural-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.binaural-card{background:#1a1a2e;border-radius:12px;padding:12px 6px;text-align:center;border:1px solid #222;cursor:pointer;transition:all .2s}
+.binaural-card:hover{border-color:#a78bfa}
+.binaural-card.active{border-color:#7c3aed;background:#7c3aed15}
+.binaural-card .icon{font-size:1.6em}
+.binaural-card .name{font-size:0.75em;color:#ccc;margin-top:2px}
+.binaural-card .freq{font-size:0.6em;color:#888}
 
-        /* ─── BINAURAL ─── */
-        .binaural-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .binaural-card { background:#1a1a2e; border-radius:14px; padding:14px; text-align:center; border:1px solid #222; cursor:pointer; transition:all .2s; }
-        .binaural-card:hover { border-color:#a78bfa; }
-        .binaural-card.active { border-color:#7c3aed; background:#7c3aed15; }
-        .binaural-card .icon { font-size:2em; margin-bottom:6px; }
-        .binaural-card .name { font-size:0.85em; color:#ccc; }
-        .binaural-card .freq { font-size:0.7em; color:#888; }
+/* RECORD */
+.rec-btn{width:80px;height:80px;border-radius:50%;border:3px solid #f44336;background:transparent;color:#f44336;font-size:2em;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.rec-btn.recording{background:#f44336;color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.rec-time{font-size:1.2em;color:#f44336;font-weight:500;margin-top:8px}
 
-        /* ─── MIXER ─── */
-        .mixer-card { background:#1a1a2e; border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; }
-        .mixer-card .icon { font-size:1.8em; }
-        .mixer-card .info { flex:1; }
-        .mixer-card .name { font-size:0.85em; color:#ccc; }
-        .mixer-card input[type=range] { width:100%; accent-color:#a78bfa; }
+/* TIMELINE */
+.timeline{background:#1a1a2e;border-radius:12px;padding:12px;margin:8px 0}
+.timeline-bar{height:30px;background:#222;border-radius:6px;position:relative;overflow:hidden;margin:8px 0}
+.timeline-voice{position:absolute;background:#a78bfa;height:100%;border-radius:4px;opacity:0.8}
+.timeline-bin{position:absolute;background:#7c3aed;height:100%;border-radius:4px;opacity:0.5}
+.timeline-ambient{position:absolute;background:#4ecdc4;height:100%;border-radius:4px;opacity:0.4}
 
-        .section-title { font-size:0.85em; color:#a78bfa; font-weight:600; margin-top:8px; }
+.gen-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:0.95em;font-weight:600;cursor:pointer}
+.gen-btn:disabled{opacity:0.5}
+.gen-btn.secondary{background:linear-gradient(135deg,#4ecdc4,#2ca59e);margin-top:8px}
+.loading{display:none;align-items:center;gap:10px;color:#a78bfa;font-size:0.85em;margin-top:10px;justify-content:center}
+.loading.active{display:flex}
+.spinner{width:18px;height:18px;border:2px solid #a78bfa30;border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-        .gen-btn { width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; font-size:0.95em; font-weight:600; cursor:pointer; }
-        .gen-btn:disabled { opacity:0.5; }
-        .loading { display:none; align-items:center; gap:10px; color:#a78bfa; font-size:0.85em; margin-top:10px; }
-        .loading.active { display:flex; }
-        .spinner { width:18px; height:18px; border:2px solid #a78bfa30; border-top-color:#a78bfa; border-radius:50%; animation:spin .8s linear infinite; }
-        @keyframes spin { to{transform:rotate(360deg)} }
-    </style>
+textarea{width:100%;padding:12px;border:1px solid #333;border-radius:10px;background:#1a1a2e;color:#fff;font-size:0.85em;outline:none;min-height:100px;resize:vertical;font-family:inherit}
+</style>
 </head>
 <body>
 
 <div class="nav">
-    <h1>ZEN<span>MIX</span></h1>
-    <button class="tab active" id="homeTab">🏠</button>
-    <button class="tab" id="mixerTab">🎵</button>
-    <button class="tab" id="customTab">✨</button>
+  <h1>ZEN<span>MIX</span></h1>
+  <button class="tab active" onclick="showTab(0)">🏠</button>
+  <button class="tab" onclick="showTab(1)">🎤</button>
+  <button class="tab" onclick="showTab(2)">✨</button>
+  <button class="tab" onclick="showTab(3)">🧠</button>
 </div>
 
 <!-- HOME -->
 <div class="screen active" id="homeScreen">
-    <div class="card" onclick="startSession('insomnio')">
-        <h3>🌙 Insomnio</h3>
-        <p>Hipnosis para conciliar el sueño. Relajación profunda con sugestiones subliminales.</p>
-        <div class="tags"><span class="tag">30 min</span><span class="tag">Sueño</span></div>
-    </div>
-    <div class="card" onclick="startSession('ansiedad')">
-        <h3>😌 Ansiedad</h3>
-        <p>Reduce la ansiedad con respiración guiada y afirmaciones subliminales.</p>
-        <div class="tags"><span class="tag">20 min</span><span class="tag">Calma</span></div>
-    </div>
-    <div class="card" onclick="startSession('migrania')">
-        <h3>🤕 Migraña</h3>
-        <p>Alivio con frecuencias binaurales e hipnosis de alivio del dolor.</p>
-        <div class="tags"><span class="tag">25 min</span><span class="tag">Alivio</span></div>
-    </div>
-    <div class="card" onclick="startSession('autoestima')">
-        <h3>💪 Autoestima</h3>
-        <p>Refuerza tu confianza con afirmaciones subliminales y visualización.</p>
-        <div class="tags"><span class="tag">20 min</span><span class="tag">Confianza</span></div>
-    </div>
-    <div class="card" onclick="startSession('dejar-fumar')">
-        <h3>🚭 Dejar de Fumar</h3>
-        <p>Hipnosis para liberarte del tabaco. Sugestiones de rechazo al cigarro.</p>
-        <div class="tags"><span class="tag">25 min</span><span class="tag">Liberación</span></div>
-    </div>
-    <div class="card" onclick="startSession('peso')">
-        <h3>⚖️ Control de Peso</h3>
-        <p>Hipnosis para controlar el apetito y modificar hábitos alimenticios.</p>
-        <div class="tags"><span class="tag">20 min</span><span class="tag">Salud</span></div>
-    </div>
-    <div class="card" onclick="startSession('focus')">
-        <h3>🎯 Concentración</h3>
-        <p>Frecuencias Theta + hipnosis para enfoque mental y productividad.</p>
-        <div class="tags"><span class="tag">15 min</span><span class="tag">Mente</span></div>
-    </div>
+  <div class="card" onclick="startSession('insomnio')"><h3>🌙 Insomnio</h3><p>Hipnosis para conciliar el sueño.</p><div class="tags"><span class="tag">30 min</span><span class="tag">Sueño</span></div></div>
+  <div class="card" onclick="startSession('ansiedad')"><h3>😌 Ansiedad</h3><p>Respira y reduce la ansiedad.</p><div class="tags"><span class="tag">20 min</span><span class="tag">Calma</span></div></div>
+  <div class="card" onclick="startSession('migrania')"><h3>🤕 Migraña</h3><p>Alivio con frecuencias binaurales.</p><div class="tags"><span class="tag">25 min</span><span class="tag">Alivio</span></div></div>
+  <div class="card" onclick="startSession('autoestima')"><h3>💪 Autoestima</h3><p>Refuerza tu confianza interior.</p><div class="tags"><span class="tag">20 min</span><span class="tag">Confianza</span></div></div>
+  <div class="card" onclick="startSession('dejar-fumar')"><h3>🚭 Dejar de Fumar</h3><p>Libérate del tabaco.</p><div class="tags"><span class="tag">25 min</span><span class="tag">Liberación</span></div></div>
+  <div class="card" onclick="startSession('peso')"><h3>⚖️ Control de Peso</h3><p>Modifica hábitos alimenticios.</p><div class="tags"><span class="tag">20 min</span><span class="tag">Salud</span></div></div>
+  <div class="card" onclick="startSession('focus')"><h3>🎯 Concentración</h3><p>Enfoque mental y productividad.</p><div class="tags"><span class="tag">15 min</span><span class="tag">Mente</span></div></div>
 </div>
 
-<!-- MIXER -->
-<div class="screen" id="mixerScreen">
-    <div class="section-title">🧠 Frecuencias Binaurales</div>
-    <div class="binaural-grid" id="binauralGrid"></div>
+<!-- RECORD & EDIT -->
+<div class="screen" id="recordScreen">
+  <div class="section-title">🎤 Grabadora de Voz</div>
+  <div style="text-align:center;padding:10px 0">
+    <button class="rec-btn" id="recBtn" onclick="toggleRecord()">🎙️</button>
+    <div class="rec-time" id="recTime">00:00</div>
+    <p style="font-size:0.7em;color:#888;margin-top:4px">Toca para grabar tu hipnosis</p>
+  </div>
+  
+  <div id="recResult" style="display:none">
+    <audio id="recAudio" controls style="width:100%;margin:8px 0"></audio>
+    <div class="section-title">🎚️ Efectos de Estudio</div>
     
-    <div class="section-title" style="margin-top:16px">🎵 Sonidos Ambientales</div>
-    <div id="soundList"></div>
+    <div class="section-title" style="margin-top:8px">🗣️ Voz</div>
+    <div class="voice-grid" id="recVoiceGrid"></div>
+    
+    <div class="section-title" style="margin-top:8px">🐌 Velocidad</div>
+    <div class="speed-options" id="recSpeedOpts">
+      <button class="speed-opt" data-rate="-50%">Muy lenta</button>
+      <button class="speed-opt selected" data-rate="-30%">Lenta</button>
+      <button class="speed-opt" data-rate="-15%">Media</button>
+      <button class="speed-opt" data-rate="+0%">Normal</button>
+    </div>
+    
+    <div class="section-title" style="margin-top:8px">🎚️ Mezcla</div>
+    <div class="slider-row"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="recReverb"><span id="recReverbVal">50%</span></div>
+    <div class="slider-row"><label>🔈 Eco</label><input type="range" min="0" max="100" value="20" id="recEcho"><span id="recEchoVal">20%</span></div>
+    <div class="slider-row"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="recBass"><span id="recBassVal">30%</span></div>
+    <div class="slider-row"><label>🎚 Tono</label><input type="range" min="-8" max="4" value="-3" id="recPitch"><span id="recPitchVal">-3</span></div>
+    
+    <button class="gen-btn" id="processRecBtn" onclick="processRecording()" style="margin-top:12px">🎚️ Aplicar Efectos</button>
+    <div class="loading" id="procRecLoading"><div class="spinner"></div><span>Procesando audio...</span></div>
+    
+    <div id="procRecResult" style="display:none;margin-top:12px">
+      <audio id="procRecAudio" controls style="width:100%"></audio>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="dl-btn" onclick="dlProcessed()" style="flex:1">⬇️ Descargar MP3</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="noRec" style="text-align:center;padding:20px;color:#555;font-size:0.85em">
+    Graba tu voz primero para editarla con efectos de estudio
+  </div>
 </div>
 
 <!-- CUSTOM -->
 <div class="screen" id="customScreen">
-    <div class="section-title">🗣️ Elige la Voz</div>
-    <div class="voice-grid" id="voiceGrid"></div>
-    
-    <div class="section-title" style="margin-top:12px">🐌 Velocidad de Voz</div>
-    <div class="speed-options" id="speedOpts">
-        <button class="speed-opt" data-rate="-50%">Muy lenta</button>
-        <button class="speed-opt selected" data-rate="-30%">Lenta</button>
-        <button class="speed-opt" data-rate="-15%">Media</button>
-        <button class="speed-opt" data-rate="+0%">Normal</button>
+  <div class="section-title">🗣️ Voz</div>
+  <div class="voice-grid" id="voiceGrid"></div>
+  
+  <div class="section-title" style="margin-top:8px">🐌 Velocidad</div>
+  <div class="speed-options" id="speedOpts">
+    <button class="speed-opt" data-rate="-50%">Muy lenta</button>
+    <button class="speed-opt selected" data-rate="-40%">Lenta</button>
+    <button class="speed-opt" data-rate="-15%">Media</button>
+    <button class="speed-opt" data-rate="+0%">Normal</button>
+  </div>
+  
+  <div class="section-title" style="margin-top:8px">🎚️ Tono (más bajo = más grave)</div>
+  <div class="slider-row"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="pitchSlider"><span id="pitchVal">-8Hz</span></div>
+  
+  <div class="section-title" style="margin-top:8px">🎚️ Efectos de Estudio</div>
+  <div class="slider-row"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="reverbSlider"><span id="reverbVal">50%</span></div>
+  <div class="slider-row"><label>🔈 Eco</label><input type="range" min="0" max="100" value="20" id="echoSlider"><span id="echoVal">20%</span></div>
+  <div class="slider-row"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="bassSlider"><span id="bassVal">30%</span></div>
+  
+  <div class="section-title" style="margin-top:8px">📝 Guion de Hipnosis</div>
+  <textarea id="customScript" placeholder="Escribe el guion completo de hipnosis... La IA lo dirá con voz suave y lenta con efectos de estudio."></textarea>
+  
+  <button class="gen-btn" id="generateBtn" onclick="generateCustom()">🎙️ Generar Audio</button>
+  <div class="loading" id="generating"><div class="spinner"></div><span>Generando con efectos de estudio...</span></div>
+  
+  <div id="customResult" style="display:none;margin-top:12px">
+    <audio id="customAudio" controls style="width:100%"></audio>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="dl-btn" onclick="dlCustom()" style="flex:1">⬇️ Descargar MP3</button>
     </div>
-    
-    <div class="toggle-row">
-        <label>🔊 Efecto Eco (reverberación hipnótica)</label>
-        <div class="toggle on" id="echoToggle" onclick="this.classList.toggle('on')"></div>
-    </div>
-    
-    <div class="section-title" style="margin-top:12px">📝 Guion de Hipnosis</div>
-    <div style="margin-bottom:8px">
-        <textarea id="customScript" style="width:100%;padding:12px;border:1px solid #333;border-radius:10px;background:#1a1a2e;color:#fff;font-size:0.9em;outline:none;min-height:120px;resize:vertical;font-family:inherit;" placeholder="Escribe el guion completo de hipnosis... La IA lo dirá con voz suave y lenta."></textarea>
-    </div>
-    
-    <button class="gen-btn" id="generateBtn" onclick="generateCustom()">🎙️ Generar Audio</button>
-    <div class="loading" id="generating">
-        <div class="spinner"></div>
-        <span>Generando audio con voz lenta y eco...</span>
-    </div>
-    <div id="customResult" style="display:none;text-align:center;margin-top:12px;">
-        <audio id="customAudio" controls style="width:100%;"></audio>
-        <p style="font-size:0.75em;color:#888;margin-top:6px;">✅ 100% gratis — edge-tts + eco</p>
-    </div>
+  </div>
+</div>
+
+<!-- BINAURAL -->
+<div class="screen" id="binauralScreen">
+  <div class="section-title">🧠 Frecuencias Binaurales</div>
+  <div class="binaural-grid" id="binauralGrid"></div>
+  
+  <div id="binauralControls" style="display:none;margin-top:12px">
+    <div class="slider-row"><label>🔊 Volumen</label><input type="range" min="0" max="100" value="30" id="binVolume"><span id="binVolVal">30%</span></div>
+    <div class="section-title" style="margin-top:8px">⏱️ Timeline</div>
+    <div style="font-size:0.75em;color:#888;margin-bottom:4px">Iniciar antes de la voz (segundos)</div>
+    <div class="slider-row"><label>Inicio</label><input type="range" min="0" max="60" value="10" id="binStart"><span id="binStartVal">10s</span></div>
+    <div style="font-size:0.75em;color:#888;margin-bottom:4px">Continuar después de la voz (segundos)</div>
+    <div class="slider-row"><label>Fin</label><input type="range" min="0" max="120" value="30" id="binEnd"><span id="binEndVal">30s</span></div>
+  </div>
+  
+  <div id="binPlaying" style="display:none;text-align:center;margin-top:16px">
+    <div class="breathe" style="width:100px;height:100px;font-size:2em;margin:0 auto" id="binCircle">🧠</div>
+    <p style="font-size:0.8em;color:#a78bfa;margin-top:8px" id="binLabel">Theta 6Hz — Meditación</p>
+    <button class="stop-btn" onclick="stopBinaural()" style="margin-top:8px;width:50px;height:50px;border-radius:50%;border:2px solid #555;background:transparent;color:#888;font-size:1.2em;cursor:pointer">⏹</button>
+  </div>
 </div>
 
 <!-- SESSION -->
 <div class="screen session" id="sessionScreen">
-    <h2 class="session-title" id="sessionTitle">Insomnio</h2>
-    <p class="session-sub" id="sessionSub">Hipnosis para conciliar el sueño</p>
-    <div class="breathe" id="breatheCircle">🌙</div>
-    <div class="timer" id="timer">00:00</div>
-    
-    <div class="section-title">🗣️ Voz</div>
-    <div class="voice-grid" id="sessionVoiceGrid"></div>
-    
-    <div class="speed-options" id="sessionSpeedOpts">
-        <button class="speed-opt" data-rate="-50%">Muy lenta</button>
-        <button class="speed-opt selected" data-rate="-30%">Lenta</button>
-        <button class="speed-opt" data-rate="-15%">Media</button>
-        <button class="speed-opt" data-rate="+0%">Normal</button>
-    </div>
-    
-    <div class="toggle-row">
-        <label>🔊 Eco hipnótico</label>
-        <div class="toggle on" id="sessionEchoToggle" onclick="this.classList.toggle('on')"></div>
-    </div>
-    
-    <div class="slider-row">
-        <label>🗣️ Voz</label>
-        <input type="range" min="0" max="100" value="80" id="voiceVol">
-        <span id="voiceVolLabel">80%</span>
-    </div>
-    <div class="slider-row">
-        <label>🎵 Fondo</label>
-        <input type="range" min="0" max="100" value="40" id="bgVol">
-        <span id="bgVolLabel">40%</span>
-    </div>
-    
-    <div class="controls">
-        <button class="stop-btn" onclick="stopSession()">⏹</button>
-        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
-    </div>
+  <h2 class="session-title" id="sessionTitle">Insomnio</h2>
+  <p class="session-sub" id="sessionSub">Hipnosis para conciliar el sueño</p>
+  <div class="breathe" id="breatheCircle">🌙</div>
+  <div class="timer" id="timer">00:00</div>
+  
+  <div class="section-title">🗣️ Voz</div>
+  <div class="voice-grid" id="sessionVoiceGrid"></div>
+  
+  <div class="section-title" style="margin-top:8px">🐌 Velocidad</div>
+  <div class="speed-options" id="sessionSpeedOpts">
+    <button class="speed-opt" data-rate="-50%">Muy lenta</button>
+    <button class="speed-opt selected" data-rate="-40%">Lenta</button>
+    <button class="speed-opt" data-rate="-15%">Media</button>
+    <button class="speed-opt" data-rate="+0%">Normal</button>
+  </div>
+  
+  <div class="section-title" style="margin-top:8px">🎚️ Tono</div>
+  <div class="slider-row"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="sessionPitch"><span id="sessionPitchVal">-8Hz</span></div>
+  
+  <div class="section-title" style="margin-top:8px">🎚️ Efectos de Estudio</div>
+  <div class="slider-row"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="sessionReverb"><span id="sessionReverbVal">50%</span></div>
+  <div class="slider-row"><label>🔈 Eco</label><input type="range" min="0" max="100" value="20" id="sessionEcho"><span id="sessionEchoVal">20%</span></div>
+  <div class="slider-row"><label>🎵 Graves</label><input type="range" min="0" max="100" value="30" id="sessionBass"><span id="sessionBassVal">30%</span></div>
+  
+  <div class="section-title" style="margin-top:8px">🧠 Binaural</div>
+  <div class="slider-row"><label>Tipo</label><select id="sessionBinType" style="flex:1;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:8px;padding:4px 8px;font-size:0.8em">
+    <option value="">Sin binaural</option>
+    <option value="delta">Delta 2Hz — Sueño</option>
+    <option value="theta" selected>Theta 6Hz — Meditación</option>
+    <option value="alpha">Alfa 10Hz — Relajación</option>
+    <option value="sigma">Sigma 14Hz — Enfoque</option>
+    <option value="gamma">Gamma 40Hz — Concentración</option>
+  </select></div>
+  <div class="slider-row"><label>🔊 Vol. Binaural</label><input type="range" min="0" max="100" value="40" id="sessionBinVol"><span id="sessionBinVolVal">40%</span></div>
+  <div class="slider-row"><label>⏱ Inicio antes</label><input type="range" min="0" max="60" value="10" id="sessionBinStart"><span id="sessionBinStartVal">10s</span></div>
+  <div class="slider-row"><label>⏱ Fin después</label><input type="range" min="0" max="120" value="30" id="sessionBinEnd"><span id="sessionBinEndVal">30s</span></div>
+  
+  <div class="controls">
+    <button class="stop-btn" onclick="stopSession()">⏹</button>
+    <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+  </div>
+  <button class="dl-btn" onclick="downloadSession()" style="margin-top:8px;width:100%">⬇️ Descargar MP3</button>
 </div>
 
 <script>
 const SERVER = window.location.origin;
-let currentSession = null;
-let isPlaying = false;
-let sessionAudio = null;
-let timerInterval = null;
-let seconds = 0;
-let selectedVoice = 'es-MX-DaliaNeural';
-let selectedRate = '-30%';
-let selectedEcho = true;
-let binauralCtx = null;
-let binauralNodes = {};
-let activeSounds = {};
+let currentSession = null, isPlaying = false, sessionAudio = null, timerInterval = null, seconds = 0;
+let selectedVoice = 'es-ES-AlvaroNeural', selectedRate = '-40%', selectedPitch = '-8Hz';
 
 const sessions = {
-    insomnio: {title:'Insomnio',sub:'Hipnosis para conciliar el sueño',emoji:'🌙'},
-    ansiedad: {title:'Ansiedad',sub:'Reduce la ansiedad',emoji:'😌'},
-    migrania: {title:'Migraña',sub:'Alivio del dolor',emoji:'🤕'},
-    autoestima: {title:'Autoestima',sub:'Confianza interior',emoji:'💪'},
-    'dejar-fumar': {title:'Dejar de Fumar',sub:'Libérate del tabaco',emoji:'🚭'},
-    peso: {title:'Control de Peso',sub:'Hábitos saludables',emoji:'⚖️'},
-    focus: {title:'Concentración',sub:'Enfoque mental',emoji:'🎯'}
+  insomnio:{title:'Insomnio',sub:'Hipnosis para conciliar el sueño',emoji:'🌙'},
+  ansiedad:{title:'Ansiedad',sub:'Reduce la ansiedad',emoji:'😌'},
+  migrania:{title:'Migraña',sub:'Alivio del dolor',emoji:'🤕'},
+  autoestima:{title:'Autoestima',sub:'Confianza interior',emoji:'💪'},
+  'dejar-fumar':{title:'Dejar de Fumar',sub:'Libérate del tabaco',emoji:'🚭'},
+  peso:{title:'Control de Peso',sub:'Hábitos saludables',emoji:'⚖️'},
+  focus:{title:'Concentración',sub:'Enfoque mental',emoji:'🎯'}
 };
 
 const voices = [
-    {id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽 México',gender:'Femenina'},
-    {id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽 México',gender:'Masculino'},
-    {id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸 España',gender:'Femenina'},
-    {id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'🇪🇸 España',gender:'Masculino'},
-    {id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸 España',gender:'Femenina'}
+  {id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'🇪🇸',gender:'M',deep:true},
+  {id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽',gender:'M',deep:true},
+  {id:'es-AR-TomasNeural',name:'Tomás',lang:'🇦🇷',gender:'M',deep:true},
+  {id:'es-CO-GonzaloNeural',name:'Gonzalo',lang:'🇨🇴',gender:'M',deep:true},
+  {id:'es-VE-SebastianNeural',name:'Sebastián',lang:'🇻🇪',gender:'M',deep:true},
+  {id:'es-CL-LorenzoNeural',name:'Lorenzo',lang:'🇨🇱',gender:'M',deep:true},
+  {id:'es-PE-AlexNeural',name:'Alex',lang:'🇵🇪',gender:'M',deep:true},
+  {id:'es-US-AlonsoNeural',name:'Alonso',lang:'🇺🇸',gender:'M',deep:true},
+  {id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽',gender:'F',deep:false},
+  {id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸',gender:'F',deep:false},
+  {id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸',gender:'F',deep:false},
+  {id:'es-AR-ElenaNeural',name:'Elena',lang:'🇦🇷',gender:'F',deep:false},
+  {id:'es-CO-SalomeNeural',name:'Salomé',lang:'🇨🇴',gender:'F',deep:false},
+  {id:'es-PE-CamilaNeural',name:'Camila',lang:'🇵🇪',gender:'F',deep:false},
+  {id:'es-US-PalomaNeural',name:'Paloma',lang:'🇺🇸',gender:'F',deep:false},
 ];
 
 const binaurals = [
-    {id:'delta',freq:2,name:'Delta 2Hz',emoji:'😴',desc:'Sueño profundo'},
-    {id:'theta',freq:6,name:'Theta 6Hz',emoji:'🧠',desc:'Meditación'},
-    {id:'alpha',freq:10,name:'Alfa 10Hz',emoji:'✨',desc:'Relajación'},
-    {id:'sigma',freq:14,name:'Sigma 14Hz',emoji:'💡',desc:'Enfoque'},
-    {id:'gamma',freq:40,name:'Gamma 40Hz',emoji:'⚡',desc:'Concentración'}
+  {id:'delta',freq:2,name:'Delta',emoji:'😴',desc:'Sueño profundo'},
+  {id:'theta',freq:6,name:'Theta',emoji:'🧠',desc:'Meditación'},
+  {id:'alpha',freq:10,name:'Alfa',emoji:'✨',desc:'Relajación'},
+  {id:'sigma',freq:14,name:'Sigma',emoji:'💡',desc:'Enfoque'},
+  {id:'gamma',freq:40,name:'Gamma',emoji:'⚡',desc:'Concentración'},
+  {id:'beta',freq:20,name:'Beta',emoji:'🔥',desc:'Activación'}
 ];
 
-const sounds = [
-    {id:'rain',icon:'🌧️',name:'Lluvia'},
-    {id:'ocean',icon:'🌊',name:'Océano'},
-    {id:'fire',icon:'🔥',name:'Fuego'},
-    {id:'birds',icon:'🐦',name:'Pájaros'},
-    {id:'thunder',icon:'⛈️',name:'Truenos'},
-    {id:'wind',icon:'💨',name:'Viento'}
-];
-
-// ─── INIT ───
-const homeTab=document.getElementById('homeTab'),mixerTab=document.getElementById('mixerTab'),customTab=document.getElementById('customTab');
-const homeScreen=document.getElementById('homeScreen'),mixerScreen=document.getElementById('mixerScreen'),customScreenEl=document.getElementById('customScreen'),sessionScreen=document.getElementById('sessionScreen');
-const tabs=[homeTab,mixerTab,customTab];
-const screens=[homeScreen,mixerScreen,customScreenEl];
-
-function showScreen(idx){tabs.forEach(t=>t.classList.remove('active'));screens.forEach(s=>s.classList.remove('active'));tabs[idx].classList.add('active');screens[idx].classList.add('active');sessionScreen.classList.remove('active');}
-homeTab.onclick=()=>showScreen(0);
-mixerTab.onclick=()=>showScreen(1);
-customTab.onclick=()=>showScreen(2);
-
-// ─── VOICE GRID ───
-function renderVoices(containerId,interactive){
-    const c=document.getElementById(containerId);
-    c.innerHTML='';
-    voices.forEach(v=>{
-        const d=document.createElement('div');
-        d.className='voice-card'+(selectedVoice===v.id?' selected':'');
-        d.innerHTML=`<div class="name">${v.name}</div><div class="info">${v.lang} · ${v.gender}</div>`;
-        if(interactive) d.onclick=()=>{selectedVoice=v.id;renderVoices(containerId,interactive);};
-        c.appendChild(d);
-    });
+// ─── TABS ───
+function showTab(idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  ['homeScreen','recordScreen','customScreen','binauralScreen'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('active',i===idx);
+  });
+  document.getElementById('sessionScreen').classList.remove('active');
 }
-renderVoices('voiceGrid',true);
-renderVoices('sessionVoiceGrid',true);
+
+// ─── VOICES ───
+function renderVoices(cid){
+  const c=document.getElementById(cid);c.innerHTML='';
+  voices.forEach(v=>{
+    const d=document.createElement('div');d.className='voice-card'+(selectedVoice===v.id?' selected':'');
+    d.innerHTML=`<div class="name">${v.name}</div><div class="info">${v.lang} ${v.gender}</div>${v.deep?'<div class="deep">🎙️ Grave</div>':''}`;
+    d.onclick=()=>{selectedVoice=v.id;['voiceGrid','sessionVoiceGrid','recVoiceGrid'].forEach(renderVoices);};
+    c.appendChild(d);
+  });
+}
+['voiceGrid','sessionVoiceGrid','recVoiceGrid'].forEach(renderVoices);
 
 // ─── SPEED ───
-function renderSpeed(containerId){
-    const c=document.getElementById(containerId);
-    c.querySelectorAll('.speed-opt').forEach(btn=>{
-        btn.onclick=()=>{
-            c.querySelectorAll('.speed-opt').forEach(b=>b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedRate=btn.dataset.rate;
-        };
-    });
+function initSpeed(cid){
+  const c=document.getElementById(cid);
+  c.querySelectorAll('.speed-opt').forEach(btn=>{
+    btn.onclick=()=>{c.querySelectorAll('.speed-opt').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedRate=btn.dataset.rate;};
+  });
 }
-renderSpeed('speedOpts');
-renderSpeed('sessionSpeedOpts');
+['speedOpts','sessionSpeedOpts','recSpeedOpts'].forEach(initSpeed);
 
-// ─── BINAURAL ───
+// ─── SLIDERS ───
+function wireSlider(sid,lid,valFmt){
+  const s=document.getElementById(sid),l=document.getElementById(lid);
+  if(!s||!l)return;
+  s.oninput=()=>{l.textContent=valFmt(s.value);};
+}
+wireSlider('reverbSlider','reverbVal',v=>v+'%');
+wireSlider('echoSlider','echoVal',v=>v+'%');
+wireSlider('bassSlider','bassVal',v=>v+'%');
+wireSlider('pitchSlider','pitchVal',v=>v+'Hz');
+wireSlider('sessionReverb','sessionReverbVal',v=>v+'%');
+wireSlider('sessionEcho','sessionEchoVal',v=>v+'%');
+wireSlider('sessionBass','sessionBassVal',v=>v+'%');
+wireSlider('sessionPitch','sessionPitchVal',v=>v+'Hz');
+wireSlider('sessionBinVol','sessionBinVolVal',v=>v+'%');
+wireSlider('sessionBinStart','sessionBinStartVal',v=>v+'s');
+wireSlider('sessionBinEnd','sessionBinEndVal',v=>v+'s');
+wireSlider('recReverb','recReverbVal',v=>v+'%');
+wireSlider('recEcho','recEchoVal',v=>v+'%');
+wireSlider('recBass','recBassVal',v=>v+'%');
+wireSlider('recPitch','recPitchVal',v=>v);
+wireSlider('binVolume','binVolVal',v=>v+'%');
+wireSlider('binStart','binStartVal',v=>v+'s');
+wireSlider('binEnd','binEndVal',v=>v+'s');
+
+// ─── BINAURAL PLAYER ───
+let binauralCtx=null, binauralOsc=null, binauralGain=null, activeBinaural=null;
 const bg=document.getElementById('binauralGrid');
 binaurals.forEach(b=>{
-    const d=document.createElement('div');
-    d.className='binaural-card';
-    d.id='bin-'+b.id;
-    d.innerHTML=`<div class="icon">${b.emoji}</div><div class="name">${b.name}</div><div class="freq">${b.desc}</div>`;
-    d.onclick=()=>toggleBinaural(b.id,d);
-    bg.appendChild(d);
+  const d=document.createElement('div');d.className='binaural-card';d.id='bin-'+b.id;
+  d.innerHTML=`<div class="icon">${b.emoji}</div><div class="name">${b.name}</div><div class="freq">${b.desc}</div>`;
+  d.onclick=()=>toggleBinaural(b.id,d);
+  bg.appendChild(d);
 });
 
 function toggleBinaural(id,el){
-    if(binauralNodes[id]){
-        binauralNodes[id].oscL.stop();binauralNodes[id].oscR.stop();
-        binauralNodes[id].ctx.close();
-        delete binauralNodes[id];
-        el.classList.remove('active');
-    } else {
-        const b=binaurals.find(x=>x.id===id);
-        const ctx=new(window.AudioContext||window.webkitAudioContext)();
-        const merger=ctx.createChannelMerger(2);
-        const oscL=ctx.createOscillator(),oscR=ctx.createOscillator();
-        const gainL=ctx.createGain(),gainR=ctx.createGain();
-        oscL.frequency.value=200+b.freq;oscR.frequency.value=200;
-        gainL.gain.value=0.12;gainR.gain.value=0.12;
-        oscL.connect(gainL);gainL.connect(merger,0,0);
-        oscR.connect(gainR);gainR.connect(merger,0,1);
-        merger.connect(ctx.destination);
-        oscL.start();oscR.start();
-        binauralNodes[id]={oscL,oscR,ctx};
-        el.classList.add('active');
-    }
+  if(activeBinaural===id){
+    stopBinaural();return;
+  }
+  stopBinaural();
+  const b=binaurals.find(x=>x.id===id);
+  binauralCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const oscL=binauralCtx.createOscillator(),oscR=binauralCtx.createOscillator();
+  const merger=binauralCtx.createChannelMerger(2);
+  binauralGain=binauralCtx.createGain();
+  binauralGain.gain.value=document.getElementById('binVolume').value/100*0.3;
+  oscL.frequency.value=200+b.freq;oscR.frequency.value=200;
+  oscL.connect(binauralGain);oscR.connect(binauralGain);
+  binauralGain.connect(merger,0,0);binauralGain.connect(merger,0,1);
+  merger.connect(binauralCtx.destination);
+  oscL.start();oscR.start();
+  binauralOsc={oscL,oscR};activeBinaural=id;
+  document.querySelectorAll('.binaural-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('binauralControls').style.display='block';
+  document.getElementById('binPlaying').style.display='block';
+  document.getElementById('binCircle').textContent=b.emoji;
+  document.getElementById('binLabel').textContent=b.name+' '+b.freq+'Hz — '+b.desc;
 }
+
+function stopBinaural(){
+  if(binauralOsc){binauralOsc.oscL.stop();binauralOsc.oscR.stop();}
+  if(binauralCtx){binauralCtx.close();}
+  binauralOsc=null;binauralCtx=null;activeBinaural=null;
+  document.querySelectorAll('.binaural-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('binauralControls').style.display='none';
+  document.getElementById('binPlaying').style.display='none';
+}
+
+document.getElementById('binVolume').oninput=e=>{if(binauralGain)binauralGain.gain.value=e.target.value/100*0.3;};
 
 // ─── SESSION ───
 function startSession(id){
-    const s=sessions[id];if(!s)return;
-    currentSession=id;
-    document.getElementById('sessionTitle').textContent=s.title;
-    document.getElementById('sessionSub').textContent=s.sub;
-    document.getElementById('breatheCircle').textContent=s.emoji;
-    document.getElementById('timer').textContent='00:00';
-    seconds=0;
-    tabs.forEach(t=>t.classList.remove('active'));
-    screens.forEach(s=>s.classList.remove('active'));
-    sessionScreen.classList.add('active');
+  const s=sessions[id];if(!s)return;
+  currentSession=id;
+  document.getElementById('sessionTitle').textContent=s.title;
+  document.getElementById('sessionSub').textContent=s.sub;
+  document.getElementById('breatheCircle').textContent=s.emoji;
+  document.getElementById('timer').textContent='00:00';seconds=0;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sessionScreen').classList.add('active');
 }
 
 async function togglePlay(){
-    if(isPlaying){
-        isPlaying=false;
-        document.getElementById('playBtn').textContent='▶';
-        document.getElementById('breatheCircle').classList.remove('playing');
-        if(sessionAudio)sessionAudio.pause();
-        clearInterval(timerInterval);
-        return;
-    }
-    isPlaying=true;
-    document.getElementById('playBtn').textContent='⏸';
-    document.getElementById('breatheCircle').classList.add('playing');
-    timerInterval=setInterval(()=>{seconds++;const m=Math.floor(seconds/60).toString().padStart(2,'0');const ss=(seconds%60).toString().padStart(2,'0');document.getElementById('timer').textContent=m+':'+ss;},1000);
-    
-    if(!sessionAudio){
-        const voice=selectedVoice;
-        const rate=selectedRate;
-        const echo=document.getElementById('sessionEchoToggle').classList.contains('on');
-        try{
-            const res=await fetch(`${SERVER}/api/hypnosis/${currentSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&echo=${echo}`);
-            if(res.ok){
-                const blob=await res.blob();
-                sessionAudio=new Audio(URL.createObjectURL(blob));
-                sessionAudio.volume=document.getElementById('voiceVol').value/100;
-                sessionAudio.loop=true;
-                sessionAudio.play();
-            }
-        }catch(e){console.error('Audio error:',e);}
-    } else sessionAudio.play();
+  if(isPlaying){
+    isPlaying=false;document.getElementById('playBtn').textContent='▶';
+    document.getElementById('breatheCircle').classList.remove('playing');
+    if(sessionAudio)sessionAudio.pause();clearInterval(timerInterval);return;
+  }
+  isPlaying=true;document.getElementById('playBtn').textContent='⏸';
+  document.getElementById('breatheCircle').classList.add('playing');
+  timerInterval=setInterval(()=>{seconds++;const m=Math.floor(seconds/60).toString().padStart(2,'0');const ss=(seconds%60).toString().padStart(2,'0');document.getElementById('timer').textContent=m+':'+ss;},1000);
+  
+  if(!sessionAudio){
+    const voice=selectedVoice, rate=selectedRate;
+    const pitch=document.getElementById('sessionPitch').value+'Hz';
+    const reverb=document.getElementById('sessionReverb').value;
+    const echo=document.getElementById('sessionEcho').value;
+    const bass=document.getElementById('sessionBass').value;
+    try{
+      const url=`${SERVER}/api/hypnosis/${currentSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}`;
+      const res=await fetch(url);
+      if(res.ok){const blob=await res.blob();sessionAudio=new Audio(URL.createObjectURL(blob));sessionAudio.loop=true;sessionAudio.play();}
+    }catch(e){console.error('Audio error:',e);}
+  }else sessionAudio.play();
 }
 
 function stopSession(){
-    isPlaying=false;if(sessionAudio){sessionAudio.pause();sessionAudio.currentTime=0;sessionAudio=null;}
-    clearInterval(timerInterval);seconds=0;
-    document.getElementById('playBtn').textContent='▶';
-    document.getElementById('breatheCircle').classList.remove('playing');
-    sessionScreen.classList.remove('active');homeTab.classList.add('active');homeScreen.classList.add('active');
+  isPlaying=false;if(sessionAudio){sessionAudio.pause();sessionAudio.currentTime=0;sessionAudio=null;}
+  clearInterval(timerInterval);seconds=0;
+  document.getElementById('playBtn').textContent='▶';
+  document.getElementById('breatheCircle').classList.remove('playing');
+  document.getElementById('sessionScreen').classList.remove('active');
+  document.getElementById('homeScreen').classList.add('active');
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
 }
 
-document.getElementById('voiceVol').oninput=e=>{document.getElementById('voiceVolLabel').textContent=e.target.value+'%';if(sessionAudio)sessionAudio.volume=e.target.value/100;};
-document.getElementById('bgVol').oninput=e=>{document.getElementById('bgVolLabel').textContent=e.target.value+'%';};
+function downloadSession(){
+  const voice=selectedVoice, rate=selectedRate;
+  const pitch=document.getElementById('sessionPitch').value+'Hz';
+  const reverb=document.getElementById('sessionReverb').value;
+  const echo=document.getElementById('sessionEcho').value;
+  const bass=document.getElementById('sessionBass').value;
+  const url=`${SERVER}/api/hypnosis/${currentSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&download=true`;
+  window.open(url,'_blank');
+}
 
-// ─── CUSTOM ───
+// ─── CUSTOM TTS ───
 async function generateCustom(){
-    const script=document.getElementById('customScript').value.trim();
-    const voice=selectedVoice;
-    const rate=selectedRate;
-    const echo=document.getElementById('echoToggle').classList.contains('on');
-    if(!script){alert('Escribe un guion de hipnosis');return;}
-    document.getElementById('generateBtn').disabled=true;
-    document.getElementById('generating').classList.add('active');
-    document.getElementById('customResult').style.display='none';
+  const script=document.getElementById('customScript').value.trim();
+  if(!script){alert('Escribe un guion de hipnosis');return;}
+  const voice=selectedVoice, rate=selectedRate;
+  const pitch=document.getElementById('pitchSlider').value+'Hz';
+  const reverb=document.getElementById('reverbSlider').value;
+  const echo=document.getElementById('echoSlider').value;
+  const bass=document.getElementById('bassSlider').value;
+  document.getElementById('generateBtn').disabled=true;
+  document.getElementById('generating').classList.add('active');
+  document.getElementById('customResult').style.display='none';
+  try{
+    const res=await fetch(SERVER+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass})});
+    if(res.ok){const blob=await res.blob();document.getElementById('customAudio').src=URL.createObjectURL(blob);document.getElementById('customResult').style.display='block';}
+    else{const err=await res.json();alert('Error: '+err.error);}
+  }catch(e){alert('Error: '+e.message);}
+  document.getElementById('generateBtn').disabled=false;
+  document.getElementById('generating').classList.remove('active');
+}
+
+function dlCustom(){
+  const voice=selectedVoice, rate=selectedRate;
+  const pitch=document.getElementById('pitchSlider').value+'Hz';
+  const reverb=document.getElementById('reverbSlider').value;
+  const echo=document.getElementById('echoSlider').value;
+  const bass=document.getElementById('bassSlider').value;
+  const script=document.getElementById('customScript').value.trim();
+  // Use POST with download=true - need to create form
+  fetch(SERVER+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,pitch,reverb,echo,bass,download:true})})
+  .then(r=>r.blob()).then(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='zenmix_custom.mp3';a.click();});
+}
+
+// ─── VOICE RECORDER ───
+let mediaRecorder=null, audioChunks=[], recording=false, recSeconds=0, recInterval=null;
+let uploadedFileId=null;
+
+async function toggleRecord(){
+  const btn=document.getElementById('recBtn');
+  if(recording){
+    recording=false;btn.classList.remove('recording');btn.textContent='🎙️';
+    mediaRecorder.stop();clearInterval(recInterval);
+  }else{
     try{
-        const res=await fetch(SERVER+'/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:script,voice,rate,echo})});
-        if(res.ok){const blob=await res.blob();const url=URL.createObjectURL(blob);document.getElementById('customAudio').src=url;document.getElementById('customResult').style.display='block';}
-        else{alert('Error al generar audio');}
-    }catch(e){alert('Error: '+e.message);}
-    document.getElementById('generateBtn').disabled=false;
-    document.getElementById('generating').classList.remove('active');
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream,{mimeType:'audio/webm'});
+      audioChunks=[];
+      mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+      mediaRecorder.onstop=async()=>{
+        stream.getTracks().forEach(t=>t.stop());
+        const blob=new Blob(audioChunks,{type:'audio/webm'});
+        // Upload
+        const fd=new FormData();fd.append('audio',blob,'recording.webm');
+        try{
+          const res=await fetch(SERVER+'/api/upload-voice',{method:'POST',body:fd});
+          const data=await res.json();
+          uploadedFileId=data.id;
+          document.getElementById('recAudio').src=URL.createObjectURL(blob);
+          document.getElementById('recResult').style.display='block';
+          document.getElementById('noRec').style.display='none';
+        }catch(e){alert('Error al subir: '+e.message);}
+      };
+      recording=true;btn.classList.add('recording');btn.textContent='⏹';
+      recSeconds=0;document.getElementById('recTime').textContent='00:00';
+      recInterval=setInterval(()=>{recSeconds++;const m=Math.floor(recSeconds/60).toString().padStart(2,'0');const s=(recSeconds%60).toString().padStart(2,'0');document.getElementById('recTime').textContent=m+':'+s;},1000);
+      mediaRecorder.start();
+    }catch(e){alert('No se pudo acceder al micrófono: '+e.message);}
+  }
+}
+
+async function processRecording(){
+  if(!uploadedFileId){alert('Graba tu voz primero');return;}
+  const reverb=document.getElementById('recReverb').value;
+  const echo=document.getElementById('recEcho').value;
+  const bass=document.getElementById('recBass').value;
+  const pitch=document.getElementById('recPitch').value;
+  document.getElementById('processRecBtn').disabled=true;
+  document.getElementById('procRecLoading').classList.add('active');
+  document.getElementById('procRecResult').style.display='none';
+  try{
+    const res=await fetch(SERVER+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedFileId,echo,reverb,bass,pitch})});
+    if(res.ok){const blob=await res.blob();document.getElementById('procRecAudio').src=URL.createObjectURL(blob);document.getElementById('procRecResult').style.display='block';}
+    else{const err=await res.json();alert('Error: '+err.error);}
+  }catch(e){alert('Error: '+e.message);}
+  document.getElementById('processRecBtn').disabled=false;
+  document.getElementById('procRecLoading').classList.remove('active');
+}
+
+function dlProcessed(){
+  if(!uploadedFileId)return;
+  const reverb=document.getElementById('recReverb').value;
+  const echo=document.getElementById('recEcho').value;
+  const bass=document.getElementById('recBass').value;
+  const pitch=document.getElementById('recPitch').value;
+  fetch(SERVER+'/api/process-voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId:uploadedFileId,echo,reverb,bass,pitch,download:true})})
+  .then(r=>r.blob()).then(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='zenmix_voz_editada.mp3';a.click();});
 }
 </script>
 </body>
