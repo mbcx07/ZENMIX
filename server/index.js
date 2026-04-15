@@ -96,20 +96,20 @@ app.post('/api/stats/record',(req,res)=>{
   saveStats(s);res.json(s);
 });
 
-// ─── Build audio filter array (NO compand — causes screech) ──
+// ─── Build audio filter array (clean sound, no distortion) ──
 function buildAudioFilter(opts={}){
   const{echo=0,reverb=50,bassBoost=30,deEss=true,warm=true,normalize=true,fadeIn=0,fadeOut=0}=opts;
   const filters=[];
-  // Clean rumble and harshness
+  // Clean: remove rumble below 60Hz and hiss above 10kHz
   if(deEss){filters.push('highpass=f=60');filters.push('lowpass=f=10000');}
-  // Warm EQ: deep bass + body, cut nasal and harsh
+  // Warm EQ: deep bass + body, cut harshness
   if(warm){
     filters.push('equalizer=f=100:t=q:w=1.5:g=4');   // deep warmth
     filters.push('equalizer=f=200:t=q:w=1.5:g=3');   // body
     filters.push('equalizer=f=500:t=q:w=2:g=1');     // presence
     filters.push('equalizer=f=2500:t=q:w=2:g=-3');    // reduce nasal
     filters.push('equalizer=f=5000:t=q:w=2:g=-4');    // reduce harshness
-    filters.push('equalizer=f=8000:t=q:w=2:g=-6');    // smooth top
+    filters.push('equalizer=f=8000:t=q:w=2:g=-5');    // smooth top end
   }
   // Bass boost for deep hypnotic voice
   if(bassBoost>0){
@@ -118,8 +118,6 @@ function buildAudioFilter(opts={}){
     filters.push('equalizer=f=100:t=q:w=2:g='+(g*0.8).toFixed(1));
     filters.push('equalizer=f=150:t=q:w=2:g='+(g*0.5).toFixed(1));
   }
-  // Soft compressor instead of compand (prevents screech)
-  filters.push('acompressor=threshold=-20dB:ratio=3:attack=5:release=50:makeup=2');
   // Studio reverb: multi-tap for professional sound
   if(reverb>0){
     const rv=reverb/100;
@@ -131,9 +129,10 @@ function buildAudioFilter(opts={}){
     const ei=echo/100;const d=(0.3+ei*0.4).toFixed(2);
     filters.push('aecho='+d+':'+(parseFloat(d)+0.1).toFixed(2)+':'+(150+Math.round(ei*250))+':'+(ei*0.5).toFixed(2));
   }
+  // Gentle fade-in only (no fade-out to avoid cutoff sound)
   if(fadeIn>0)filters.push('afade=t=in:d='+fadeIn);
-  // No fade-out — causes perceived cutoff in browser playback
-  if(normalize)filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
+  // Soft limiter instead of loudnorm (prevents clipping without distortion)
+  if(normalize)filters.push('alimiter=limit=-1dB:level=off');
   return filters;
 }
 
