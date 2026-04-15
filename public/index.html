@@ -367,10 +367,19 @@ document.getElementById('sessionScreen').classList.add('active');startMandala('v
 async function togglePlay(){if(playing){playing=false;document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');if(sAudio)sAudio.pause();clearInterval(timerInt);return;}
 playing=true;document.getElementById('playBtn').textContent='⏸';document.getElementById('breatheCircle').classList.add('playing');
 timerInt=setInterval(()=>{secs++;document.getElementById('timer').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');if(sAudio&&sAudio.duration)document.getElementById('progressFill').style.width=(sAudio.currentTime/sAudio.duration*100)+'%';},1000);
-if(!sAudio){const voice=selVoice,rate=selRate,pitch=document.getElementById('sessionPitch').value+'Hz';
+
+// Always regenerate audio with current settings (allows real-time effect changes)
+sAudio=null;
+const voice=selVoice,rate=selRate,pitch=document.getElementById('sessionPitch').value+'Hz';
 const reverb=document.getElementById('sessionReverb').value,echo=document.getElementById('sessionEcho').value,bass=document.getElementById('sessionBass').value;
-try{const url=`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&level=${selLevel}`;
-const res=await fetch(url);if(res.ok){const blob=await res.blob();sAudio=new Audio(URL.createObjectURL(blob));sAudio.volume=document.getElementById('sessionVoiceVol').value/100;sAudio.loop=false;sAudio.onended=()=>{if(playing){sAudio.currentTime=0;sAudio.play();}else{document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');recordStats();}};sAudio.play();}}catch(e){console.error(e);}}else sAudio.play();}
+try{
+document.getElementById('playBtn').textContent='⏳';
+const url=`${S}/api/hypnosis/${curSession}?voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}&reverb=${reverb}&echo=${echo}&bass=${bass}&level=${selLevel}`;
+const res=await fetch(url);
+if(res.ok){const blob=await res.blob();sAudio=new Audio(URL.createObjectURL(blob));sAudio.volume=document.getElementById('sessionVoiceVol').value/100;sAudio.loop=false;sAudio.onended=()=>{if(playing){sAudio.currentTime=0;sAudio.play();}else{document.getElementById('playBtn').textContent='▶';document.getElementById('breatheCircle').classList.remove('playing');recordStats();}};sAudio.play();
+}else{playing=false;document.getElementById('playBtn').textContent='▶';}
+}catch(e){console.error(e);playing=false;document.getElementById('playBtn').textContent='▶';}
+document.getElementById('playBtn').textContent='⏸';}
 
 document.getElementById('progressBar').onclick=e=>{if(!sAudio)return;const r=e.target.getBoundingClientRect();sAudio.currentTime=((e.clientX-r.left)/r.width)*sAudio.duration;};
 document.getElementById('sessionVoiceVol').oninput=e=>{document.getElementById('sessionVoiceVolVal').textContent=e.target.value+'%';if(sAudio)sAudio.volume=e.target.value/100;};
