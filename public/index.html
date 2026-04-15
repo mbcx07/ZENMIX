@@ -170,7 +170,7 @@ canvas.viz{width:100%;height:80px;border-radius:10px;margin:4px 0}
   <div class="vgrid" id="voiceGrid"></div>
   <div class="stitle" style="margin-top:4px">🐌 Velocidad</div>
   <div class="speed-opts" id="speedOpts"><button class="sopt" data-rate="-50%">Muy lenta</button><button class="sopt sel" data-rate="-40%">Lenta</button><button class="sopt" data-rate="-15%">Media</button><button class="sopt" data-rate="+0%">Normal</button></div>
-  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="pitchSlider"><span id="pitchVal">-8Hz</span></div>
+  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-12" id="pitchSlider"><span id="pitchVal">-12Hz</span></div>
   <div class="stitle">Presets</div><div class="preset-grid" id="customPresets"></div>
   <div class="srow"><label>🔊 Reverb</label><input type="range" min="0" max="100" value="50" id="reverbSlider"><span id="reverbVal">50%</span></div>
   <div class="srow"><label>🔈 Eco</label><input type="range" min="0" max="100" value="10" id="echoSlider"><span id="echoVal">10%</span></div>
@@ -234,7 +234,7 @@ canvas.viz{width:100%;height:80px;border-radius:10px;margin:4px 0}
   <div class="stitle">🗣️ Voz</div>
   <div class="vgrid" id="sessionVoiceGrid"></div>
   <div class="speed-opts" id="sessionSpeedOpts"><button class="sopt" data-rate="-50%">Muy lenta</button><button class="sopt sel" data-rate="-40%">Lenta</button><button class="sopt" data-rate="-15%">Media</button><button class="sopt" data-rate="+0%">Normal</button></div>
-  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-8" id="sessionPitch"><span id="sessionPitchVal">-8Hz</span></div>
+  <div class="srow" style="margin-top:4px"><label>Tono</label><input type="range" min="-15" max="5" value="-12" id="sessionPitch"><span id="sessionPitchVal">-12Hz</span></div>
   <div class="stitle">🎚️ Nivel</div>
   <div class="speed-opts" id="sessionInduction"><button class="sopt" data-level="superficial">Superficial</button><button class="sopt sel" data-level="medio">Medio</button><button class="sopt" data-level="profundo">Profundo</button></div>
   <div class="stitle">Presets</div><div class="preset-grid" id="sessionPresets"></div>
@@ -260,7 +260,7 @@ canvas.viz{width:100%;height:80px;border-radius:10px;margin:4px 0}
 <script>
 const S=window.location.origin;
 let curSession=null,playing=false,sAudio=null,timerInt=null,secs=0,autoStopTimer=null,selLevel='medio';
-let selVoice='es-ES-AlvaroNeural',selRate='-40%',selPitch='-8Hz';
+let selVoice='es-MX-JorgeNeural',selRate='-40%',selPitch='-12Hz';
 let favorites=JSON.parse(localStorage.getItem('zenmix_favs')||'[]');
 let stats=JSON.parse(localStorage.getItem('zenmix_stats')||'{"sessions":0,"totalMinutes":0,"streak":0,"lastDate":null,"perSession":{}}');
 
@@ -270,7 +270,7 @@ function closeOnboard(){document.getElementById('onboard').style.display='none';
 
 const sessions={insomnio:{title:'Insomnio',sub:'Hipnosis profunda para dormir',emoji:'🌙',tags:['30 min','Sueño'],color:'#4a6cf7'},ansiedad:{title:'Ansiedad',sub:'Calma tu mente y cuerpo',emoji:'😌',tags:['20 min','Calma'],color:'#10b981'},migrania:{title:'Migraña',sub:'Alivio con frecuencias',emoji:'🤕',tags:['25 min','Alivio'],color:'#8b5cf6'},autoestima:{title:'Autoestima',sub:'Confianza interior',emoji:'💪',tags:['20 min','Confianza'],color:'#f59e0b'},'dejar-fumar':{title:'Dejar de Fumar',sub:'Libérate del tabaco',emoji:'🚭',tags:['25 min','Libertad'],color:'#ef4444'},peso:{title:'Control de Peso',sub:'Hábitos saludables',emoji:'⚖️',tags:['20 min','Salud'],color:'#06b6d4'},focus:{title:'Concentración',sub:'Enfoque mental',emoji:'🎯',tags:['15 min','Mente'],color:'#a855f7'}};
 
-const voices=[{id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'🇪🇸',g:'M',deep:true},{id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽',g:'M',deep:true},{id:'es-AR-TomasNeural',name:'Tomás',lang:'🇦🇷',g:'M',deep:true},{id:'es-CO-GonzaloNeural',name:'Gonzalo',lang:'🇨🇴',g:'M',deep:true},{id:'es-VE-SebastianNeural',name:'Sebastián',lang:'🇻🇪',g:'M',deep:true},{id:'es-CL-LorenzoNeural',name:'Lorenzo',lang:'🇨🇱',g:'M',deep:true},{id:'es-PE-AlexNeural',name:'Alex',lang:'🇵🇪',g:'M',deep:true},{id:'es-US-AlonsoNeural',name:'Alonso',lang:'🇺🇸',g:'M',deep:true},{id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽',g:'F',deep:false},{id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸',g:'F',deep:false},{id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸',g:'F',deep:false},{id:'es-AR-ElenaNeural',name:'Elena',lang:'🇦🇷',g:'F',deep:false},{id:'es-CO-SalomeNeural',name:'Salomé',lang:'🇨🇴',g:'F',deep:false},{id:'es-PE-CamilaNeural',name:'Camila',lang:'🇵🇪',g:'F',deep:false},{id:'es-US-PalomaNeural',name:'Paloma',lang:'🇺🇸',g:'F',deep:false}];
+const voices=[{id:'es-MX-JorgeNeural',name:'Jorge',lang:'🇲🇽',g:'M',deep:true},{id:'es-MX-DaliaNeural',name:'Dalia',lang:'🇲🇽',g:'F',deep:false},{id:'es-ES-AlvaroNeural',name:'Álvaro M.',lang:'🇪🇸',g:'M',deep:true},{id:'es-AR-TomasNeural',name:'Tomás M.',lang:'🇦🇷',g:'M',deep:true},{id:'es-CO-GonzaloNeural',name:'Gonzalo M.',lang:'🇨🇴',g:'M',deep:true},{id:'es-VE-SebastianNeural',name:'Sebastián M.',lang:'🇻🇪',g:'M',deep:true},{id:'es-CL-LorenzoNeural',name:'Lorenzo M.',lang:'🇨🇱',g:'M',deep:true},{id:'es-PE-AlexNeural',name:'Alex M.',lang:'🇵🇪',g:'M',deep:true},{id:'es-US-AlonsoNeural',name:'Alonso M.',lang:'🇺🇸',g:'M',deep:true},{id:'es-BO-MarceloNeural',name:'Marcelo M.',lang:'🇧🇴',g:'M',deep:true},{id:'es-CR-JuanNeural',name:'Juan M.',lang:'🇨🇷',g:'M',deep:true},{id:'es-DO-EmilioNeural',name:'Emilio M.',lang:'🇩🇴',g:'M',deep:true},{id:'es-HN-CarlosNeural',name:'Carlos M.',lang:'🇭🇳',g:'M',deep:true},{id:'es-PA-RobertoNeural',name:'Roberto M.',lang:'🇵🇦',g:'M',deep:true},{id:'es-GQ-JavierNeural',name:'Javier M.',lang:'🇬🇶',g:'M',deep:true},{id:'es-ES-ElviraNeural',name:'Elvira',lang:'🇪🇸',g:'F',deep:false},{id:'es-ES-XimenaNeural',name:'Ximena',lang:'🇪🇸',g:'F',deep:false},{id:'es-AR-ElenaNeural',name:'Elena',lang:'🇦🇷',g:'F',deep:false},{id:'es-CO-SalomeNeural',name:'Salomé',lang:'🇨🇴',g:'F',deep:false}];
 
 const binaurals=[{id:'delta',freq:2,name:'Delta',emoji:'😴',desc:'Sueño'},{id:'theta',freq:6,name:'Theta',emoji:'🧠',desc:'Meditación'},{id:'alpha',freq:10,name:'Alfa',emoji:'✨',desc:'Relajación'},{id:'sigma',freq:14,name:'Sigma',emoji:'💡',desc:'Enfoque'},{id:'gamma',freq:40,name:'Gamma',emoji:'⚡',desc:'Concentración'},{id:'beta',freq:20,name:'Beta',emoji:'🔥',desc:'Activación'}];
 const ambients=[{id:'pad',name:'Pad',emoji:'🎵',desc:'Ambiente'},{id:'rain',name:'Lluvia',emoji:'🌧',desc:'Lluvia'},{id:'ocean',name:'Océano',emoji:'🌊',desc:'Olas'},{id:'forest',name:'Bosque',emoji:'🌲',desc:'Naturaleza'},{id:'fire',name:'Fuego',emoji:'🔥',desc:'Leña'},{id:'wind',name:'Viento',emoji:'💨',desc:'Brisa'}];

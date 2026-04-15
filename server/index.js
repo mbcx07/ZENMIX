@@ -28,23 +28,31 @@ const inductionLevels = {
   profundo: `\n\nAhora... déjate ir aún más profundo... como si cayeras suavemente... en un sueño dentro del sueño... cada vez más abajo... más relajado... más en paz... Las sugestiones se graban profundamente... en tu subconsciente... se convierten en verdad... en realidad... en ti... Cuando tu mente esté lista... naturalmente... comenzarás a regresar... poco a poco... sin prisa... como quien despierta de un sueño reparador... lentamente... suavemente... abres los ojos... te sientes completamente renovado... transformado... en paz...`
 };
 
-// ─── All Spanish voices ──────────────────────────────────────
+// ─── All voices — Mexican + deep hypnotist voices ────────────
 const allVoices = [
-  {id:'es-ES-AlvaroNeural',name:'Álvaro',lang:'España',gender:'Masculino',deep:true},
-  {id:'es-MX-JorgeNeural',name:'Jorge',lang:'México',gender:'Masculino',deep:true},
-  {id:'es-AR-TomasNeural',name:'Tomás',lang:'Argentina',gender:'Masculino',deep:true},
-  {id:'es-CO-GonzaloNeural',name:'Gonzalo',lang:'Colombia',gender:'Masculino',deep:true},
-  {id:'es-VE-SebastianNeural',name:'Sebastián',lang:'Venezuela',gender:'Masculino',deep:true},
-  {id:'es-CL-LorenzoNeural',name:'Lorenzo',lang:'Chile',gender:'Masculino',deep:true},
-  {id:'es-PE-AlexNeural',name:'Alex',lang:'Perú',gender:'Masculino',deep:true},
-  {id:'es-US-AlonsoNeural',name:'Alonso',lang:'EE.UU.',gender:'Masculino',deep:true},
-  {id:'es-MX-DaliaNeural',name:'Dalia',lang:'México',gender:'Femenino',deep:false},
-  {id:'es-ES-ElviraNeural',name:'Elvira',lang:'España',gender:'Femenino',deep:false},
-  {id:'es-ES-XimenaNeural',name:'Ximena',lang:'España',gender:'Femenino',deep:false},
-  {id:'es-AR-ElenaNeural',name:'Elena',lang:'Argentina',gender:'Femenino',deep:false},
-  {id:'es-CO-SalomeNeural',name:'Salomé',lang:'Colombia',gender:'Femenino',deep:false},
-  {id:'es-PE-CamilaNeural',name:'Camila',lang:'Perú',gender:'Femenino',deep:false},
-  {id:'es-US-PalomaNeural',name:'Paloma',lang:'EE.UU.',gender:'Femenino',deep:false},
+  // 🇲🇽 Mexican voices (primary)
+  {id:'es-MX-JorgeNeural',name:'Jorge',lang:'México',gender:'Masculino',deep:true,icon:'🎙️'},
+  {id:'es-MX-DaliaNeural',name:'Dalia',lang:'México',gender:'Femenino',deep:false,icon:'🗣️'},
+  // 🎙️ Deep hypnotist voices (John Milton style)
+  {id:'es-ES-AlvaroNeural',name:'Álvaro M.',lang:'España',gender:'Masculino',deep:true,icon:'🌙'},
+  {id:'es-AR-TomasNeural',name:'Tomás M.',lang:'Argentina',gender:'Masculino',deep:true,icon:'🌑'},
+  {id:'es-CO-GonzaloNeural',name:'Gonzalo M.',lang:'Colombia',gender:'Masculino',deep:true,icon:'🔮'},
+  {id:'es-VE-SebastianNeural',name:'Sebastián M.',lang:'Venezuela',gender:'Masculino',deep:true,icon:'✨'},
+  {id:'es-CL-LorenzoNeural',name:'Lorenzo M.',lang:'Chile',gender:'Masculino',deep:true,icon:'💫'},
+  {id:'es-PE-AlexNeural',name:'Alex M.',lang:'Perú',gender:'Masculino',deep:true,icon:'⭐'},
+  // Additional deep voices
+  {id:'es-US-AlonsoNeural',name:'Alonso M.',lang:'EE.UU.',gender:'Masculino',deep:true,icon:'🌟'},
+  {id:'es-BO-MarceloNeural',name:'Marcelo M.',lang:'Bolivia',gender:'Masculino',deep:true,icon:'🌀'},
+  {id:'es-CR-JuanNeural',name:'Juan M.',lang:'Costa Rica',gender:'Masculino',deep:true,icon:'🌀'},
+  {id:'es-DO-EmilioNeural',name:'Emilio M.',lang:'Rep. Dom.',gender:'Masculino',deep:true,icon:'🌀'},
+  {id:'es-GQ-JavierNeural',name:'Javier M.',lang:'Guinea Eq.',gender:'Masculino',deep:true,icon:'🌀'},
+  {id:'es-HN-CarlosNeural',name:'Carlos M.',lang:'Honduras',gender:'Masculino',deep:true,icon:'🌀'},
+  {id:'es-PA-RobertoNeural',name:'Roberto M.',lang:'Panamá',gender:'Masculino',deep:true,icon:'🌀'},
+  // Female voices
+  {id:'es-ES-ElviraNeural',name:'Elvira',lang:'España',gender:'Femenino',deep:false,icon:'🗣️'},
+  {id:'es-ES-XimenaNeural',name:'Ximena',lang:'España',gender:'Femenino',deep:false,icon:'🗣️'},
+  {id:'es-AR-ElenaNeural',name:'Elena',lang:'Argentina',gender:'Femenino',deep:false,icon:'🗣️'},
+  {id:'es-CO-SalomeNeural',name:'Salomé',lang:'Colombia',gender:'Femenino',deep:false,icon:'🗣️'},
 ];
 
 // ─── Effect Presets ──────────────────────────────────────────
@@ -88,26 +96,36 @@ app.post('/api/stats/record',(req,res)=>{
   saveStats(s);res.json(s);
 });
 
-// ─── Build audio filter array ───────────────────────────────
+// ─── Build audio filter array (NO compand — causes screech) ──
 function buildAudioFilter(opts={}){
   const{echo=0,reverb=50,bassBoost=30,deEss=true,warm=true,normalize=true,fadeIn=0,fadeOut=0}=opts;
   const filters=[];
-  if(deEss){filters.push('highpass=f=80');filters.push('lowpass=f=12000');}
+  // Clean rumble and harshness
+  if(deEss){filters.push('highpass=f=60');filters.push('lowpass=f=10000');}
+  // Warm EQ: deep bass + body, cut nasal and harsh
   if(warm){
-    filters.push('equalizer=f=150:t=q:w=1.5:g=3');filters.push('equalizer=f=300:t=q:w=1.5:g=2');
-    filters.push('equalizer=f=2500:t=q:w=2:g=-2');filters.push('equalizer=f=5000:t=q:w=2:g=-3');
-    filters.push('equalizer=f=8000:t=q:w=2:g=-4');
+    filters.push('equalizer=f=100:t=q:w=1.5:g=4');   // deep warmth
+    filters.push('equalizer=f=200:t=q:w=1.5:g=3');   // body
+    filters.push('equalizer=f=500:t=q:w=2:g=1');     // presence
+    filters.push('equalizer=f=2500:t=q:w=2:g=-3');    // reduce nasal
+    filters.push('equalizer=f=5000:t=q:w=2:g=-4');    // reduce harshness
+    filters.push('equalizer=f=8000:t=q:w=2:g=-6');    // smooth top
   }
+  // Bass boost for deep hypnotic voice
   if(bassBoost>0){
-    const g=(1+(bassBoost/100)*5).toFixed(1);
-    filters.push('equalizer=f=80:t=q:w=2:g='+g);filters.push('equalizer=f=120:t=q:w=2:g='+(g*0.7).toFixed(1));
+    const g=(2+(bassBoost/100)*6).toFixed(1);
+    filters.push('equalizer=f=60:t=q:w=2:g='+g);
+    filters.push('equalizer=f=100:t=q:w=2:g='+(g*0.8).toFixed(1));
+    filters.push('equalizer=f=150:t=q:w=2:g='+(g*0.5).toFixed(1));
   }
-  filters.push('compand=0.3|0.3:1|1:-90/-60|-60/-40|-40/-30|-20/-20:6:0:-90:0.1');
+  // Soft compressor instead of compand (prevents screech)
+  filters.push('acompressor=threshold=-20dB:ratio=3:attack=5:release=50:makeup=2');
+  // Studio reverb: multi-tap for professional sound
   if(reverb>0){
     const rv=reverb/100;
-    filters.push('aecho=0.8:0.88:'+(18+Math.round(rv*30))+':'+(0.25+rv*0.45).toFixed(2));
-    filters.push('aecho=0.7:0.85:'+(35+Math.round(rv*60))+':'+(0.2+rv*0.35).toFixed(2));
-    filters.push('aecho=0.6:0.82:'+(60+Math.round(rv*100))+':'+(0.15+rv*0.25).toFixed(2));
+    filters.push('aecho=0.8:0.88:'+(20+Math.round(rv*25))+':'+(0.25+rv*0.4).toFixed(2));
+    filters.push('aecho=0.7:0.85:'+(40+Math.round(rv*50))+':'+(0.2+rv*0.3).toFixed(2));
+    filters.push('aecho=0.6:0.82:'+(70+Math.round(rv*90))+':'+(0.15+rv*0.2).toFixed(2));
   }
   if(echo>0){
     const ei=echo/100;const d=(0.3+ei*0.4).toFixed(2);
@@ -192,7 +210,7 @@ app.get('/api/hypnosis/:session',async(req,res)=>{
     if(!text)return res.status(404).json({error:'Sesión no encontrada'});
     const level=req.query.level||'medio';
     if(inductionLevels[level])text+=inductionLevels[level];
-    const voice=req.query.voice||'es-ES-AlvaroNeural',rate=req.query.rate||'-40%',pitch=req.query.pitch||'-8Hz';
+    const voice=req.query.voice||'es-MX-JorgeNeural',rate=req.query.rate||'-40%',pitch=req.query.pitch||'-12Hz';
     const echo=parseInt(req.query.echo)||0,reverb=parseInt(req.query.reverb)||50,bass=parseInt(req.query.bass)||30;
     const download=req.query.download==='true';
     const id='hyp_'+session+'_'+Date.now();
@@ -227,7 +245,7 @@ app.post('/api/tts',async(req,res)=>{
     const{text,voice,rate,pitch,echo,reverb,bass,download}=req.body;
     if(!text)return res.status(400).json({error:'No text'});
     const id='tts_'+Date.now(),ttsFile='/tmp/zenmix_'+id+'.mp3',outFile='/tmp/zenmix_'+id+'_out.mp3';
-    await new Promise((resolve,reject)=>{execFile('edge-tts',['--text',text.substring(0,5000),'--voice',voice||'es-ES-AlvaroNeural','--rate='+(rate||'-40%'),'--pitch='+(pitch||'-8Hz'),'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());});
+    await new Promise((resolve,reject)=>{execFile('edge-tts',['--text',text.substring(0,5000),'--voice',voice||'es-MX-JorgeNeural','--rate='+(rate||'-40%'),'--pitch='+(pitch||'-12Hz'),'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());});
     const filters=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:2,fadeOut:3});
     await processAudio(ttsFile,outFile,filters);
     try{fs.unlinkSync(ttsFile)}catch(e){}
