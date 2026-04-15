@@ -132,7 +132,7 @@ function buildAudioFilter(opts={}){
     filters.push('aecho='+d+':'+(parseFloat(d)+0.1).toFixed(2)+':'+(150+Math.round(ei*250))+':'+(ei*0.5).toFixed(2));
   }
   if(fadeIn>0)filters.push('afade=t=in:d='+fadeIn);
-  if(fadeOut>0)filters.push('afade=t=out:d='+fadeOut);
+  // No fade-out — causes perceived cutoff in browser playback
   if(normalize)filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
   return filters;
 }
@@ -216,7 +216,7 @@ app.get('/api/hypnosis/:session',async(req,res)=>{
     const id='hyp_'+session+'_'+Date.now();
     const ttsFile='/tmp/zenmix_'+id+'.mp3',outFile='/tmp/zenmix_'+id+'_out.mp3';
     await new Promise((resolve,reject)=>{execFile('edge-tts',['--text',text,'--voice',voice,'--rate='+rate,'--pitch='+pitch,'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());});
-    const filters=buildAudioFilter({echo,reverb,bassBoost:bass,fadeIn:2,fadeOut:3});
+    const filters=buildAudioFilter({echo,reverb,bassBoost:bass,fadeIn:3});
     await processAudio(ttsFile,outFile,filters);
     try{fs.unlinkSync(ttsFile)}catch(e){}
     const result=fs.readFileSync(outFile);try{fs.unlinkSync(outFile)}catch(e){}
@@ -246,7 +246,7 @@ app.post('/api/tts',async(req,res)=>{
     if(!text)return res.status(400).json({error:'No text'});
     const id='tts_'+Date.now(),ttsFile='/tmp/zenmix_'+id+'.mp3',outFile='/tmp/zenmix_'+id+'_out.mp3';
     await new Promise((resolve,reject)=>{execFile('edge-tts',['--text',text.substring(0,5000),'--voice',voice||'es-MX-JorgeNeural','--rate='+(rate||'-40%'),'--pitch='+(pitch||'-12Hz'),'--write-media',ttsFile],{timeout:120000},err=>err?reject(err):resolve());});
-    const filters=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:2,fadeOut:3});
+    const filters=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:2});
     await processAudio(ttsFile,outFile,filters);
     try{fs.unlinkSync(ttsFile)}catch(e){}
     const result=fs.readFileSync(outFile);try{fs.unlinkSync(outFile)}catch(e){}
@@ -286,7 +286,7 @@ app.post('/api/process-voice',async(req,res)=>{
       await runFfmpeg(['-y','-i',inputPath,'-ss',String(ts),'-to',String(endTime),'-c','copy',trimmedFile]);
       processFile=trimmedFile;
     }
-    const filterArray=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:1,fadeOut:2});
+    const filterArray=buildAudioFilter({echo:parseInt(echo)||0,reverb:parseInt(reverb)||50,bassBoost:parseInt(bass)||30,fadeIn:1});
     const pitchVal=parseFloat(pitch)||0;
     let fullFilter;
     if(pitchVal!==0){const pf=Math.pow(2,pitchVal/12);fullFilter=['asetrate=44100*'+pf.toFixed(4)+',aresample=44100',...filterArray];}
@@ -331,7 +331,7 @@ app.post('/api/mix-final',upload.single('voiceAudio'),async(req,res)=>{
     if(!voiceFile)return res.status(400).json({error:'No voice audio'});
     const id='mix_'+Date.now();
     const processedVoice='/tmp/zenmix_'+id+'_voice.mp3';
-    const voiceFilter=buildAudioFilter({echo:parseInt(echo),reverb:parseInt(reverb),bassBoost:parseInt(bass),fadeIn:2,fadeOut:3});
+    const voiceFilter=buildAudioFilter({echo:parseInt(echo),reverb:parseInt(reverb),bassBoost:parseInt(bass),fadeIn:2});
     await processAudio(voiceFile,processedVoice,voiceFilter);
     const voiceDur=await getDuration(processedVoice);
     const binauralFile='/tmp/zenmix_'+id+'_bin.wav';
