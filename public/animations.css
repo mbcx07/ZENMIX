@@ -1,0 +1,1187 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ZENMIX v2 — Premium Animation System
+   PixelForge 🎨 | Pure CSS • GPU-Accelerated • Zero JS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties (Theme-Aware) ──────────────────────────── */
+:root {
+  --zm-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --zm-ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --zm-ease-spring: cubic-bezier(0.22, 1.24, 0.41, 1.07);
+  --zm-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --zm-duration-fast: 200ms;
+  --zm-duration-base: 400ms;
+  --zm-duration-slow: 700ms;
+  --zm-duration-glacial: 1200ms;
+  --zm-stagger-base: 80ms;
+  --zm-glass-bg: rgba(255, 255, 255, 0.06);
+  --zm-glass-border: rgba(255, 255, 255, 0.1);
+  --zm-glass-shadow: rgba(0, 0, 0, 0.15);
+  --zm-glow-color-1: rgba(139, 92, 246, 0.4);
+  --zm-glow-color-2: rgba(59, 130, 246, 0.3);
+  --zm-glow-color-3: rgba(236, 72, 153, 0.25);
+  --zm-mandala-size: 300px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. STAGGERED FADE-IN SYSTEM
+   Cards, list items, buttons — cascading entrance
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Base state: hidden & shifted */
+.zm-stagger-item,
+.zm-card-enter,
+.zm-btn-enter,
+.zm-list-enter {
+  opacity: 0;
+  transform: translateY(24px) scale(0.97);
+  will-change: transform, opacity;
+}
+
+/* Triggered via parent class or on-mount */
+.zm-stagger-in > .zm-stagger-item,
+.zm-stagger-in > .zm-card-enter,
+.zm-stagger-in > .zm-btn-enter,
+.zm-stagger-in > .zm-list-enter {
+  animation: zmFadeSlideUp var(--zm-duration-base) var(--zm-ease-out-expo) forwards;
+}
+
+/* Stagger delays — up to 20 items */
+.zm-stagger-in > .zm-stagger-item:nth-child(1),
+.zm-stagger-in > .zm-card-enter:nth-child(1),
+.zm-stagger-in > .zm-btn-enter:nth-child(1)  { animation-delay: calc(var(--zm-stagger-base) * 1); }
+.zm-stagger-in > .zm-stagger-item:nth-child(2),
+.zm-stagger-in > .zm-card-enter:nth-child(2),
+.zm-stagger-in > .zm-btn-enter:nth-child(2)  { animation-delay: calc(var(--zm-stagger-base) * 2); }
+.zm-stagger-in > .zm-stagger-item:nth-child(3),
+.zm-stagger-in > .zm-card-enter:nth-child(3),
+.zm-stagger-in > .zm-btn-enter:nth-child(3)  { animation-delay: calc(var(--zm-stagger-base) * 3); }
+.zm-stagger-in > .zm-stagger-item:nth-child(4),
+.zm-stagger-in > .zm-card-enter:nth-child(4),
+.zm-stagger-in > .zm-btn-enter:nth-child(4)  { animation-delay: calc(var(--zm-stagger-base) * 4); }
+.zm-stagger-in > .zm-stagger-item:nth-child(5),
+.zm-stagger-in > .zm-card-enter:nth-child(5),
+.zm-stagger-in > .zm-btn-enter:nth-child(5)  { animation-delay: calc(var(--zm-stagger-base) * 5); }
+.zm-stagger-in > .zm-stagger-item:nth-child(6),
+.zm-stagger-in > .zm-card-enter:nth-child(6),
+.zm-stagger-in > .zm-btn-enter:nth-child(6)  { animation-delay: calc(var(--zm-stagger-base) * 6); }
+.zm-stagger-in > .zm-stagger-item:nth-child(7),
+.zm-stagger-in > .zm-card-enter:nth-child(7),
+.zm-stagger-in > .zm-btn-enter:nth-child(7)  { animation-delay: calc(var(--zm-stagger-base) * 7); }
+.zm-stagger-in > .zm-stagger-item:nth-child(8),
+.zm-stagger-in > .zm-card-enter:nth-child(8),
+.zm-stagger-in > .zm-btn-enter:nth-child(8)  { animation-delay: calc(var(--zm-stagger-base) * 8); }
+.zm-stagger-in > .zm-stagger-item:nth-child(9),
+.zm-stagger-in > .zm-card-enter:nth-child(9),
+.zm-stagger-in > .zm-btn-enter:nth-child(9)  { animation-delay: calc(var(--zm-stagger-base) * 9); }
+.zm-stagger-in > .zm-stagger-item:nth-child(10),
+.zm-stagger-in > .zm-card-enter:nth-child(10),
+.zm-stagger-in > .zm-btn-enter:nth-child(10) { animation-delay: calc(var(--zm-stagger-base) * 10); }
+.zm-stagger-in > .zm-stagger-item:nth-child(11) { animation-delay: calc(var(--zm-stagger-base) * 11); }
+.zm-stagger-in > .zm-stagger-item:nth-child(12) { animation-delay: calc(var(--zm-stagger-base) * 12); }
+.zm-stagger-in > .zm-stagger-item:nth-child(13) { animation-delay: calc(var(--zm-stagger-base) * 13); }
+.zm-stagger-in > .zm-stagger-item:nth-child(14) { animation-delay: calc(var(--zm-stagger-base) * 14); }
+.zm-stagger-in > .zm-stagger-item:nth-child(15) { animation-delay: calc(var(--zm-stagger-base) * 15); }
+.zm-stagger-in > .zm-stagger-item:nth-child(16) { animation-delay: calc(var(--zm-stagger-base) * 16); }
+.zm-stagger-in > .zm-stagger-item:nth-child(17) { animation-delay: calc(var(--zm-stagger-base) * 17); }
+.zm-stagger-in > .zm-stagger-item:nth-child(18) { animation-delay: calc(var(--zm-stagger-base) * 18); }
+.zm-stagger-in > .zm-stagger-item:nth-child(19) { animation-delay: calc(var(--zm-stagger-base) * 19); }
+.zm-stagger-in > .zm-stagger-item:nth-child(20) { animation-delay: calc(var(--zm-stagger-base) * 20); }
+
+/* Stagger from left (horizontal card decks) */
+.zm-stagger-left > * {
+  opacity: 0;
+  transform: translateX(-32px);
+  animation: zmFadeSlideLeft var(--zm-duration-base) var(--zm-ease-out-expo) forwards;
+}
+.zm-stagger-left > *:nth-child(1)  { animation-delay: calc(var(--zm-stagger-base) * 1); }
+.zm-stagger-left > *:nth-child(2)  { animation-delay: calc(var(--zm-stagger-base) * 2); }
+.zm-stagger-left > *:nth-child(3)  { animation-delay: calc(var(--zm-stagger-base) * 3); }
+.zm-stagger-left > *:nth-child(4)  { animation-delay: calc(var(--zm-stagger-base) * 4); }
+.zm-stagger-left > *:nth-child(5)  { animation-delay: calc(var(--zm-stagger-base) * 5); }
+.zm-stagger-left > *:nth-child(6)  { animation-delay: calc(var(--zm-stagger-base) * 6); }
+.zm-stagger-left > *:nth-child(7)  { animation-delay: calc(var(--zm-stagger-base) * 7); }
+.zm-stagger-left > *:nth-child(8)  { animation-delay: calc(var(--zm-stagger-base) * 8); }
+
+/* Scale-in stagger (hero sections, feature grids) */
+.zm-stagger-scale > * {
+  opacity: 0;
+  transform: scale(0.85);
+  animation: zmFadeScaleIn var(--zm-duration-base) var(--zm-ease-out-back) forwards;
+}
+.zm-stagger-scale > *:nth-child(1)  { animation-delay: calc(var(--zm-stagger-base) * 1); }
+.zm-stagger-scale > *:nth-child(2)  { animation-delay: calc(var(--zm-stagger-base) * 2); }
+.zm-stagger-scale > *:nth-child(3)  { animation-delay: calc(var(--zm-stagger-base) * 3); }
+.zm-stagger-scale > *:nth-child(4)  { animation-delay: calc(var(--zm-stagger-base) * 4); }
+.zm-stagger-scale > *:nth-child(5)  { animation-delay: calc(var(--zm-stagger-base) * 5); }
+.zm-stagger-scale > *:nth-child(6)  { animation-delay: calc(var(--zm-stagger-base) * 6); }
+.zm-stagger-scale > *:nth-child(7)  { animation-delay: calc(var(--zm-stagger-base) * 7); }
+.zm-stagger-scale > *:nth-child(8)  { animation-delay: calc(var(--zm-stagger-base) * 8); }
+
+@keyframes zmFadeSlideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes zmFadeSlideLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zmFadeScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. GLASSMORPHISM — Advanced Glass Effects
+   backdrop-blur + layered transparency + subtle border
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zm-glass {
+  background: var(--zm-glass-bg);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--zm-glass-border);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 24px var(--zm-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Deeper frosted variant */
+.zm-glass-heavy {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme glass */
+.zm-glass-dark {
+  background: rgba(15, 15, 25, 0.65);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Gradient-border glass card */
+.zm-glass-gradient {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.zm-glass-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.5),
+    rgba(59, 130, 246, 0.4),
+    rgba(236, 72, 153, 0.35),
+    rgba(139, 92, 246, 0.5)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Glass panel with subtle hover lift */
+.zm-glass-panel {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  transition:
+    transform var(--zm-duration-base) var(--zm-ease-out-expo),
+    box-shadow var(--zm-duration-base) var(--zm-ease-out-expo),
+    background var(--zm-duration-base) var(--zm-ease-smooth);
+  will-change: transform;
+}
+.zm-glass-panel:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. BREATH ANIMATION — Soft Pulsing Glow
+   Meditative breathing rhythm with luminous aura
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zm-breath {
+  animation: zmBreath 4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.zm-breath-slow {
+  animation: zmBreath 6s ease-in-out infinite;
+}
+
+.zm-breath-fast {
+  animation: zmBreath 2.5s ease-in-out infinite;
+}
+
+/* Breath with colored glow ring */
+.zm-breath-glow {
+  animation: zmBreathGlow 4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.zm-breath-glow-violet {
+  animation: zmBreathGlowViolet 4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.zm-breath-glow-multi {
+  animation: zmBreathGlowMulti 5s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes zmBreath {
+  0%, 100% { transform: scale(1);     opacity: 0.9; }
+  50%      { transform: scale(1.03);  opacity: 1; }
+}
+
+@keyframes zmBreathGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 20px var(--zm-glow-color-1),
+      0 0 40px rgba(139, 92, 246, 0.15),
+      0 0 60px rgba(139, 92, 246, 0.08);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow:
+      0 0 32px var(--zm-glow-color-1),
+      0 0 64px rgba(139, 92, 246, 0.25),
+      0 0 96px rgba(139, 92, 246, 0.12),
+      0 0 128px rgba(139, 92, 246, 0.05);
+  }
+}
+
+@keyframes zmBreathGlowViolet {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 16px rgba(139, 92, 246, 0.35),
+      0 0 48px rgba(139, 92, 246, 0.12);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow:
+      0 0 28px rgba(139, 92, 246, 0.5),
+      0 0 72px rgba(139, 92, 246, 0.2),
+      0 0 120px rgba(139, 92, 246, 0.08);
+  }
+}
+
+@keyframes zmBreathGlowMulti {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 16px var(--zm-glow-color-1),
+      0 0 36px rgba(59, 130, 246, 0.12);
+  }
+  33% {
+    transform: scale(1.03);
+    box-shadow:
+      0 0 24px var(--zm-glow-color-2),
+      0 0 56px rgba(59, 130, 246, 0.2);
+  }
+  66% {
+    transform: scale(1.035);
+    box-shadow:
+      0 0 28px var(--zm-glow-color-3),
+      0 0 64px rgba(236, 72, 153, 0.18);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 16px var(--zm-glow-color-1),
+      0 0 36px rgba(59, 130, 246, 0.12);
+  }
+}
+
+/* Breath ring — standalone expanding rings */
+.zm-breath-ring {
+  position: relative;
+}
+.zm-breath-ring::before,
+.zm-breath-ring::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid rgba(139, 92, 246, 0.4);
+  animation: zmBreathRing 3s ease-out infinite;
+  pointer-events: none;
+}
+.zm-breath-ring::after {
+  animation-delay: 1.5s;
+}
+
+@keyframes zmBreathRing {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. PAGE-FLIP TRANSITIONS
+   Smooth page-to-page transitions for SPA feel
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zm-page-enter {
+  animation: zmPageFlipIn var(--zm-duration-slow) var(--zm-ease-out-expo) both;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+
+.zm-page-exit {
+  animation: zmPageFlipOut var(--zm-duration-slow) var(--zm-ease-out-expo) both;
+  transform-origin: center top;
+  will-change: transform, opacity;
+}
+
+/* Gentle crossfade variant */
+.zm-page-fade-enter {
+  animation: zmPageFadeIn var(--zm-duration-base) var(--zm-ease-smooth) both;
+}
+.zm-page-fade-exit {
+  animation: zmPageFadeOut var(--zm-duration-base) var(--zm-ease-smooth) both;
+}
+
+/* Slide-from-right (forward nav) */
+.zm-page-slide-next {
+  animation: zmPageSlideNext var(--zm-duration-slow) var(--zm-ease-out-expo) both;
+  will-change: transform, opacity;
+}
+
+/* Slide-from-left (back nav) */
+.zm-page-slide-prev {
+  animation: zmPageSlidePrev var(--zm-duration-slow) var(--zm-ease-out-expo) both;
+  will-change: transform, opacity;
+}
+
+@keyframes zmPageFlipIn {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(-8deg) translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes zmPageFlipOut {
+  from {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(800px) rotateX(8deg) translateY(-12px) scale(0.98);
+  }
+}
+
+@keyframes zmPageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zmPageFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes zmPageSlideNext {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zmPageSlidePrev {
+  from { opacity: 0; transform: translateX(-48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. PREMIUM HOVER EFFECTS
+   Scale + Shadow Lift + Gradient Shift — the trifecta
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Card Hover: subtle lift ── */
+.zm-hover-lift {
+  transition:
+    transform var(--zm-duration-base) var(--zm-ease-out-expo),
+    box-shadow var(--zm-duration-base) var(--zm-ease-out-expo);
+  will-change: transform;
+}
+.zm-hover-lift:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Card Hover: pronounced lift + border glow ── */
+.zm-hover-lift-glow {
+  transition:
+    transform var(--zm-duration-base) var(--zm-ease-out-back),
+    box-shadow var(--zm-duration-base) var(--zm-ease-smooth),
+    border-color var(--zm-duration-base) var(--zm-ease-smooth);
+  will-change: transform;
+}
+.zm-hover-lift-glow:hover {
+  transform: translateY(-8px) scale(1.025);
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(139, 92, 246, 0.35),
+    0 0 40px rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* ── Gradient Shift on hover ── */
+.zm-hover-gradient {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  transition:
+    transform var(--zm-duration-base) var(--zm-ease-out-expo),
+    box-shadow var(--zm-duration-base) var(--zm-ease-smooth);
+  will-change: transform;
+  overflow: hidden;
+}
+.zm-hover-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(59, 130, 246, 0.1),
+    rgba(236, 72, 153, 0.08)
+  );
+  opacity: 0;
+  transition: opacity var(--zm-duration-slow) var(--zm-ease-smooth);
+  pointer-events: none;
+}
+.zm-hover-gradient:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+.zm-hover-gradient:hover::after {
+  opacity: 1;
+}
+
+/* ── Image / Media hover — subtle zoom ── */
+.zm-hover-zoom {
+  overflow: hidden;
+}
+.zm-hover-zoom > img,
+.zm-hover-zoom > .zm-zoom-target {
+  transition: transform var(--zm-duration-slow) var(--zm-ease-out-expo);
+  will-change: transform;
+}
+.zm-hover-zoom:hover > img,
+.zm-hover-zoom:hover > .zm-zoom-target {
+  transform: scale(1.06);
+}
+
+/* ── Button hover — magnetic feel ── */
+.zm-hover-btn {
+  transition:
+    transform var(--zm-duration-fast) var(--zm-ease-spring),
+    box-shadow var(--zm-duration-fast) var(--zm-ease-smooth),
+    background var(--zm-duration-fast) var(--zm-ease-smooth);
+  will-change: transform;
+}
+.zm-hover-btn:hover {
+  transform: scale(1.05);
+}
+.zm-hover-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Shine sweep on hover ── */
+.zm-hover-shine {
+  position: relative;
+  overflow: hidden;
+}
+.zm-hover-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.zm-hover-shine:hover::before {
+  left: 120%;
+}
+
+/* ── Underline expand on hover ── */
+.zm-hover-underline {
+  position: relative;
+}
+.zm-hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  transition: width var(--zm-duration-base) var(--zm-ease-out-expo), left var(--zm-duration-base) var(--zm-ease-out-expo);
+}
+.zm-hover-underline:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. MICRO-INTERACTIONS
+   Ripple effect • Icon pulse • subtle feedback
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Ripple Effect (CSS-only via :active pseudo-element) ── */
+.zm-ripple {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.zm-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out;
+  pointer-events: none;
+}
+.zm-ripple:active::after {
+  width: 300%;
+  height: 300%;
+  opacity: 0;
+  transition: 0s;
+}
+
+/* Dark ripple variant */
+.zm-ripple-dark::after {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* ── Icon Pulse — heartbeat on icons ── */
+.zm-icon-pulse {
+  animation: zmIconPulse 2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.zm-icon-pulse-slow {
+  animation: zmIconPulse 3s ease-in-out infinite;
+}
+
+@keyframes zmIconPulse {
+  0%, 100% { transform: scale(1); }
+  15%      { transform: scale(1.25); }
+  30%      { transform: scale(1); }
+  45%      { transform: scale(1.15); }
+  60%      { transform: scale(1); }
+}
+
+/* ── Icon wiggle on hover ── */
+.zm-icon-wiggle {
+  display: inline-block;
+  transition: transform var(--zm-duration-fast) var(--zm-ease-spring);
+}
+.zm-icon-wiggle:hover {
+  animation: zmIconWiggle 0.5s ease-in-out;
+}
+
+@keyframes zmIconWiggle {
+  0%, 100% { transform: rotate(0); }
+  25%      { transform: rotate(-8deg); }
+  75%      { transform: rotate(8deg); }
+}
+
+/* ── Icon spin on hover ── */
+.zm-icon-spin {
+  display: inline-block;
+  transition: transform var(--zm-duration-base) var(--zm-ease-spring);
+}
+.zm-icon-spin:hover {
+  transform: rotate(180deg);
+}
+
+/* ── Bounce-in attention grabber ── */
+.zm-bounce-in {
+  animation: zmBounceIn 0.6s var(--zm-ease-out-back) both;
+}
+
+@keyframes zmBounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.08); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* ── Shake on invalid / error ── */
+.zm-shake {
+  animation: zmShake 0.5s ease-in-out;
+}
+
+@keyframes zmShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-6px); }
+  30%, 70% { transform: translateX(6px); }
+}
+
+/* ── Dot notification pulse ── */
+.zm-dot-pulse {
+  position: relative;
+}
+.zm-dot-pulse::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: zmDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes zmDotPulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.5); opacity: 0.5; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. ROTATING MANDALA — Gradient-Shifting Meditative Geometry
+   Hypnotic multi-layered rotation with cycling gradients
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zm-mandala-container {
+  position: relative;
+  width: var(--zm-mandala-size);
+  height: var(--zm-mandala-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Core ring layers */
+.zm-mandala-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  animation: zmMandalaSpin var(--zm-duration-glacial) linear infinite;
+  will-change: transform;
+}
+
+.zm-mandala-ring:nth-child(1) {
+  width: 100%;
+  height: 100%;
+  animation-duration: 20s;
+  border-width: 3px;
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.zm-mandala-ring:nth-child(2) {
+  width: 82%;
+  height: 82%;
+  animation-duration: 16s;
+  animation-direction: reverse;
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.12), inset 0 0 16px rgba(59, 130, 246, 0.08);
+}
+
+.zm-mandala-ring:nth-child(3) {
+  width: 64%;
+  height: 64%;
+  animation-duration: 12s;
+  border-color: rgba(236, 72, 153, 0.4);
+  box-shadow: 0 0 14px rgba(236, 72, 153, 0.1), inset 0 0 14px rgba(236, 72, 153, 0.06);
+}
+
+.zm-mandala-ring:nth-child(4) {
+  width: 46%;
+  height: 46%;
+  animation-duration: 9s;
+  animation-direction: reverse;
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.08);
+}
+
+.zm-mandala-ring:nth-child(5) {
+  width: 28%;
+  height: 28%;
+  animation-duration: 6s;
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.06);
+}
+
+.zm-mandala-ring:nth-child(6) {
+  width: 14%;
+  height: 14%;
+  animation-duration: 4s;
+  animation-direction: reverse;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 70%);
+  border: none;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
+}
+
+@keyframes zmMandalaSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Mandala with petal geometry (CSS-only petals via box-shadow) ── */
+.zm-mandala-petal {
+  position: absolute;
+  width: 4px;
+  height: 40%;
+  background: linear-gradient(
+    to top,
+    transparent,
+    rgba(139, 92, 246, 0.5),
+    rgba(236, 72, 153, 0.4)
+  );
+  border-radius: 2px;
+  transform-origin: center bottom;
+  animation: zmMandalaPetalSpin 12s linear infinite;
+  will-change: transform;
+}
+
+.zm-mandala-petal:nth-child(1)  { transform: rotate(0deg);   animation-delay: 0s; }
+.zm-mandala-petal:nth-child(2)  { transform: rotate(30deg);  animation-delay: -0.3s; }
+.zm-mandala-petal:nth-child(3)  { transform: rotate(60deg);  animation-delay: -0.6s; }
+.zm-mandala-petal:nth-child(4)  { transform: rotate(90deg);  animation-delay: -0.9s; }
+.zm-mandala-petal:nth-child(5)  { transform: rotate(120deg); animation-delay: -1.2s; }
+.zm-mandala-petal:nth-child(6)  { transform: rotate(150deg); animation-delay: -1.5s; }
+.zm-mandala-petal:nth-child(7)  { transform: rotate(180deg); animation-delay: -1.8s; }
+.zm-mandala-petal:nth-child(8)  { transform: rotate(210deg); animation-delay: -2.1s; }
+.zm-mandala-petal:nth-child(9)  { transform: rotate(240deg); animation-delay: -2.4s; }
+.zm-mandala-petal:nth-child(10) { transform: rotate(270deg); animation-delay: -2.7s; }
+.zm-mandala-petal:nth-child(11) { transform: rotate(300deg); animation-delay: -3.0s; }
+.zm-mandala-petal:nth-child(12) { transform: rotate(330deg); animation-delay: -3.3s; }
+
+/* Petal gradient cycling */
+@keyframes zmMandalaPetalSpin {
+  0%   { filter: hue-rotate(0deg);   opacity: 0.7; }
+  25%  { opacity: 1; }
+  50%  { filter: hue-rotate(180deg); opacity: 0.7; }
+  75%  { opacity: 0.4; }
+  100% { filter: hue-rotate(360deg); opacity: 0.7; }
+}
+
+/* ── Mandala center glow ── */
+.zm-mandala-center {
+  position: absolute;
+  width: 8%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(139, 92, 246, 0.6));
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.5),
+    0 0 60px rgba(139, 92, 246, 0.25),
+    0 0 100px rgba(139, 92, 246, 0.1);
+  animation: zmMandalaCenterPulse 3s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes zmMandalaCenterPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 20px rgba(139, 92, 246, 0.5),
+      0 0 60px rgba(139, 92, 246, 0.25),
+      0 0 100px rgba(139, 92, 246, 0.1);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow:
+      0 0 32px rgba(139, 92, 246, 0.6),
+      0 0 80px rgba(236, 72, 153, 0.35),
+      0 0 140px rgba(59, 130, 246, 0.18);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. FLOATING ZEN PARTICLES — Background Ambient Particles
+   Pure CSS floating orbs with varied trajectories
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zm-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Individual particle orbs */
+.zm-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Particle sizes */
+.zm-particle-xs  { width: 3px;  height: 3px; }
+.zm-particle-sm  { width: 5px;  height: 5px; }
+.zm-particle-md  { width: 8px;  height: 8px; }
+.zm-particle-lg  { width: 12px; height: 12px; }
+.zm-particle-xl  { width: 18px; height: 18px; }
+
+/* Particle colors */
+.zm-particle-violet { background: rgba(139, 92, 246, 0.4);  box-shadow: 0 0 8px rgba(139, 92, 246, 0.3); }
+.zm-particle-blue   { background: rgba(59, 130, 246, 0.35); box-shadow: 0 0 8px rgba(59, 130, 246, 0.25); }
+.zm-particle-pink   { background: rgba(236, 72, 153, 0.3);  box-shadow: 0 0 8px rgba(236, 72, 153, 0.2); }
+.zm-particle-teal   { background: rgba(20, 184, 166, 0.35); box-shadow: 0 0 8px rgba(20, 184, 166, 0.25); }
+.zm-particle-amber  { background: rgba(245, 158, 11, 0.3);  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2); }
+
+/* ── Particle Float Animations (varied) ── */
+
+/* Gentle drift upward */
+.zm-particle-float-up {
+  animation: zmParticleFloatUp 8s ease-in-out infinite;
+}
+
+/* Diagonal drift */
+.zm-particle-float-diag {
+  animation: zmParticleFloatDiag 10s ease-in-out infinite;
+}
+
+/* Sway left-right while floating */
+.zm-particle-float-sway {
+  animation: zmParticleFloatSway 12s ease-in-out infinite;
+}
+
+/* Zigzag ascent */
+.zm-particle-float-zigzag {
+  animation: zmParticleFloatZigzag 14s linear infinite;
+}
+
+/* Slow orbit-like */
+.zm-particle-float-orbit {
+  animation: zmParticleFloatOrbit 16s ease-in-out infinite;
+}
+
+/* Rise and fade (ephemeral) */
+.zm-particle-float-rise {
+  animation: zmParticleFloatRise 6s ease-out infinite;
+}
+
+@keyframes zmParticleFloatUp {
+  0%   { transform: translateY(0) translateX(0);     opacity: 0; }
+  10%  { opacity: var(--zm-particle-opacity, 0.6); }
+  90%  { opacity: var(--zm-particle-opacity, 0.6); }
+  100% { transform: translateY(-120px) translateX(20px); opacity: 0; }
+}
+
+@keyframes zmParticleFloatDiag {
+  0%   { transform: translate(0, 0);     opacity: 0; }
+  15%  { opacity: 0.7; }
+  85%  { opacity: 0.7; }
+  100% { transform: translate(60px, -100px); opacity: 0; }
+}
+
+@keyframes zmParticleFloatSway {
+  0%   { transform: translate(0, 0);        opacity: 0; }
+  10%  { opacity: 0.5; }
+  25%  { transform: translate(30px, -30px);  opacity: 0.7; }
+  50%  { transform: translate(-25px, -60px); opacity: 0.5; }
+  75%  { transform: translate(20px, -90px);  opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translate(0, -120px);    opacity: 0; }
+}
+
+@keyframes zmParticleFloatZigzag {
+  0%   { transform: translate(0, 0);     opacity: 0; }
+  5%   { opacity: 0.6; }
+  25%  { transform: translate(40px, -30px); }
+  50%  { transform: translate(-35px, -60px); }
+  75%  { transform: translate(30px, -90px); }
+  95%  { opacity: 0.3; }
+  100% { transform: translate(0, -130px); opacity: 0; }
+}
+
+@keyframes zmParticleFloatOrbit {
+  0%   { transform: translate(0, 0) rotate(0deg);         opacity: 0; }
+  10%  { opacity: 0.5; }
+  25%  { transform: translate(40px, -20px) rotate(90deg);  opacity: 0.6; }
+  50%  { transform: translate(0, -50px) rotate(180deg);    opacity: 0.4; }
+  75%  { transform: translate(-35px, -20px) rotate(270deg); opacity: 0.6; }
+  90%  { opacity: 0.2; }
+  100% { transform: translate(0, 0) rotate(360deg);        opacity: 0; }
+}
+
+@keyframes zmParticleFloatRise {
+  0%   { transform: translateY(0) scale(0);    opacity: 0; }
+  20%  { transform: translateY(-20px) scale(1); opacity: 0.7; }
+  80%  { transform: translateY(-80px) scale(1); opacity: 0.4; }
+  100% { transform: translateY(-120px) scale(0); opacity: 0; }
+}
+
+/* ── Particle Positioning Helpers ── */
+.zm-particle-pos-1  { top: 90%; left: 10%;  animation-delay: 0s; }
+.zm-particle-pos-2  { top: 85%; left: 25%;  animation-delay: -1.5s; }
+.zm-particle-pos-3  { top: 92%; left: 40%;  animation-delay: -3s; }
+.zm-particle-pos-4  { top: 88%; left: 55%;  animation-delay: -4.5s; }
+.zm-particle-pos-5  { top: 95%; left: 70%;  animation-delay: -6s; }
+.zm-particle-pos-6  { top: 80%; left: 85%;  animation-delay: -2s; }
+.zm-particle-pos-7  { top: 75%; left: 15%;  animation-delay: -5s; }
+.zm-particle-pos-8  { top: 70%; left: 50%;  animation-delay: -7s; }
+.zm-particle-pos-9  { top: 82%; left: 65%;  animation-delay: -3.5s; }
+.zm-particle-pos-10 { top: 78%; left: 35%;  animation-delay: -8s; }
+.zm-particle-pos-11 { top: 93%; left: 92%;  animation-delay: -1s; }
+.zm-particle-pos-12 { top: 87%; left: 5%;   animation-delay: -5.5s; }
+.zm-particle-pos-13 { top: 72%; left: 75%;  animation-delay: -2.5s; }
+.zm-particle-pos-14 { top: 84%; left: 45%;  animation-delay: -6.5s; }
+.zm-particle-pos-15 { top: 96%; left: 30%;  animation-delay: -4s; }
+
+/* Second layer — deeper particles, larger, slower */
+.zm-particles-deep .zm-particle {
+  opacity: 0;
+  filter: blur(2px);
+  animation-duration: 18s !important;
+}
+.zm-particles-deep .zm-particle-pos-1  { animation-delay: 0s; }
+.zm-particles-deep .zm-particle-pos-2  { animation-delay: -4s; }
+.zm-particles-deep .zm-particle-pos-3  { animation-delay: -8s; }
+.zm-particles-deep .zm-particle-pos-4  { animation-delay: -12s; }
+.zm-particles-deep .zm-particle-pos-5  { animation-delay: -2s; }
+.zm-particles-deep .zm-particle-pos-6  { animation-delay: -10s; }
+.zm-particles-deep .zm-particle-pos-7  { animation-delay: -6s; }
+.zm-particles-deep .zm-particle-pos-8  { animation-delay: -14s; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. UTILITY ANIMATIONS
+   Loading • Skeleton • Attention • Entrance variants
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Skeleton loading shimmer ── */
+.zm-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.1) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
+  animation: zmSkeleton 2s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes zmSkeleton {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ── Spinner — premium ring spinner ── */
+.zm-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(139, 92, 246, 0.15);
+  border-top-color: #8b5cf6;
+  animation: zmSpinner 0.8s linear infinite;
+  will-change: transform;
+}
+
+.zm-spinner-sm { width: 18px; height: 18px; border-width: 2px; }
+.zm-spinner-lg { width: 44px; height: 44px; border-width: 4px; }
+
+@keyframes zmSpinner {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Dual-ring spinner ── */
+.zm-spinner-dual {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+.zm-spinner-dual::before,
+.zm-spinner-dual::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  animation: zmSpinner 1.2s linear infinite;
+}
+.zm-spinner-dual::before {
+  inset: 0;
+  border-top-color: #8b5cf6;
+}
+.zm-spinner-dual::after {
+  inset: 6px;
+  border-bottom-color: #ec4899;
+  animation-direction: reverse;
+  animation-duration: 0.9s;
+}
+
+/* ── Progress bar indeterminate ── */
+.zm-progress-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.zm-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6, #ec4899);
+  border-radius: 3px;
+  animation: zmProgressIndeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes zmProgressIndeterminate {
+  0%   { left: -30%; }
+  100% { left: 100%; }
+}
+
+/* ── Text reveal (typewriter feel, CSS-only) ── */
+.zm-text-reveal {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: zmTextReveal 1.5s steps(30, end) forwards;
+}
+
+@keyframes zmTextReveal {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ── Blur-in entrance ── */
+.zm-blur-in {
+  animation: zmBlurIn 0.6s var(--zm-ease-out-expo) both;
+}
+
+@keyframes zmBlurIn {
+  from { opacity: 0; filter: blur(8px); transform: scale(1.02); }
+  to   { opacity: 1; filter: blur(0);  transform: scale(1); }
+}
+
+/* ── Slide-up reveal (scroll-triggered feel) ── */
+.zm-reveal-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.8s var(--zm-ease-out-expo),
+    transform 0.8s var(--zm-ease-out-expo);
+}
+.zm-reveal-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Attention pulse (CTA emphasis) ── */
+.zm-attention-pulse {
+  animation: zmAttentionPulse 2s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@keyframes zmAttentionPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 12px rgba(139, 92, 246, 0);
+  }
+}
+
+/* ── Count-up tick (for number animations) ── */
+.zm-count-up {
+  counter-reset: zm-count 0;
+  animation: zmCountUp 2s steps(100) forwards;
+}
+.zm-count-up::after {
+  content: counter(zm-count);
+}
+
+@keyframes zmCountUp {
+  from { counter-increment: zm-count 0; }
+  to   { counter-increment: zm-count 100; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. REDUCED MOTION — Accessibility
+   Respects prefers-reduced-motion
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .zm-stagger-item,
+  .zm-card-enter,
+  .zm-btn-enter,
+  .zm-list-enter,
+  .zm-reveal-up {
+    opacity: 1;
+    transform: none;
+  }
+
+  .zm-particle,
+  .zm-mandala-ring,
+  .zm-mandala-petal {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PixelForge 🎨 — Made with love for ZENMIX v2
+   Pure CSS • GPU-Accelerated • Zero JavaScript
+   ═══════════════════════════════════════════════════════════════════ */
