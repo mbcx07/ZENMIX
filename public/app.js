@@ -185,6 +185,20 @@ function startSession(id) {
   curSes = id; secs = 0; playing = true;
   switchTab('session');
   renderSessionPage(id);
+  
+  // Map session to mandala palette
+  const sessionPalette = {
+    insomnio: 'sleep',
+    ansiedad: 'relaxation',
+    migrania: 'relaxation',
+    autoestima: 'meditation',
+    'dejar-fumar': 'relaxation',
+    peso: 'meditation',
+    focus: 'concentration'
+  };
+  if (window.MANDALA3D?.setState) {
+    window.MANDALA3D.setState(sessionPalette[id] || 'meditation');
+  }
 }
 
 function renderSessionPage(id) {
@@ -297,14 +311,29 @@ function toggleBin(id, el) {
   mg.connect(bCtx.destination);
   oL.start(); oR.start();
   bOsc = {oL, oR}; activeBin = id;
-  // Update viz
-  if (window.ZENMIX?.setFrequency) window.ZENMIX.setFrequency(id);
+  // Update viz - use MANDALA3D if available, fallback to ZENMIX
+  if (window.MANDALA3D?.setState) {
+    // Map binaural frequencies to mandala states
+    const binToState = {
+      delta: 'sleep',
+      theta: 'meditation',
+      alpha: 'relaxation',
+      sigma: 'concentration',
+      gamma: 'concentration',
+      beta: 'concentration'
+    };
+    window.MANDALA3D.setState(binToState[id] || 'meditation');
+  } else if (window.ZENMIX?.setFrequency) {
+    window.ZENMIX.setFrequency(id);
+  }
   $$('#page-brain') && renderBinaurals();
 }
 function stopBin() {
   if (bOsc) { try { bOsc.oL.stop(); bOsc.oR.stop(); } catch(e){} bOsc = null; }
   if (bCtx) { bCtx.close().catch(()=>{}); bCtx = null; }
   bGain = null; activeBin = null;
+  // Reset visualizers
+  if (window.MANDALA3D?.dispose) window.MANDALA3D.dispose();
   if (window.ZENMIX?.dispose) window.ZENMIX.dispose();
   $$('#page-brain') && renderBinaurals();
 }
@@ -414,9 +443,13 @@ function init() {
   synth.getVoices();
   synth.onvoiceschanged = () => synth.getVoices();
 
-  // Init visualizer
-  if (typeof THREE !== 'undefined' && window.ZENMIX) {
-    window.ZENMIX.init();
+  // Init visualizer - prefer MANDALA3D over ZENMIX
+  if (typeof THREE !== 'undefined') {
+    if (window.MANDALA3D) {
+      window.MANDALA3D.init();
+    } else if (window.ZENMIX) {
+      window.ZENMIX.init();
+    }
   }
 
   // Start
