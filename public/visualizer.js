@@ -1,667 +1,193 @@
-/**
- * ZENMIX 3D Visualizer — VertexWizard 💎
- * Mandala icosaédrica reactiva a audio binaural con Three.js
- * 
- * Frecuencias:
- *   delta  (0.5–4 Hz)   → azul profundo
- *   theta  (4–8 Hz)     → púrpura
- *   alpha  (8–14 Hz)    → dorado
- *   gamma  (30–100 Hz)  → blanco brillante
- */
+// ZENMIX — Visualizer module for Three.js integration
+// Dependencies: THREE (loaded via CDN)
+window.ZENMIX = (() => {
+  let scene, camera, renderer, mesh, particles = [], analyser, dataArray;
+  let container, animId, activeFreq = 'alpha', disposed = false;
+  let rotSpeed = 0.005, scaleTarget = 1;
 
-(function () {
-  'use strict';
-
-  // ─── Paletas de color por frecuencia ───────────────────────────────
-  const PALETTES = {
-    delta: {
-      primary: 0x1a3a5c,
-      wireframe: 0x3a7bd5,
-      points: 0x5b9ef5,
-      particles: [0x2a5a9c, 0x1e90ff, 0x00bfff],
-      ambient: 0x0a1a3c,
-      light: 0x4488cc,
-      bg: 0x020812
-    },
-    theta: {
-      primary: 0x2d1b4e,
-      wireframe: 0x9b59b6,
-      points: 0xc39bdb,
-      particles: [0x6c3483, 0xa569bd, 0xd7bde2],
-      ambient: 0x140a26,
-      light: 0x8e44ad,
-      bg: 0x080412
-    },
-    alpha: {
-      primary: 0x3d2e00,
-      wireframe: 0xf1c40f,
-      points: 0xf9e076,
-      particles: [0xd4ac0d, 0xf5b041, 0xffd700],
-      ambient: 0x1a1200,
-      light: 0xd4a017,
-      bg: 0x0a0800
-    },
-    gamma: {
-      primary: 0x2c2c2c,
-      wireframe: 0xf0f0f0,
-      points: 0xffffff,
-      particles: [0xcccccc, 0xe8e8e8, 0xffffff],
-      ambient: 0x181818,
-      light: 0xe0e0e0,
-      bg: 0x080808
-    }
+  const palettes = {
+    delta: { main: 0x1e3a5f, glow: 0x3b5998, accent: 0x5b7fc0, speed: 0.002 },
+    theta: { main: 0x4a1d6b, glow: 0x7b3fa3, accent: 0xa855f7, speed: 0.004 },
+    alpha: { main: 0x8b6914, glow: 0xc4a035, accent: 0xf5d060, speed: 0.005 },
+    sigma: { main: 0x1d5b3a, glow: 0x3a8b5c, accent: 0x5de890, speed: 0.006 },
+    gamma: { main: 0x5c5c5c, glow: 0xaaaaaa, accent: 0xf0f0f0, speed: 0.008 },
+    beta: { main: 0x5c1a1a, glow: 0xcc3333, accent: 0xff5555, speed: 0.006 }
   };
 
-  // ─── Estado ─────────────────────────────────────────────────────────
-  let currentPalette = PALETTES.alpha;
-  let targetPalette = PALETTES.alpha;
-  let paletteTransition = 1.0; // 0 = old, 1 = new
-  const PALETTE_TRANSITION_SPEED = 0.02;
+  function init(container) {
+    if (disposed || scene) return;
+    container = container || document.getElementById('zenViz') || document.body;
 
-  let audioCtx = null;
-  let analyser = null;
-  let frequencyData = null;
-  let audioSource = null;
-  let audioInitialized = false;
-
-  // ─── Three.js core ─────────────────────────────────────────────────
-  let scene, camera, renderer;
-  let mandalaGroup, wireframeIco, pointsIco, innerGlow;
-  let particleSystems = [];
-  let pointLight, ambientLight;
-  let clock;
-
-  // ─── Animation params ──────────────────────────────────────────────
-  let baseRotationSpeed = 0.003;
-  let currentRotationSpeed = 0.003;
-  let targetRotationSpeed = 0.003;
-
-  // ─── DOM ref ───────────────────────────────────────────────────────
-  let container = null;
-
-  // ─── Lerp helpers ──────────────────────────────────────────────────
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function lerpColor(a, b, t) {
-    const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
-    const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
-    const rr = Math.round(lerp(ar, br, t));
-    const rg = Math.round(lerp(ag, bg, t));
-    const rb = Math.round(lerp(ab, bb, t));
-    return (rr << 16) | (rg << 8) | rb;
-  }
-
-  // ─── INIT ──────────────────────────────────────────────────────────
-  function init(containerElement) {
-    container = containerElement || document.getElementById('zenmix-visualizer');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'zenmix-visualizer';
-      container.style.cssText = 'position:fixed;inset:0;z-index:0;';
-      document.body.prepend(container);
-    }
-
-    // Scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(PALETTES.alpha.bg);
-    scene.fog = new THREE.FogExp2(PALETTES.alpha.bg, 0.00015);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 5;
 
-    // Camera
-    camera = new THREE.PerspectiveCamera(
-      55,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      100
-    );
-    camera.position.set(0, 0.8, 7);
-    camera.lookAt(0, 0, 0);
-
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer = new THREE.WebGLRenderer({ canvas: container, alpha: true, antialias: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    container.appendChild(renderer.domElement);
 
-    // Clock
-    clock = new THREE.Clock();
-
-    // ── Lighting ───────────────────────────────────────────────────
-    ambientLight = new THREE.AmbientLight(PALETTES.alpha.ambient, 1.8);
-    scene.add(ambientLight);
-
-    pointLight = new THREE.PointLight(PALETTES.alpha.light, 3.5, 12, 1.5);
-    pointLight.position.set(0, 0, 0);
-    pointLight.castShadow = true;
-    pointLight.shadow.mapSize.set(512, 512);
-    pointLight.shadow.camera.near = 0.5;
-    pointLight.shadow.camera.far = 30;
-    scene.add(pointLight);
-
-    // Secondary rim light
-    const rimLight = new THREE.PointLight(PALETTES.alpha.wireframe, 1.5, 8, 2);
-    rimLight.position.set(3, 2, -3);
-    scene.add(rimLight);
-
-    // ── Mandala Group ──────────────────────────────────────────────
-    mandalaGroup = new THREE.Group();
-    scene.add(mandalaGroup);
-
-    // ── Icosahedron Geometry ──────────────────────────────────────
-    const icoGeom = new THREE.IcosahedronGeometry(1.6, 3);
-
-    // Wireframe
-    const wireframeMat = new THREE.MeshBasicMaterial({
-      color: PALETTES.alpha.wireframe,
+    // Main mandala - icosahedron
+    let geo = new THREE.IcosahedronGeometry(1.2, 3);
+    let mat = new THREE.MeshBasicMaterial({
+      color: palettes[activeFreq].main,
       wireframe: true,
       transparent: true,
-      opacity: 0.55,
-      depthWrite: false
+      opacity: 0.25
     });
-    wireframeIco = new THREE.Mesh(icoGeom, wireframeMat);
-    mandalaGroup.add(wireframeIco);
+    mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
 
-    // Solid inner core (subtle)
-    const innerGeom = new THREE.IcosahedronGeometry(1.0, 2);
-    const innerMat = new THREE.MeshStandardMaterial({
-      color: PALETTES.alpha.primary,
-      roughness: 0.6,
-      metalness: 0.2,
+    // Inner glow sphere
+    let glowGeo = new THREE.IcosahedronGeometry(0.5, 2);
+    let glowMat = new THREE.MeshBasicMaterial({
+      color: palettes[activeFreq].glow,
       transparent: true,
-      opacity: 0.35,
-      depthWrite: false
+      opacity: 0.12
     });
-    innerGlow = new THREE.Mesh(innerGeom, innerMat);
-    mandalaGroup.add(innerGlow);
+    let innerGlow = new THREE.Mesh(glowGeo, glowMat);
+    mesh.add(innerGlow);
 
-    // Vertex points (brillantes)
-    const pointsGeom = new THREE.IcosahedronGeometry(1.64, 3);
-    const pointsMat = new THREE.PointsMaterial({
-      color: PALETTES.alpha.points,
-      size: 0.06,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-      opacity: 0.9
-    });
-    pointsIco = new THREE.Points(pointsGeom, pointsMat);
-    mandalaGroup.add(pointsIco);
+    // Vertex points
+    let positions = mesh.geometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      if (Math.random() > 0.2) continue;
+      let ptGeo = new THREE.SphereGeometry(0.015, 4, 4);
+      let ptMat = new THREE.MeshBasicMaterial({ color: palettes[activeFreq].accent, transparent: true, opacity: 0.7 });
+      let pt = new THREE.Mesh(ptGeo, ptMat);
+      pt.position.set(positions[i], positions[i + 1], positions[i + 2]);
+      mesh.add(pt);
+    }
 
-    // ── Orbiting Particles ────────────────────────────────────────
-    createOrbitingParticles(3);
+    // Starfield
+    let starsGeo = new THREE.BufferGeometry();
+    let starCount = 300;
+    let starVerts = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i += 3) {
+      starVerts[i] = (Math.random() - 0.5) * 10;
+      starVerts[i + 1] = (Math.random() - 0.5) * 10;
+      starVerts[i + 2] = (Math.random() - 0.5) * 10;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starVerts, 3));
+    let starsMat = new THREE.PointsMaterial({ color: 0xaabbdd, size: 0.02, transparent: true, opacity: 0.5 });
+    let stars = new THREE.Points(starsGeo, starsMat);
+    scene.add(stars);
 
-    // ── Outer Ring ────────────────────────────────────────────────
-    createOuterRing();
-
-    // ── Events ────────────────────────────────────────────────────
-    window.addEventListener('resize', onResize);
-    window.addEventListener('zenmix:frequency', onFrequencyChange);
-    window.addEventListener('zenmix:audioStream', onAudioStream);
-
-    // ── Start Loop ────────────────────────────────────────────────
-    animate();
-
-    console.log('💎 ZENMIX Visualizer initialized — VertexWizard ready');
-  }
-
-  // ─── Orbiting Particles ────────────────────────────────────────────
-  function createOrbitingParticles(count) {
-    particleSystems.forEach(sys => scene.remove(sys));
-    particleSystems = [];
-
-    for (let i = 0; i < count; i++) {
-      const particleCount = 200 + i * 60;
-      const geom = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-      const colors = new Float32Array(particleCount * 3);
-      const sizes = new Float32Array(particleCount);
-
-      const radius = 2.2 + i * 0.6;
-      const tilt = (i - 1) * 0.5;
-
-      for (let j = 0; j < particleCount; j++) {
-        // Spherical distribution with variable radius
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const r = radius + (Math.random() - 0.5) * 0.6;
-
-        positions[j * 3] = r * Math.sin(phi) * Math.cos(theta);
-        positions[j * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * Math.cos(tilt);
-        positions[j * 3 + 2] = r * Math.cos(phi);
-
-        // Random color from palette
-        const colorIdx = Math.floor(Math.random() * PALETTES.alpha.particles.length);
-        const c = new THREE.Color(PALETTES.alpha.particles[colorIdx]);
-        colors[j * 3] = c.r;
-        colors[j * 3 + 1] = c.g;
-        colors[j * 3 + 2] = c.b;
-
-        sizes[j] = Math.random() * 3.5 + 1.0;
+    // Orbit particles
+    for (let j = 0; j < 3; j++) {
+      let pCount = 60;
+      let pGeo = new THREE.BufferGeometry();
+      let pVerts = new Float32Array(pCount * 3);
+      for (let i = 0; i < pCount; i++) {
+        let angle = (i / pCount) * Math.PI * 2;
+        let r = 1.6 + j * 0.4 + Math.random() * 0.1;
+        pVerts[i * 3] = Math.cos(angle) * r;
+        pVerts[i * 3 + 1] = Math.sin(angle) * r * (0.3 + j * 0.2);
+        pVerts[i * 3 + 2] = Math.sin(angle) * r * (0.5 + j * 0.1);
       }
-
-      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-      // Use a circular sprite texture
-      const canvas = document.createElement('canvas');
-      canvas.width = 32;
-      canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-      gradient.addColorStop(0, 'rgba(255,255,255,1)');
-      gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-      gradient.addColorStop(0.5, 'rgba(255,255,255,0.3)');
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 32, 32);
-      const spriteTexture = new THREE.CanvasTexture(canvas);
-
-      const mat = new THREE.PointsMaterial({
-        size: 0.08,
-        map: spriteTexture,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pVerts, 3));
+      let pMat = new THREE.PointsMaterial({
+        color: palettes[activeFreq].accent,
+        size: 0.03,
         transparent: true,
-        opacity: 0.7,
-        vertexColors: true,
-        sizeAttenuation: true
+        opacity: 0.6 - j * 0.15,
+        blending: THREE.AdditiveBlending
       });
-
-      const points = new THREE.Points(geom, mat);
-      points.userData = {
-        baseRadius: radius,
-        tilt: tilt,
-        speed: 0.15 + i * 0.08 + Math.random() * 0.1,
-        offset: Math.random() * Math.PI * 2
-      };
-      scene.add(points);
-      particleSystems.push(points);
+      let pSys = new THREE.Points(pGeo, pMat);
+      pSys.userData = { speed: 0.3 + j * 0.15, radius: 1.6 + j * 0.4 };
+      scene.add(pSys);
+      particles.push(pSys);
     }
+
+    window.addEventListener('resize', resize);
+    animate();
   }
 
-  // ─── Outer Ring ────────────────────────────────────────────────────
-  function createOuterRing() {
-    const ringGeom = new THREE.TorusGeometry(2.8, 0.02, 16, 180);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: PALETTES.alpha.wireframe,
-      transparent: true,
-      opacity: 0.4,
-      depthWrite: false
+  function setFrequency(freq) {
+    if (!palettes[freq]) return;
+    activeFreq = freq;
+    rotSpeed = palettes[freq].speed;
+    if (mesh) {
+      mesh.material.color.set(palettes[freq].main);
+      mesh.children.forEach((c, i) => {
+        if (i === 0 && c.material) c.material.color.set(palettes[freq].glow);
+      });
+    }
+    particles.forEach((p, i) => {
+      if (p.material) p.material.color.set(palettes[freq].accent);
     });
-    const ring = new THREE.Mesh(ringGeom, ringMat);
-    ring.rotation.x = Math.PI / 2.3;
-    ring.userData.isRing = true;
-    scene.add(ring);
-
-    // Second ring
-    const ring2Geom = new THREE.TorusGeometry(3.0, 0.015, 16, 200);
-    const ring2Mat = new THREE.MeshBasicMaterial({
-      color: PALETTES.alpha.points,
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false
-    });
-    const ring2 = new THREE.Mesh(ring2Geom, ring2Mat);
-    ring2.rotation.x = -Math.PI / 3;
-    ring2.rotation.y = Math.PI / 4;
-    ring2.userData.isRing = true;
-    scene.add(ring2);
   }
 
-  // ─── Animation Loop ────────────────────────────────────────────────
+  function connectAudio(streamOrElement) {
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let src;
+    if (streamOrElement instanceof MediaStream) src = ctx.createMediaStreamSource(streamOrElement);
+    else if (streamOrElement instanceof HTMLMediaElement || streamOrElement instanceof HTMLAudioElement) src = ctx.createMediaElementSource(streamOrElement);
+    else return;
+
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    src.connect(analyser);
+  }
+
   function animate() {
-    requestAnimationFrame(animate);
+    if (disposed) return;
+    animId = requestAnimationFrame(animate);
 
-    const dt = Math.min(clock.getDelta(), 0.1);
-    const elapsed = clock.elapsedTime;
+    // Audio reactivity
+    if (analyser && dataArray) {
+      analyser.getByteFrequencyData(dataArray);
+      let low = dataArray.slice(0, 30).reduce((a, b) => a + b, 0) / 30 / 255;
+      let mid = dataArray.slice(30, 120).reduce((a, b) => a + b, 0) / 90 / 255;
+      let high = dataArray.slice(120).reduce((a, b) => a + b, 0) / 900 / 255;
 
-    // ── Palette Transition ───────────────────────────────────────
-    if (paletteTransition < 1.0) {
-      paletteTransition = Math.min(1.0, paletteTransition + PALETTE_TRANSITION_SPEED);
-      applyPaletteBlend(currentPalette, targetPalette, paletteTransition);
-    }
-
-    // ── Audio Reactivity ─────────────────────────────────────────
-    let audioEnergy = 0;
-    let lowFreqEnergy = 0;
-    let midFreqEnergy = 0;
-    let highFreqEnergy = 0;
-
-    if (analyser && frequencyData) {
-      analyser.getByteFrequencyData(frequencyData);
-
-      // Low: 0–200 Hz (bins 0–10 aprox for 2048 FFT)
-      for (let i = 0; i < 10; i++) lowFreqEnergy += frequencyData[i] / 255;
-      lowFreqEnergy /= 10;
-
-      // Mid: 200–2000 Hz
-      for (let i = 10; i < 100; i++) midFreqEnergy += frequencyData[i] / 255;
-      midFreqEnergy /= 90;
-
-      // High: 2000 Hz+
-      for (let i = 100; i < frequencyData.length; i++) highFreqEnergy += frequencyData[i] / 255;
-      highFreqEnergy /= (frequencyData.length - 100);
-
-      audioEnergy = (lowFreqEnergy * 0.5 + midFreqEnergy * 0.3 + highFreqEnergy * 0.2);
-    }
-
-    // ── Rotation (audio-reactive) ────────────────────────────────
-    const audioBoost = 1.0 + audioEnergy * 1.8;
-    const targetSpeed = baseRotationSpeed * audioBoost;
-    currentRotationSpeed = lerp(currentRotationSpeed, targetSpeed, 0.05);
-
-    mandalaGroup.rotation.y += currentRotationSpeed;
-    mandalaGroup.rotation.x += currentRotationSpeed * 0.4;
-    mandalaGroup.rotation.z += currentRotationSpeed * 0.15;
-
-    // ── Audio-reactive scale ─────────────────────────────────────
-    const scaleTarget = 1.0 + lowFreqEnergy * 0.15;
-    mandalaGroup.scale.lerp(
-      new THREE.Vector3(scaleTarget, scaleTarget, scaleTarget),
-      0.08
-    );
-
-    // ── Wireframe opacity pulse ──────────────────────────────────
-    if (wireframeIco && wireframeIco.material) {
-      const targetOpacity = 0.45 + midFreqEnergy * 0.35;
-      wireframeIco.material.opacity = lerp(
-        wireframeIco.material.opacity,
-        targetOpacity,
-        0.1
-      );
-    }
-
-    // ── Points size pulse ────────────────────────────────────────
-    if (pointsIco && pointsIco.material) {
-      const targetSize = 0.05 + highFreqEnergy * 0.06;
-      pointsIco.material.size = lerp(pointsIco.material.size, targetSize, 0.1);
-    }
-
-    // ── Point light intensity ────────────────────────────────────
-    if (pointLight) {
-      const targetIntensity = 3.0 + lowFreqEnergy * 3.0;
-      pointLight.intensity = lerp(pointLight.intensity, targetIntensity, 0.08);
-    }
-
-    // ── Orbiting particles ───────────────────────────────────────
-    particleSystems.forEach((sys, idx) => {
-      if (!sys.userData) return;
-      const { baseRadius, tilt, speed, offset } = sys.userData;
-      const angle = elapsed * speed + offset;
-
-      // Orbit around mandala
-      const r = baseRadius + audioEnergy * 0.3;
-      sys.position.x = Math.cos(angle) * r;
-      sys.position.y = Math.sin(angle * 0.7) * r * 0.5;
-      sys.position.z = Math.sin(angle) * r;
-
-      // Subtle rotation
-      sys.rotation.y += speed * 0.3 * dt;
-      sys.rotation.x += speed * 0.15 * dt;
-
-      // Opacity pulse
-      sys.material.opacity = 0.5 + audioEnergy * 0.4;
-    });
-
-    // ── Animate rings ────────────────────────────────────────────
-    scene.children.forEach(child => {
-      if (child.userData && child.userData.isRing) {
-        child.rotation.z += currentRotationSpeed * 0.6;
-        child.rotation.y += currentRotationSpeed * 0.25;
+      if (mesh) {
+        scaleTarget = 1 + low * 0.15 + mid * 0.1;
+        mesh.material.opacity = 0.2 + mid * 0.3;
       }
-    });
+      rotSpeed = palettes[activeFreq].speed * (1 + low * 2 + mid * 0.5);
+    }
 
-    // ── Camera subtle orbit ──────────────────────────────────────
-    const camAngle = elapsed * 0.12;
-    const camRadius = 7.0 + Math.sin(elapsed * 0.3) * 0.5;
-    const camY = 0.8 + Math.sin(elapsed * 0.25) * 0.6;
-    camera.position.x = Math.sin(camAngle) * camRadius;
-    camera.position.y = camY;
-    camera.position.z = Math.cos(camAngle) * camRadius;
-    camera.lookAt(0, 0, 0);
-
-    // ── Inner glow pulse ─────────────────────────────────────────
-    if (innerGlow) {
-      innerGlow.rotation.y += currentRotationSpeed * 0.5;
-      innerGlow.rotation.x += currentRotationSpeed * 0.2;
-      const innerScale = 1.0 + highFreqEnergy * 0.08;
-      innerGlow.scale.lerp(
-        new THREE.Vector3(innerScale, innerScale, innerScale),
+    // Smooth scale
+    if (mesh) {
+      mesh.scale.lerp(
+        new THREE.Vector3(scaleTarget, scaleTarget, scaleTarget),
         0.05
       );
+      mesh.rotation.x += rotSpeed * 0.7;
+      mesh.rotation.y += rotSpeed;
+      mesh.rotation.z += rotSpeed * 0.3;
     }
 
-    // ── Render ───────────────────────────────────────────────────
+    // Orbit particles
+    let t = performance.now() * 0.001;
+    particles.forEach(p => {
+      p.rotation.y += p.userData.speed * 0.01;
+      p.rotation.x += p.userData.speed * 0.005;
+    });
+
+    // Camera orbit
+    camera.position.x = Math.sin(t * 0.15) * 0.5;
+    camera.position.y = Math.cos(t * 0.15) * 0.25;
+    camera.lookAt(0, 0, 0);
+
     renderer.render(scene, camera);
   }
 
-  // ─── Palette Blending ──────────────────────────────────────────────
-  function applyPaletteBlend(from, to, t) {
-    if (t >= 1.0) {
-      currentPalette = to;
-      paletteTransition = 1.0;
-      t = 1.0;
-    }
-
-    // Scene background
-    const bgColor = new THREE.Color(lerpColor(from.bg, to.bg, t));
-    scene.background = bgColor;
-    if (scene.fog) {
-      scene.fog.color = bgColor;
-    }
-
-    // Wireframe
-    if (wireframeIco && wireframeIco.material) {
-      wireframeIco.material.color.set(lerpColor(from.wireframe, to.wireframe, t));
-    }
-
-    // Points
-    if (pointsIco && pointsIco.material) {
-      pointsIco.material.color.set(lerpColor(from.points, to.points, t));
-    }
-
-    // Inner glow
-    if (innerGlow && innerGlow.material) {
-      innerGlow.material.color.set(lerpColor(from.primary, to.primary, t));
-    }
-
-    // Lights
-    if (ambientLight) {
-      ambientLight.color.set(lerpColor(from.ambient, to.ambient, t));
-    }
-    if (pointLight) {
-      pointLight.color.set(lerpColor(from.light, to.light, t));
-    }
-
-    // Particles
-    const blendedParticles = to.particles.map((toCol, i) => {
-      const fromCol = from.particles[i % from.particles.length];
-      return lerpColor(fromCol, toCol, t);
-    });
-    particleSystems.forEach(sys => {
-      if (sys.geometry && sys.geometry.attributes.color) {
-        const colors = sys.geometry.attributes.color.array;
-        for (let i = 0; i < colors.length; i += 3) {
-          const idx = Math.floor(Math.random() * blendedParticles.length);
-          const c = new THREE.Color(blendedParticles[idx]);
-          colors[i] = c.r;
-          colors[i + 1] = c.g;
-          colors[i + 2] = c.b;
-        }
-        sys.geometry.attributes.color.needsUpdate = true;
-      }
-    });
-
-    // Rings
-    scene.children.forEach(child => {
-      if (child.userData && child.userData.isRing && child.material) {
-        child.material.color.set(lerpColor(from.wireframe, to.wireframe, t));
-      }
-    });
-  }
-
-  // ─── Frequency Change Handler ──────────────────────────────────────
-  function onFrequencyChange(e) {
-    const freq = e.detail && e.detail.frequency ? e.detail.frequency.toLowerCase() : 'alpha';
-    let palette;
-
-    switch (freq) {
-      case 'delta':  palette = PALETTES.delta;  break;
-      case 'theta':  palette = PALETTES.theta;  break;
-      case 'alpha':  palette = PALETTES.alpha;  break;
-      case 'gamma':  palette = PALETTES.gamma;  break;
-      default:       palette = PALETTES.alpha;  break;
-    }
-
-    if (targetPalette !== palette) {
-      currentPalette = targetPalette;
-      targetPalette = palette;
-      paletteTransition = 0.0;
-
-      // Adjust rotation speed per frequency
-      switch (freq) {
-        case 'delta':  baseRotationSpeed = 0.0015; break;
-        case 'theta':  baseRotationSpeed = 0.0025; break;
-        case 'alpha':  baseRotationSpeed = 0.0030; break;
-        case 'gamma':  baseRotationSpeed = 0.0050; break;
-        default:       baseRotationSpeed = 0.0030; break;
-      }
-    }
-  }
-
-  // ─── Audio Stream Handler ──────────────────────────────────────────
-  function onAudioStream(e) {
-    const stream = e.detail && e.detail.stream;
-    if (!stream || audioInitialized) return;
-
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.8;
-      frequencyData = new Uint8Array(analyser.frequencyBinCount);
-
-      audioSource = audioCtx.createMediaStreamSource(stream);
-      audioSource.connect(analyser);
-      // Don't connect to destination to avoid feedback
-
-      audioInitialized = true;
-      console.log('🎵 ZENMIX Audio analyzer connected');
-    } catch (err) {
-      console.warn('⚠️ ZENMIX Audio init failed:', err);
-    }
-  }
-
-  // ─── Public API: connect audio directly ────────────────────────────
-  function connectAudio(streamOrElement) {
-    if (audioInitialized) return;
-
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.8;
-      frequencyData = new Uint8Array(analyser.frequencyBinCount);
-
-      if (streamOrElement instanceof MediaStream) {
-        audioSource = audioCtx.createMediaStreamSource(streamOrElement);
-      } else if (streamOrElement instanceof HTMLMediaElement) {
-        audioSource = audioCtx.createMediaElementSource(streamOrElement);
-        // Media element sources must connect to destination
-        audioSource.connect(audioCtx.destination);
-      }
-
-      audioSource.connect(analyser);
-      audioInitialized = true;
-      console.log('🎵 ZENMIX Audio connected directly');
-    } catch (err) {
-      console.warn('⚠️ ZENMIX Audio connect failed:', err);
-    }
-  }
-
-  // ─── Public API: set frequency ─────────────────────────────────────
-  function setFrequency(freq) {
-    onFrequencyChange({ detail: { frequency: freq } });
-  }
-
-  // ─── Resize Handler ────────────────────────────────────────────────
-  function onResize() {
-    if (!container || !camera || !renderer) return;
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  }
-
-  // ─── Public resize ─────────────────────────────────────────────────
   function resize() {
-    onResize();
+    if (!camera || !renderer) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // ─── Dispose / Cleanup ─────────────────────────────────────────────
   function dispose() {
-    window.removeEventListener('resize', onResize);
-    window.removeEventListener('zenmix:frequency', onFrequencyChange);
-    window.removeEventListener('zenmix:audioStream', onAudioStream);
-
-    if (audioCtx && audioCtx.state !== 'closed') {
-      audioCtx.close().catch(() => {});
-    }
-    audioInitialized = false;
-
-    if (renderer) {
-      renderer.dispose();
-      if (container && renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
-      }
-    }
-
-    // Dispose geometries and materials
-    scene.traverse(obj => {
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach(m => {
-            if (m.map) m.map.dispose();
-            m.dispose();
-          });
-        } else {
-          if (obj.material.map) obj.material.map.dispose();
-          obj.material.dispose();
-        }
-      }
-    });
-
-    console.log('💎 ZENMIX Visualizer disposed');
+    disposed = true;
+    if (animId) cancelAnimationFrame(animId);
+    if (renderer) { renderer.dispose(); renderer = null; }
+    if (scene) { scene.clear(); scene = null; }
+    mesh = null; particles = []; camera = null;
   }
 
-  // ─── Export ────────────────────────────────────────────────────────
-  const ZENMIX = {
-    init,
-    connectAudio,
-    setFrequency,
-    resize,
-    dispose,
-    get isInitialized() { return !!scene; },
-    get currentPalette() { return targetPalette; }
-  };
-
-  // Attach to window
-  window.ZENMIX = ZENMIX;
-
-  // Auto-init if script is loaded with data-auto-init attribute
-  if (document.currentScript && document.currentScript.dataset.autoInit !== undefined) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => ZENMIX.init());
-    } else {
-      ZENMIX.init();
-    }
-  }
-
-  console.log('💎 VertexWizard — ZENMIX 3D Visualizer loaded');
-  console.log('   Usage: ZENMIX.init(container?) | ZENMIX.setFrequency("alpha") | ZENMIX.connectAudio(stream)');
+  return { init, setFrequency, connectAudio, resize, dispose };
 })();
