@@ -39,7 +39,7 @@
   <canvas id="zenViz" aria-hidden="true"></canvas>
 
   <!-- MAIN CONTENT -->
-  <main class="pf-main" id="mainContent" role="main"></main>
+  <main class="pf-main" id="zenmix-app" role="main"></main>
 
   <!-- DOCK NAVIGATION -->
   <nav class="pf-dock" role="navigation" aria-label="Navegación principal">
@@ -68,7 +68,7 @@
   <!-- CORE MODULES -->
   <script src="nc-data-v4.js"></script>
   <script src="nc-audio-v4.js"></script>
-  <script src="nc-app-v4.js"></script>
+  <!-- nc-app-v4.js disabled: using CEO integrated UI -->
 
   <!-- PATCH: Force render home view on load -->
   <script>
@@ -85,7 +85,7 @@
             window.ZENMIX.app.navigate('home');
           }
           // If no navigate method, manually render
-          const main = document.getElementById('mainContent');
+          const main = document.getElementById('zenmix-app');
           if (main && (!main.innerHTML || main.innerHTML.trim() === '')) {
             renderFallbackHome();
           }
@@ -100,7 +100,7 @@
       };
 
       function renderFallbackHome() {
-        const main = document.getElementById('mainContent');
+        const main = document.getElementById('zenmix-app');
         if (!main) return;
         main.innerHTML = `
           <div class="pf-container">
@@ -260,7 +260,7 @@
       }
 
       function navigateToSession(presetId) {
-        const main = document.getElementById('mainContent');
+        const main = document.getElementById('zenmix-app');
         if (!main) return;
         main.innerHTML = `
           <div class="pf-player">
@@ -372,7 +372,7 @@
       }
 
       function renderStats() {
-        const main = document.getElementById('mainContent');
+        const main = document.getElementById('zenmix-app');
         if (!main) return;
         main.innerHTML = `
           <div class="pf-container">
@@ -415,7 +415,7 @@
       }
 
       function renderRecord() {
-        const main = document.getElementById('mainContent');
+        const main = document.getElementById('zenmix-app');
         if (!main) return;
         main.innerHTML = `
           <div class="pf-recorder pf-container">
@@ -443,7 +443,7 @@
       }
 
       function renderCustom() {
-        const main = document.getElementById('mainContent');
+        const main = document.getElementById('zenmix-app');
         if (!main) return;
         main.innerHTML = `
           <div class="pf-container">
