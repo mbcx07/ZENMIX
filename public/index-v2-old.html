@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ZENMIX — Hipnosis Subliminal</title>
+<meta name="theme-color" content="#0a0014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<meta name="description" content="Hipnosis subliminal con frecuencias binaurales y efectos 3D — 100% gratis">
+
+<!-- PixelForge 🎨 Premium Stylesheets -->
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="animations.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<!-- Floating orbs (ambient) -->
+<div class="zm-particle-orb"></div>
+<div class="zm-particle-orb"></div>
+<div class="zm-particle-orb"></div>
+
+<!-- App Shell -->
+<header class="app-header">
+  <h1>ZEN<span>MIX</span></h1>
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Cambiar tema">🌙</button>
+</header>
+
+<main class="main-content">
+  <!-- Home -->
+  <section class="page active zm-page-enter" id="page-home">
+    <div class="zm-flex-col zm-gap-md">
+      <h2 class="section-title">Sesiones</h2>
+      <div id="sessionCards" class="zm-stagger-in zm-flex-col zm-gap-sm"></div>
+
+      <h2 class="section-title">Sonidos Ambiente</h2>
+      <div id="ambientGrid" class="zm-stagger-in" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"></div>
+    </div>
+  </section>
+
+  <!-- Session -->
+  <section class="page" id="page-session">
+    <div class="zen-player zm-flex-col zm-gap-lg zm-p-md">
+      <div class="zen-circle zm-breath-glow-violet" id="zenCircle">🧘</div>
+      <div id="sessionTitle" class="zm-text-lg zm-font-semibold zm-text-center"></div>
+      <div class="timer" id="sessionTimer">00:00</div>
+      <div class="progress-bar" id="sessionProgress"><div class="progress-fill"></div></div>
+      <div class="player-ctrls">
+        <button class="stop-btn" id="stopBtn">⏹</button>
+        <button class="play-btn" id="playBtn">▶</button>
+      </div>
+      <div class="slider-row">
+        <label>Voz</label>
+        <input type="range" id="voiceVol" min="0" max="100" value="80" oninput="document.getElementById('voiceVolVal').textContent=this.value">
+        <span id="voiceVolVal">80</span>
+      </div>
+      <div class="slider-row">
+        <label>Binaural</label>
+        <input type="range" id="binVol" min="0" max="100" value="40" oninput="document.getElementById('binVolVal').textContent=this.value">
+        <span id="binVolVal">40</span>
+      </div>
+      <div class="slider-row">
+        <label>Ambiente</label>
+        <input type="range" id="ambVol" min="0" max="100" value="30" oninput="document.getElementById('ambVolVal').textContent=this.value">
+        <span id="ambVolVal">30</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom -->
+  <section class="page" id="page-custom">
+    <div class="zm-flex-col zm-gap-md zm-p-md">
+      <h2 class="section-title">Voz</h2>
+      <div class="voice-grid" id="voiceGrid"></div>
+      <div class="speed-bar" id="speedBar"></div>
+
+      <h2 class="section-title">Frecuencia Binaural</h2>
+      <div class="bgrid" id="binauralGrid"></div>
+
+      <h2 class="section-title">Script Personalizado</h2>
+      <textarea id="customScript" placeholder="Escribe tu script de hipnosis aquí..."></textarea>
+
+      <h2 class="section-title">Temporizador</h2>
+      <div class="zm-flex zm-gap-sm" style="flex-wrap:wrap">
+        <button class="sopt" onclick="setTimer(0)">∞</button>
+        <button class="sopt" onclick="setTimer(5)">5m</button>
+        <button class="sopt" onclick="setTimer(10)">10m</button>
+        <button class="sopt sel" onclick="setTimer(15)">15m</button>
+        <button class="sopt" onclick="setTimer(20)">20m</button>
+        <button class="sopt" onclick="setTimer(30)">30m</button>
+        <button class="sopt" onclick="setTimer(60)">60m</button>
+      </div>
+
+      <button class="btn-primary" id="customPlayBtn">▶ Iniciar Sesión</button>
+    </div>
+  </section>
+
+  <!-- Record -->
+  <section class="page" id="page-record">
+    <div class="zm-flex-col zm-gap-lg zm-p-md zm-text-center">
+      <h2 class="section-title">Grabar tu propia voz</h2>
+      <p class="zm-text-dim">Graba afirmaciones personalizadas para tu sesión de hipnosis</p>
+      <button class="rec-btn" id="recBtn">🎤</button>
+      <div id="recStatus" class="zm-text-sm zm-text-dim">Presiona para grabar</div>
+      <div id="recTimer" class="timer" style="display:none">00:00</div>
+      <div id="recPlayback" style="display:none">
+        <audio id="recAudio" controls></audio>
+      </div>
+      <button class="btn-outline" id="recDownload" style="display:none">💾 Descargar audio</button>
+      <div class="slider-row">
+        <label>Eco</label>
+        <input type="range" id="echoFx" min="0" max="100" value="0">
+        <span id="echoFxVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label>Reverb</label>
+        <input type="range" id="reverbFx" min="0" max="100" value="50">
+        <span id="reverbFxVal">50</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brain -->
+  <section class="page" id="page-brain">
+    <div class="zm-flex-col zm-gap-md zm-p-md">
+      <h2 class="section-title">Ondas Cerebrales</h2>
+      <div class="bgrid" id="brainBinauralGrid"></div>
+      <p class="zm-text-xs zm-text-dim zm-text-center">Selecciona una frecuencia para escuchar solo el binaural</p>
+      <button class="btn-primary" id="brainPlayBtn">▶ Escuchar Binaural</button>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="page" id="page-stats">
+    <div class="zm-flex-col zm-gap-md zm-p-md">
+      <h2 class="section-title">Tus Estadísticas</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+      <p class="zm-text-xs zm-text-dim zm-text-center">Los datos se guardan localmente en tu dispositivo</p>
+      <button class="btn-outline" id="resetStats">🗑️ Reiniciar estadísticas</button>
+    </div>
+  </section>
+</main>
+
+<!-- Bottom Dock Navigation -->
+<nav class="zm-dock">
+  <button class="zm-dock-btn active" data-page="home">
+    <span class="zm-dock-icon">🏠</span>
+    <span class="zm-dock-label">Inicio</span>
+    <span class="zm-dock-ripple"></span>
+  </button>
+  <button class="zm-dock-btn" data-page="session">
+    <span class="zm-dock-icon">🧘</span>
+    <span class="zm-dock-label">Sesión</span>
+    <span class="zm-dock-ripple"></span>
+  </button>
+  <button class="zm-dock-btn" data-page="custom">
+    <span class="zm-dock-icon">✨</span>
+    <span class="zm-dock-label">Custom</span>
+    <span class="zm-dock-ripple"></span>
+  </button>
+  <button class="zm-dock-btn" data-page="record">
+    <span class="zm-dock-icon">🎤</span>
+    <span class="zm-dock-label">Grabar</span>
+    <span class="zm-dock-ripple"></span>
+  </button>
+  <button class="zm-dock-btn" data-page="stats">
+    <span class="zm-dock-icon">📊</span>
+    <span class="zm-dock-label">Stats</span>
+    <span class="zm-dock-ripple"></span>
+  </button>
+</nav>
+
+<canvas id="zenViz"></canvas>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="engine.js"></script>
+<script src="visualizer.js"></script>
+<script src="mandala3d.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
