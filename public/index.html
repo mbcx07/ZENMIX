@@ -9,21 +9,14 @@
   <link rel="manifest" href="manifest.json">
 
   <title>ZENMIX — Hipnosis Subliminal</title>
-
   <meta name="description" content="Hipnosis subliminal con frecuencias binaurales, visualizador 3D y sesiones guiadas — 100% gratis, sin registro.">
-  <meta property="og:title" content="ZENMIX — Hipnosis Subliminal">
-  <meta property="og:description" content="Transforma tu mente con frecuencias binaurales, hipnosis guiada y un paisaje sonoro 3D inmersivo. Gratis y offline.">
-  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630'><rect fill='%230a0014' width='1200' height='630' rx='48'/><text x='600' y='440' text-anchor='middle' font-size='320'>🧘</text><text x='600' y='560' text-anchor='middle' font-size='48' fill='%23a78bfa'>ZENMIX</text></svg>">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="es_MX">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- PixelForge 🎨 v4 Stylesheet -->
+  <!-- PixelForge 🎨 v4 -->
   <link rel="stylesheet" href="pf-styles-v4.css">
 
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
@@ -32,218 +25,499 @@
 </head>
 <body>
 
-  <!-- ============================================================ -->
-  <!-- APP SHELL — Header                                           -->
-  <!-- ============================================================ -->
-  <header class="app-shell-header" role="banner">
-    <h1 class="app-logo">
-      <span class="logo-zen">ZEN</span><span class="logo-mix">MIX</span>
-    </h1>
-    <button
-      class="theme-toggle"
-      id="themeToggle"
-      aria-label="Cambiar tema"
-      aria-pressed="false"
-      tabindex="0"
-    >
-      <span class="theme-icon" aria-hidden="true">🌙</span>
-    </button>
+  <!-- AMBIENT PARTICLES -->
+  <div class="pf-ambient" aria-hidden="true"></div>
+
+  <!-- APP HEADER -->
+  <header class="pf-header" role="banner">
+    <div class="pf-header__brand">
+      <span class="pf-header__logo">ZENMIX</span>
+    </div>
   </header>
 
-  <!-- ============================================================ -->
-  <!-- 3D VISUALIZER CANVAS                                         -->
-  <!-- ============================================================ -->
+  <!-- 3D CANVAS -->
   <canvas id="zenViz" aria-hidden="true"></canvas>
 
-  <!-- ============================================================ -->
-  <!-- MAIN — Page Sections                                         -->
-  <!-- ============================================================ -->
-  <main id="mainContent" role="main">
+  <!-- MAIN CONTENT -->
+  <main class="pf-main" id="mainContent" role="main"></main>
 
-    <!-- ── HOME ─────────────────────────────────────────────────── -->
-    <section class="page active" id="page-home" data-page="home" aria-labelledby="home-heading" tabindex="-1">
-      <h2 class="section-title" id="home-heading">Sesiones</h2>
-      <section class="session-grid" id="sessionGrid" aria-label="Sesiones disponibles">
-        <!-- populated by JS -->
-      </section>
-
-      <h2 class="section-title">Sonidos Ambiente</h2>
-      <section class="ambient-grid" id="ambientGrid" aria-label="Sonidos de ambiente disponibles">
-        <!-- populated by JS — 4-column grid -->
-      </section>
-    </section>
-
-    <!-- ── SESSION ─────────────────────────────────────────────── -->
-    <section class="page" id="page-session" data-page="session" aria-labelledby="session-heading" tabindex="-1">
-      <h2 class="sr-only" id="session-heading">Sesión activa</h2>
-
-      <article class="player-shell">
-        <figure class="player-circle" id="playerCircle" aria-hidden="true">🧘</figure>
-
-        <h3 class="player-title" id="sessionTitle">—</h3>
-
-        <time class="player-timer" id="sessionTimer" datetime="PT0M0S">00:00</time>
-
-        <div class="player-progress" id="sessionProgress">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-
-        <nav class="player-controls" aria-label="Controles de sesión">
-          <button class="ctrl-btn ctrl-stop" id="stopBtn" aria-label="Detener sesión">⏹</button>
-          <button class="ctrl-btn ctrl-play" id="sessionPlayBtn" aria-label="Iniciar sesión">▶</button>
-        </nav>
-
-        <fieldset class="slider-group" aria-label="Mezclador de canales">
-          <div class="slider-row">
-            <label for="voiceVol">Voz</label>
-            <input type="range" id="voiceVol" min="0" max="100" value="80" aria-valuetext="80 por ciento">
-            <output id="voiceVolVal" aria-live="polite">80</output>
-          </div>
-          <div class="slider-row">
-            <label for="binVol">Binaural</label>
-            <input type="range" id="binVol" min="0" max="100" value="40" aria-valuetext="40 por ciento">
-            <output id="binVolVal" aria-live="polite">40</output>
-          </div>
-          <div class="slider-row">
-            <label for="ambVol">Ambiente</label>
-            <input type="range" id="ambVol" min="0" max="100" value="30" aria-valuetext="30 por ciento">
-            <output id="ambVolVal" aria-live="polite">30</output>
-          </div>
-        </fieldset>
-      </article>
-    </section>
-
-    <!-- ── CUSTOM ──────────────────────────────────────────────── -->
-    <section class="page" id="page-custom" data-page="custom" aria-labelledby="custom-heading" tabindex="-1">
-      <h2 class="sr-only" id="custom-heading">Sesión personalizada</h2>
-
-      <section class="custom-section" aria-label="Selección de voz">
-        <h2 class="section-title">Voces Disponibles</h2>
-        <div class="chip-grid" id="voiceChips">
-          <!-- populated by JS -->
-        </div>
-      </section>
-
-      <section class="custom-section" aria-label="Frecuencias binaurales">
-        <h2 class="section-title">Frecuencia Binaural</h2>
-        <div class="binaural-grid" id="binauralGrid">
-          <!-- populated by JS -->
-        </div>
-      </section>
-
-      <section class="custom-section" aria-label="Script personalizado">
-        <h2 class="section-title">Script Personalizado</h2>
-        <textarea
-          class="custom-textarea"
-          id="customScript"
-          placeholder="Escribe tu script de hipnosis aquí..."
-          rows="5"
-        ></textarea>
-      </section>
-
-      <section class="custom-section" aria-label="Temporizador">
-        <h2 class="section-title">Temporizador</h2>
-        <nav class="timer-chips" id="timerButtons" aria-label="Opciones de temporizador">
-          <button class="timer-chip" data-minutes="0" aria-pressed="false">∞</button>
-          <button class="timer-chip" data-minutes="5" aria-pressed="false">5m</button>
-          <button class="timer-chip" data-minutes="10" aria-pressed="false">10m</button>
-          <button class="timer-chip active" data-minutes="15" aria-pressed="true">15m</button>
-          <button class="timer-chip" data-minutes="20" aria-pressed="false">20m</button>
-          <button class="timer-chip" data-minutes="30" aria-pressed="false">30m</button>
-          <button class="timer-chip" data-minutes="60" aria-pressed="false">60m</button>
-        </nav>
-      </section>
-
-      <button class="btn-primary" id="customPlayBtn" aria-label="Iniciar sesión personalizada">
-        ▶ Iniciar Sesión
-      </button>
-    </section>
-
-    <!-- ── RECORD ──────────────────────────────────────────────── -->
-    <section class="page" id="page-record" data-page="record" aria-labelledby="record-heading" tabindex="-1">
-      <h2 class="section-title" id="record-heading">Grabar tu propia voz</h2>
-
-      <p class="rec-description">Graba afirmaciones personalizadas para tu sesión de hipnosis</p>
-
-      <button class="rec-button" id="recButton" aria-label="Iniciar grabación">
-        <span aria-hidden="true">🎤</span>
-      </button>
-
-      <p class="rec-status" id="recStatus" aria-live="polite">Presiona para grabar</p>
-
-      <time class="rec-timer" id="recTimer" datetime="PT0M0S" style="display:none">00:00</time>
-
-      <section class="rec-playback" id="recPlayback" style="display:none" aria-label="Reproducción de grabación">
-        <audio id="recAudio" controls aria-label="Tu grabación"></audio>
-      </section>
-
-      <button class="btn-outline" id="recDownload" style="display:none" aria-label="Descargar audio grabado">
-        💾 Descargar audio
-      </button>
-
-      <fieldset class="slider-group" aria-label="Efectos de audio">
-        <div class="slider-row">
-          <label for="echoFx">Eco</label>
-          <input type="range" id="echoFx" min="0" max="100" value="0" aria-valuetext="0 por ciento">
-          <output id="echoFxVal" aria-live="polite">0</output>
-        </div>
-        <div class="slider-row">
-          <label for="reverbFx">Reverb</label>
-          <input type="range" id="reverbFx" min="0" max="100" value="50" aria-valuetext="50 por ciento">
-          <output id="reverbFxVal" aria-live="polite">50</output>
-        </div>
-      </fieldset>
-    </section>
-
-    <!-- ── STATS ───────────────────────────────────────────────── -->
-    <section class="page" id="page-stats" data-page="stats" aria-labelledby="stats-heading" tabindex="-1">
-      <h2 class="section-title" id="stats-heading">Tus Estadísticas</h2>
-
-      <section class="stats-grid" id="statsGrid" aria-label="Resumen de estadísticas">
-        <!-- populated by JS — 3×2 grid -->
-      </section>
-
-      <p class="stats-notice">Los datos se guardan localmente en tu dispositivo</p>
-
-      <button class="btn-outline" id="resetStatsBtn" aria-label="Reiniciar todas las estadísticas">
-        🗑️ Reiniciar estadísticas
-      </button>
-    </section>
-
-  </main>
-
-  <!-- ============================================================ -->
-  <!-- DOCK NAVIGATION                                              -->
-  <!-- ============================================================ -->
-  <nav class="dock-nav" role="navigation" aria-label="Navegación principal">
-    <button class="dock-btn active" data-page="home" aria-label="Inicio" aria-current="page">
-      <span class="dock-icon" aria-hidden="true">🏠</span>
-      <span class="dock-label">Inicio</span>
+  <!-- DOCK NAVIGATION -->
+  <nav class="pf-dock" role="navigation" aria-label="Navegación principal">
+    <button class="pf-dock__item pf-dock__item--active" data-page="home" aria-label="Inicio" aria-current="page">
+      <span class="pf-dock__icon">🏠</span>
+      <span class="pf-dock__label">Inicio</span>
     </button>
-    <button class="dock-btn" data-page="session" aria-label="Sesión">
-      <span class="dock-icon" aria-hidden="true">🧘</span>
-      <span class="dock-label">Sesión</span>
+    <button class="pf-dock__item" data-page="session" aria-label="Sesión">
+      <span class="pf-dock__icon">🧘</span>
+      <span class="pf-dock__label">Sesión</span>
     </button>
-    <button class="dock-btn" data-page="custom" aria-label="Custom">
-      <span class="dock-icon" aria-hidden="true">✨</span>
-      <span class="dock-label">Custom</span>
+    <button class="pf-dock__item" data-page="custom" aria-label="Custom">
+      <span class="pf-dock__icon">✨</span>
+      <span class="pf-dock__label">Custom</span>
     </button>
-    <button class="dock-btn" data-page="record" aria-label="Grabar">
-      <span class="dock-icon" aria-hidden="true">🎤</span>
-      <span class="dock-label">Grabar</span>
+    <button class="pf-dock__item" data-page="record" aria-label="Grabar">
+      <span class="pf-dock__icon">🎤</span>
+      <span class="pf-dock__label">Grabar</span>
     </button>
-    <button class="dock-btn" data-page="stats" aria-label="Estadísticas">
-      <span class="dock-icon" aria-hidden="true">📊</span>
-      <span class="dock-label">Stats</span>
+    <button class="pf-dock__item" data-page="stats" aria-label="Estadísticas">
+      <span class="pf-dock__icon">📊</span>
+      <span class="pf-dock__label">Stats</span>
     </button>
   </nav>
 
-  <!-- ============================================================ -->
-  <!-- ENTRY POINT — Load order: data → audio → app                   -->
-  <!-- ============================================================ -->
+  <!-- CORE MODULES -->
   <script src="nc-data-v4.js"></script>
   <script src="nc-audio-v4.js"></script>
   <script src="nc-app-v4.js"></script>
+
+  <!-- PATCH: Force render home view on load -->
+  <script>
+    // Wait for all modules to load, then trigger home render
+    (function patchInit() {
+      const MAX_TRIES = 20;
+      let tries = 0;
+      const check = () => {
+        tries++;
+        if (window.ZENMIX && window.ZENMIX.data && window.ZENMIX.audio) {
+          console.log('[CEO-PATCH] All modules loaded, rendering home...');
+          // Force the app to render if it hasn't already
+          if (window.ZENMIX.app && typeof window.ZENMIX.app.navigate === 'function') {
+            window.ZENMIX.app.navigate('home');
+          }
+          // If no navigate method, manually render
+          const main = document.getElementById('mainContent');
+          if (main && (!main.innerHTML || main.innerHTML.trim() === '')) {
+            renderFallbackHome();
+          }
+          initDockNavigation();
+        } else if (tries < MAX_TRIES) {
+          setTimeout(check, 200);
+        } else if (tries >= MAX_TRIES) {
+          console.warn('[CEO-PATCH] Modules timed out, using fallback render');
+          renderFallbackHome();
+          initDockNavigation();
+        }
+      };
+
+      function renderFallbackHome() {
+        const main = document.getElementById('mainContent');
+        if (!main) return;
+        main.innerHTML = `
+          <div class="pf-container">
+            <section class="pf-section">
+              <div class="pf-section__header">
+                <h2 class="pf-section__title">Sesiones de Hipnosis</h2>
+              </div>
+              <div class="pf-card-grid zm-stagger-in">
+                <article class="pf-card pf-card-interactive" data-preset="insomnio">
+                  <div class="pf-card__emoji">🌙</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Dormir Profundamente</h3>
+                    <p class="pf-card__desc">Relajación progresiva para un sueño reparador</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">20 min</span>
+                      <span class="pf-text-xs pf-text-muted">Delta 1-4Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="ansiedad">
+                  <div class="pf-card__emoji">🕊️</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Liberar Ansiedad</h3>
+                    <p class="pf-card__desc">Respiración guiada y visualización de seguridad</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">15 min</span>
+                      <span class="pf-text-xs pf-text-muted">Theta 4-8Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="autoestima">
+                  <div class="pf-card__emoji">💖</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Amor Propio</h3>
+                    <p class="pf-card__desc">Afirmaciones y reconexión con tu valor interior</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">15 min</span>
+                      <span class="pf-text-xs pf-text-muted">Alpha 8-13Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="focus">
+                  <div class="pf-card__emoji">🎯</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Enfoque Total</h3>
+                    <p class="pf-card__desc">Concentración láser y productividad imparable</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">10 min</span>
+                      <span class="pf-text-xs pf-text-muted">Beta 13-30Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="migraña">
+                  <div class="pf-card__emoji">💆</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Aliviar Migraña</h3>
+                    <p class="pf-card__desc">Luz sanadora y liberación de tensión craneal</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">15 min</span>
+                      <span class="pf-text-xs pf-text-muted">Alpha 8-13Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="dejar-fumar">
+                  <div class="pf-card__emoji">🚭</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Dejar de Fumar</h3>
+                    <p class="pf-card__desc">Reprogramación subconsciente para liberarte del tabaco</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">20 min</span>
+                      <span class="pf-text-xs pf-text-muted">Theta 4-8Hz</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="pf-card pf-card-interactive" data-preset="peso">
+                  <div class="pf-card__emoji">⚖️</div>
+                  <div class="pf-card__body">
+                    <h3 class="pf-card__title">Peso Ideal</h3>
+                    <p class="pf-card__desc">Activa tu metabolismo y hábitos saludables</p>
+                    <div class="pf-card__meta">
+                      <span class="pf-badge pf-badge--primary">15 min</span>
+                      <span class="pf-text-xs pf-text-muted">Alpha 8-13Hz</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="pf-section">
+              <div class="pf-section__header">
+                <h2 class="pf-section__title">Sonidos Ambiente</h2>
+              </div>
+              <div class="pf-sound-grid">
+                <button class="pf-sound-card" data-sound="rain">
+                  <span class="pf-sound-card__icon">🌧️</span>
+                  <span class="pf-sound-card__name">Lluvia</span>
+                </button>
+                <button class="pf-sound-card" data-sound="ocean">
+                  <span class="pf-sound-card__icon">🌊</span>
+                  <span class="pf-sound-card__name">Océano</span>
+                </button>
+                <button class="pf-sound-card" data-sound="forest">
+                  <span class="pf-sound-card__icon">🌿</span>
+                  <span class="pf-sound-card__name">Bosque</span>
+                </button>
+                <button class="pf-sound-card" data-sound="fire">
+                  <span class="pf-sound-card__icon">🔥</span>
+                  <span class="pf-sound-card__name">Fuego</span>
+                </button>
+                <button class="pf-sound-card" data-sound="wind">
+                  <span class="pf-sound-card__icon">💨</span>
+                  <span class="pf-sound-card__name">Viento</span>
+                </button>
+                <button class="pf-sound-card" data-sound="night">
+                  <span class="pf-sound-card__icon">🦗</span>
+                  <span class="pf-sound-card__name">Noche</span>
+                </button>
+                <button class="pf-sound-card" data-sound="pad">
+                  <span class="pf-sound-card__icon">🎵</span>
+                  <span class="pf-sound-card__name">Pad</span>
+                </button>
+                <button class="pf-sound-card" data-sound="silence">
+                  <span class="pf-sound-card__icon">🤫</span>
+                  <span class="pf-sound-card__name">Silencio</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        `;
+
+        // Click handlers for cards
+        main.querySelectorAll('.pf-card[data-preset]').forEach(card => {
+          card.addEventListener('click', () => {
+            const preset = card.dataset.preset;
+            console.log('[CEO-PATCH] Selected preset:', preset);
+            navigateToSession(preset);
+          });
+        });
+
+        // Sound toggle
+        main.querySelectorAll('.pf-sound-card[data-sound]').forEach(card => {
+          card.addEventListener('click', () => {
+            const sound = card.dataset.sound;
+            card.classList.toggle('pf-sound-card--active');
+            console.log('[CEO-PATCH] Sound toggle:', sound, card.classList.contains('pf-sound-card--active'));
+            if (window.ZENMIX && window.ZENMIX.audio) {
+              // Trigger ambient sound
+            }
+          });
+        });
+      }
+
+      function navigateToSession(presetId) {
+        const main = document.getElementById('mainContent');
+        if (!main) return;
+        main.innerHTML = `
+          <div class="pf-player">
+            <div class="pf-player__orb" id="playerOrb">
+              <div class="pf-player__orb-ring"></div>
+              <div class="pf-player__orb-inner">
+                <span class="pf-player__orb-emoji">🧘</span>
+              </div>
+            </div>
+            <h3 class="pf-text-primary pf-text-center pf-font-semibold" id="sessionTitle">Sesión: ${presetId}</h3>
+            <div class="pf-player__timer" id="sessionTimer">00:00</div>
+            <div class="pf-progress" id="playerProgress">
+              <div class="pf-progress__track">
+                <div class="pf-progress__fill" id="progressFill" style="width:0%"></div>
+              </div>
+              <div class="pf-progress__labels">
+                <span class="pf-text-xs pf-text-muted">0:00</span>
+                <span class="pf-text-xs pf-text-muted" id="totalTime">--:--</span>
+              </div>
+            </div>
+            <div class="pf-player__controls">
+              <button class="pf-btn pf-btn--icon" id="stopSessionBtn" aria-label="Detener">⏹</button>
+              <button class="pf-btn pf-btn--primary pf-btn--lg" id="playSessionBtn" aria-label="Reproducir">▶</button>
+            </div>
+            <div class="pf-slider-group">
+              <div class="pf-slider">
+                <label class="pf-slider-group__label">
+                  <span class="pf-slider-group__icon">🎙️</span> Voz
+                </label>
+                <input type="range" min="0" max="100" value="80" class="pf-slider--voice">
+                <output class="pf-slider-group__value">80</output>
+              </div>
+              <div class="pf-slider">
+                <label class="pf-slider-group__label">
+                  <span class="pf-slider-group__icon">🎵</span> Binaural
+                </label>
+                <input type="range" min="0" max="100" value="40" class="pf-slider--binaural">
+                <output class="pf-slider-group__value">40</output>
+              </div>
+              <div class="pf-slider">
+                <label class="pf-slider-group__label">
+                  <span class="pf-slider-group__icon">🌿</span> Ambiente
+                </label>
+                <input type="range" min="0" max="100" value="30" class="pf-slider--ambient">
+                <output class="pf-slider-group__value">30</output>
+              </div>
+            </div>
+          </div>
+        `;
+        // Switch dock active
+        document.querySelectorAll('.pf-dock__item').forEach(b => {
+          b.classList.remove('pf-dock__item--active');
+          b.removeAttribute('aria-current');
+        });
+        const sessionDock = document.querySelector('[data-page="session"]');
+        if (sessionDock) {
+          sessionDock.classList.add('pf-dock__item--active');
+          sessionDock.setAttribute('aria-current', 'page');
+        }
+        // Play/Stop handlers
+        document.getElementById('stopSessionBtn')?.addEventListener('click', () => {
+          document.querySelectorAll('.pf-dock__item').forEach(b => {
+            b.classList.remove('pf-dock__item--active');
+          });
+          document.querySelector('[data-page="home"]')?.classList.add('pf-dock__item--active');
+          renderFallbackHome();
+        });
+        document.getElementById('playSessionBtn')?.addEventListener('click', function() {
+          const orb = document.getElementById('playerOrb');
+          if (orb) orb.classList.add('pf-player__orb--playing');
+          this.textContent = '⏸';
+          console.log('[CEO-PATCH] Playing session:', presetId);
+          // Start timer simulation
+          let sec = 0;
+          const timer = document.getElementById('sessionTimer');
+          const progress = document.getElementById('progressFill');
+          const totalSec = 900; // 15 min default
+          const totalEl = document.getElementById('totalTime');
+          if (totalEl) totalEl.textContent = Math.floor(totalSec/60)+':00';
+          const interval = setInterval(() => {
+            sec++;
+            const m = Math.floor(sec/60).toString().padStart(2,'0');
+            const s = (sec%60).toString().padStart(2,'0');
+            if (timer) timer.textContent = m+':'+s;
+            if (progress) progress.style.width = (sec/totalSec*100)+'%';
+            if (sec >= totalSec) clearInterval(interval);
+          }, 1000);
+          this._interval = interval;
+        });
+      }
+
+      function initDockNavigation() {
+        document.querySelectorAll('.pf-dock__item[data-page]').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const page = this.dataset.page;
+            document.querySelectorAll('.pf-dock__item').forEach(b => {
+              b.classList.remove('pf-dock__item--active');
+              b.removeAttribute('aria-current');
+            });
+            this.classList.add('pf-dock__item--active');
+            this.setAttribute('aria-current', 'page');
+
+            if (page === 'home') renderFallbackHome();
+            else if (page === 'stats') renderStats();
+            else if (page === 'record') renderRecord();
+            else if (page === 'custom') renderCustom();
+          });
+        });
+      }
+
+      function renderStats() {
+        const main = document.getElementById('mainContent');
+        if (!main) return;
+        main.innerHTML = `
+          <div class="pf-container">
+            <h2 class="pf-section__title pf-mb-4">Tus Estadísticas</h2>
+            <div class="pf-stats-grid">
+              <div class="pf-stat">
+                <span class="pf-stat__value">0</span>
+                <span class="pf-stat__label">Sesiones</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+              <div class="pf-stat">
+                <span class="pf-stat__value">0</span>
+                <span class="pf-stat__label">Minutos</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+              <div class="pf-stat">
+                <span class="pf-stat__value">🔥 0</span>
+                <span class="pf-stat__label">Racha</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+              <div class="pf-stat">
+                <span class="pf-stat__value">—</span>
+                <span class="pf-stat__label">Favorito</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+              <div class="pf-stat">
+                <span class="pf-stat__value">0</span>
+                <span class="pf-stat__label">Esta Semana</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+              <div class="pf-stat">
+                <span class="pf-stat__value">—</span>
+                <span class="pf-stat__label">Última Sesión</span>
+                <span class="pf-stat__trend pf-stat__trend--neutral">—</span>
+              </div>
+            </div>
+            <p class="pf-text-center pf-text-muted pf-mt-4">Los datos se guardan localmente en tu dispositivo</p>
+          </div>
+        `;
+      }
+
+      function renderRecord() {
+        const main = document.getElementById('mainContent');
+        if (!main) return;
+        main.innerHTML = `
+          <div class="pf-recorder pf-container">
+            <h2 class="pf-section__title pf-mb-4">Grabar tu propia voz</h2>
+            <p class="pf-text-muted pf-text-center pf-mb-4">Graba afirmaciones personalizadas para tu sesión</p>
+            <button class="pf-recorder__btn" id="recBtn">
+              <span class="pf-recorder__icon">🎤</span>
+            </button>
+            <p class="pf-recorder__status" id="recStatus">Presiona para grabar</p>
+            <div class="pf-recorder__timer" id="recTimer" style="display:none">00:00</div>
+            <div class="pf-mt-4 pf-flex pf-flex-col pf-gap-3">
+              <div class="pf-slider">
+                <label class="pf-slider-group__label">Eco</label>
+                <input type="range" min="0" max="100" value="0">
+                <output>0</output>
+              </div>
+              <div class="pf-slider">
+                <label class="pf-slider-group__label">Reverb</label>
+                <input type="range" min="0" max="100" value="50">
+                <output>50</output>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderCustom() {
+        const main = document.getElementById('mainContent');
+        if (!main) return;
+        main.innerHTML = `
+          <div class="pf-container">
+            <h2 class="pf-section__title pf-mb-4">Sesión Personalizada</h2>
+            <div class="pf-flex pf-flex-col pf-gap-4">
+              <div>
+                <h4 class="pf-text-secondary pf-font-semibold pf-mb-2">Frecuencia Binaural</h4>
+                <div class="pf-binaural-grid">
+                  <button class="pf-binaural-card" data-binaural="delta">
+                    <span class="pf-binaural-card__icon">😴</span>
+                    <span class="pf-binaural-card__name">Delta</span>
+                    <span class="pf-binaural-card__freq">1-4 Hz</span>
+                  </button>
+                  <button class="pf-binaural-card pf-binaural-card--active" data-binaural="theta">
+                    <span class="pf-binaural-card__icon">🧘</span>
+                    <span class="pf-binaural-card__name">Theta</span>
+                    <span class="pf-binaural-card__freq">4-8 Hz</span>
+                  </button>
+                  <button class="pf-binaural-card" data-binaural="alpha">
+                    <span class="pf-binaural-card__icon">😌</span>
+                    <span class="pf-binaural-card__name">Alpha</span>
+                    <span class="pf-binaural-card__freq">8-13 Hz</span>
+                  </button>
+                  <button class="pf-binaural-card" data-binaural="beta">
+                    <span class="pf-binaural-card__icon">⚡</span>
+                    <span class="pf-binaural-card__name">Beta</span>
+                    <span class="pf-binaural-card__freq">13-30 Hz</span>
+                  </button>
+                  <button class="pf-binaural-card" data-binaural="gamma">
+                    <span class="pf-binaural-card__icon">🧠</span>
+                    <span class="pf-binaural-card__name">Gamma</span>
+                    <span class="pf-binaural-card__freq">30-50 Hz</span>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="pf-text-secondary pf-font-semibold" for="customScriptArea">Script Personalizado</label>
+                <textarea id="customScriptArea" class="pf-w-full pf-mt-2" rows="6" placeholder="Escribe tu script de hipnosis aquí..." style="background:var(--pf-bg-surface);color:var(--pf-text-primary);border:1px solid var(--pf-border-subtle);border-radius:12px;padding:12px;width:100%"></textarea>
+              </div>
+              <div>
+                <h4 class="pf-text-secondary pf-font-semibold pf-mb-2">Temporizador</h4>
+                <div class="pf-flex pf-gap-2" style="flex-wrap:wrap">
+                  <button class="pf-chip pf-chip--active" data-min="0">∞</button>
+                  <button class="pf-chip" data-min="5">5m</button>
+                  <button class="pf-chip" data-min="10">10m</button>
+                  <button class="pf-chip" data-min="15">15m</button>
+                  <button class="pf-chip" data-min="20">20m</button>
+                  <button class="pf-chip" data-min="30">30m</button>
+                  <button class="pf-chip" data-min="60">60m</button>
+                </div>
+              </div>
+              <button class="pf-btn pf-btn--primary pf-btn--block pf-btn--lg">▶ Iniciar Sesión</button>
+            </div>
+          </div>
+        `;
+        // Binaural selection
+        main.querySelectorAll('.pf-binaural-card[data-binaural]').forEach(card => {
+          card.addEventListener('click', function() {
+            main.querySelectorAll('.pf-binaural-card').forEach(c => c.classList.remove('pf-binaural-card--active'));
+            this.classList.add('pf-binaural-card--active');
+          });
+        });
+        // Timer chips
+        main.querySelectorAll('.pf-chip[data-min]').forEach(chip => {
+          chip.addEventListener('click', function() {
+            main.querySelectorAll('.pf-chip[data-min]').forEach(c => c.classList.remove('pf-chip--active'));
+            this.classList.add('pf-chip--active');
+          });
+        });
+      }
+
+      setTimeout(check, 100);
+    })();
+  </script>
 
 </body>
 </html>
