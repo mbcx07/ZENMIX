@@ -177,8 +177,8 @@ nav.bottom button .nav-icon{font-size:1.2rem;line-height:1}
   <div class="upload-zone" id="uploadZone">
     <div style="font-size:2rem">📁</div>
     <p>Arrastra o haz clic para subir un archivo de audio</p>
-    <p style="font-size:.65rem;color:var(--dim);margin-top:4px">MP3, WAV, OGG — máximo 50MB</p>
-    <input type="file" id="fileInput" accept="audio/*" style="display:none">
+    <p style="font-size:.65rem;color:var(--dim);margin-top:4px">MP3, WAV, OGG, WEBM, FLAC, M4A — máximo 500MB</p>
+    <input type="file" id="fileInput" accept="audio/*,.webm,.mp3,.wav,.ogg,.flac,.m4a,.mp4" style="display:none">
   </div>
 
   <div id="voicePreview" style="display:none">
@@ -532,7 +532,7 @@ uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classL
 fileInput.addEventListener('change', () => { if(fileInput.files[0]) handleFile(fileInput.files[0]); });
 
 async function handleFile(file) {
-  if (file.size > 50 * 1024 * 1024) { toast('Archivo muy grande (máx 50MB)'); return; }
+  if (file.size > 500 * 1024 * 1024) { toast('Archivo muy grande (máx 500MB)'); return; }
   toast('Cargando ' + file.name + '...');
   const blob = file;
   recordedBlob = blob;
