@@ -201,7 +201,21 @@ nav.bottom button .nav-icon{font-size:1.2rem;line-height:1}
     <button class="btn-primary" id="enhanceBtn2" disabled>🔧 Mejorar Calidad</button>
   </div>
 
-  <div class="section-title">Efectos de Voz</div>
+  <div class="section-title">🎛️ Efectos de Voz</div>
+
+  <button class="btn-primary" id="hypnoticPresetBtn" style="margin-bottom:8px;background:linear-gradient(135deg,#8b5cf6,#f0c060)">🧘 Activar Voz Hipnótica (Preconfigurado)</button>
+
+  <div class="card" id="previewCard" style="display:none;text-align:center">
+    <div style="font-size:.75rem;color:var(--accent2);margin-bottom:4px">🔊 Preview en tiempo real</div>
+    <audio id="previewAudio" controls style="width:100%"></audio>
+  </div>
+
+  <button class="btn-primary" id="hypnoticPresetBtn" style="margin-bottom:8px;background:linear-gradient(135deg,#8b5cf6,#f0c060)">🧘 Activar Voz Hipnótica (Preconfigurado)</button>
+
+  <div class="card" id="previewCard" style="display:none;text-align:center">
+    <div style="font-size:.75rem;color:var(--accent2);margin-bottom:4px">🔊 Preview en tiempo real</div>
+    <audio id="previewAudio" controls style="width:100%"></audio>
+  </div>
 
   <!-- Compressor -->
   <div class="effect-toggle">
@@ -418,590 +432,369 @@ nav.bottom button .nav-icon{font-size:1.2rem;line-height:1}
 <div class="toast" id="toast"></div>
 
 <script>
+<script>
 // ================================================================
-// ZENMIX v5 — Engine Completo
+// ZENMIX v5.1 — Engine Fluido + Preview + Preset Hipnótico
 // ================================================================
 
 let audioCtx = null;
-let voiceBuffer = null;
-let recordedBlob = null;
-let enhancedBlob = null;
-let isRecording = false;
-let mediaRecorder = null;
-let recordingChunks = [];
-let recStartTime = 0;
-let binauralOsc = null;
-let binauralGain = null;
-let isBinauralPlaying = false;
-let voiceSourceNode = null;
+let audioBuffer = null;
+let isPlaying = false;
+let sourceNode = null;
+let binauralNodes = null;
 
-function getAudioCtx() {
+function getCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
   return audioCtx;
+}
+
+function toast(msg, dur) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), dur || 2500);
 }
 
 // ─── TABS ──────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('nav.bottom button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + tab).classList.add('active');
-  document.querySelector('.tab-btn[data-tab="' + tab + '"]')?.classList.add('active');
-  document.querySelector('nav.bottom button[data-tab="' + tab + '"]')?.classList.add('active');
-  document.getElementById('tabBar').querySelector('.tab-btn[data-tab="' + tab + '"]')?.scrollIntoView({behavior:'smooth',inline:'center'});
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("nav.bottom button").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-" + tab)?.classList.add("active");
+  document.querySelector(`.tab-btn[data-tab="${tab}"]`)?.classList.add("active");
+  document.querySelector(`nav.bottom button[data-tab="${tab}"]`)?.classList.add("active");
 }
-document.querySelectorAll('.tab-btn, nav.bottom button').forEach(el => {
-  el.addEventListener('click', () => switchTab(el.dataset.tab));
+document.querySelectorAll(".tab-btn, nav.bottom button").forEach(el => {
+  el.addEventListener("click", () => switchTab(el.dataset.tab));
 });
 
-// ─── TOAST ──────────────────────────────────────
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ─── RECORDER ────────────────────────────────────
-const recBtn = document.getElementById('recBtn');
-const recStatus = document.getElementById('recStatus');
-const recTimer = document.getElementById('recTimerDisplay');
+// ─── RECORDER ───────────────────────────────────
+const recBtn = document.getElementById("recBtn");
+const recStatus = document.getElementById("recStatus");
+const recTimer = document.getElementById("recTimerDisplay");
+const voiceAudio = document.getElementById("voiceAudio");
+let isRecording = false;
+let mediaRecorder = null;
+let recordingChunks = [];
+let recStartTime = 0;
 let recInterval = null;
 
-recBtn.addEventListener('click', async () => {
-  if (isRecording) {
-    stopRecording();
-    return;
-  }
+recBtn.addEventListener("click", async () => {
+  if (isRecording) { stopRecording(); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
     startRecording(stream);
-  } catch(e) {
-    toast('Error: no se pudo acceder al micrófono');
-  }
+  } catch(e) { toast("Error: permisos de micrófono"); }
 });
 
 function startRecording(stream) {
   isRecording = true;
   recordingChunks = [];
-  recBtn.classList.add('recording');
-  recBtn.textContent = '⏹';
-  recStatus.textContent = 'Grabando...';
-  recTimer.style.display = 'block';
-  recTimer.textContent = '00:00';
+  recBtn.classList.add("recording");
+  recBtn.textContent = "⏹";
+  recStatus.textContent = "🔴 Grabando...";
+  recTimer.style.display = "block";
   recStartTime = Date.now();
   recInterval = setInterval(() => {
-    const sec = Math.floor((Date.now() - recStartTime) / 1000);
-    recTimer.textContent = String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+    const sec = Math.floor((Date.now()-recStartTime)/1000);
+    recTimer.textContent = String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
   }, 200);
-  mediaRecorder = new MediaRecorder(stream, {mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm'});
-  mediaRecorder.ondataavailable = e => recordingChunks.push(e.data);
+  mediaRecorder = new MediaRecorder(stream, {mimeType:"audio/webm;codecs=opus"});
+  mediaRecorder.ondataavailable = e => e.data.size && recordingChunks.push(e.data);
   mediaRecorder.onstop = () => {
     clearInterval(recInterval);
-    stream.getTracks().forEach(t => t.stop());
-    const blob = new Blob(recordingChunks, {type: 'audio/webm'});
-    recordedBlob = blob;
-    enhancedBlob = null;
-    const url = URL.createObjectURL(blob);
-    document.getElementById('voiceAudio').src = url;
-    document.getElementById('voicePreview').style.display = 'block';
-    document.getElementById('enhanceBtn').disabled = false;
-    document.getElementById('enhanceBtn2').disabled = false;
-    recStatus.textContent = '✅ Grabación lista (' + Math.round(blob.size/1024) + 'KB)';
-    document.getElementById('voiceDuration').textContent = 'Duración: ' + recTimer.textContent;
-    document.getElementById('voiceSize').textContent = 'Tamaño: ' + (blob.size > 1048576 ? (blob.size/1048576).toFixed(1)+'MB' : Math.round(blob.size/1024)+'KB');
-    toast('Voz grabada correctamente');
+    stream.getTracks().forEach(t=>t.stop());
+    isRecording = false;
+    recBtn.classList.remove("recording");
+    recBtn.textContent = "🎤";
+    recStatus.textContent = "✅ Procesando...";
+    const blob = new Blob(recordingChunks, {type:"audio/webm"});
+    loadAudioBlob(blob);
   };
   mediaRecorder.start();
 }
 
 function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  isRecording = false;
-  recBtn.classList.remove('recording');
-  recBtn.textContent = '🎤';
+  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
 }
 
 // ─── FILE UPLOAD ────────────────────────────────
-const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', () => { if(fileInput.files[0]) handleFile(fileInput.files[0]); });
+const uploadZone = document.getElementById("uploadZone");
+const fileInput = document.getElementById("fileInput");
+uploadZone.addEventListener("click", () => fileInput.click());
+uploadZone.addEventListener("dragover",e=>{e.preventDefault();uploadZone.classList.add("dragover")});
+uploadZone.addEventListener("dragleave",()=>uploadZone.classList.remove("dragover"));
+uploadZone.addEventListener("drop",e=>{e.preventDefault();uploadZone.classList.remove("dragover");if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+fileInput.addEventListener("change",()=>{if(fileInput.files[0])handleFile(fileInput.files[0])});
 
 async function handleFile(file) {
-  if (file.size > 500 * 1024 * 1024) { toast('Archivo muy grande (máx 500MB)'); return; }
-  toast('Cargando ' + file.name + '...');
-  const blob = file;
-  recordedBlob = blob;
-  enhancedBlob = null;
-  const url = URL.createObjectURL(blob);
-  document.getElementById('voiceAudio').src = url;
-  document.getElementById('voicePreview').style.display = 'block';
-  document.getElementById('enhanceBtn').disabled = false;
-  document.getElementById('enhanceBtn2').disabled = false;
-  document.getElementById('voiceDuration').textContent = 'Duración: —';
-  document.getElementById('voiceSize').textContent = 'Tamaño: ' + (blob.size > 1048576 ? (blob.size/1048576).toFixed(1)+'MB' : Math.round(blob.size/1024)+'KB');
-  // Wait for audio metadata
-  const audio = document.getElementById('voiceAudio');
-  audio.addEventListener('loadedmetadata', () => {
-    const m = Math.floor(audio.duration/60), s = Math.floor(audio.duration%60);
-    document.getElementById('voiceDuration').textContent = 'Duración: ' + m + ':' + String(s).padStart(2,'0');
-  }, {once:true});
-  audio.load();
-  toast('Audio cargado: ' + file.name);
+  if (file.size > 500*1024*1024) { toast("Archivo muy grande (máx 500MB)"); return; }
+  toast("Cargando audio...");
+  loadAudioBlob(file);
 }
 
-// ─── ENHANCE (Noise Reduction) ──────────────────
-async function enhanceVoice() {
-  if (!recordedBlob) { toast('Primero graba o sube un audio'); return; }
-  toast('🔧 Mejorando calidad de voz...');
+async function loadAudioBlob(blob) {
+  try {
+    const ctx = getCtx();
+    const arrayBuf = await blob.arrayBuffer();
+    audioBuffer = await ctx.decodeAudioData(arrayBuf);
+    voiceAudio.src = URL.createObjectURL(blob);
+    voiceAudio.load();
+    document.getElementById("voicePreview").style.display = "block";
+    document.getElementById("enhanceBtn").disabled = false;
+    document.getElementById("enhanceBtn2").disabled = false;
+    document.getElementById("exportBtn").disabled = false;
+    const dur = audioBuffer.duration;
+    const m = Math.floor(dur/60), s = Math.floor(dur%60);
+    document.getElementById("voiceDuration").textContent = "Duración: "+m+":"+String(s).padStart(2,"0");
+    document.getElementById("voiceSize").textContent = "Tamaño: "+(blob.size>1048576?(blob.size/1048576).toFixed(1)+"MB":Math.round(blob.size/1024)+"KB");
+    recStatus.textContent = "✅ Audio cargado ("+Math.round(dur)+"s)";
+    toast("✅ Audio listo");
+  } catch(e) { toast("Error: formato no soportado"); }
+}
 
-  const ctx = getAudioCtx();
-  const arrayBuf = await recordedBlob.arrayBuffer();
-  const audioBuf = await ctx.decodeAudioData(arrayBuf);
-  const src = audioBuf.getChannelData(0);
-  const len = src.length;
-  const sr = audioBuf.sampleRate;
-
-  // Procesamiento manual de mejora de calidad:
-  // 1. HPF elimina ruido de baja frecuencia (80Hz)
-  // 2. Noise gate: silencia por debajo de -50dB
-  // 3. Suavizado: elimina clicks/pops (median filter)
-  // 4. Compresor suave para nivelar volumen
-
-  const output = new Float32Array(len);
-
-  // HPF Biquad manual (primer orden, 80Hz)
-  const hpf_cutoff = 80 / sr;
-  const hpf_a = 1 / (1 + 2 * Math.PI * hpf_cutoff);
-  let x1 = 0;
-  for (let i = 0; i < len; i++) {
-    const x = src[i];
-    const y = hpf_a * (x - x1 + 1e-10);
-    x1 = x + y;
-    output[i] = y;
+// ─── PREVIEW EN VIVO ────────────────────────────
+function playPreview(filtered) {
+  if (!audioBuffer) { toast("Primero carga un audio"); return; }
+  stopPreview();
+  const ctx = getCtx();
+  sourceNode = ctx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  let chain = sourceNode;
+  if (filtered) {
+    const hpf = ctx.createBiquadFilter();
+    hpf.type = "highpass"; hpf.frequency.value = 80;
+    chain.connect(hpf); chain = hpf;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -24; comp.ratio.value = 8; comp.knee.value = 6;
+    comp.attack.value = 0.003; comp.release.value = 0.1;
+    chain.connect(comp); chain = comp;
+    const gain = ctx.createGain();
+    gain.gain.value = 1.3;
+    chain.connect(gain); chain = gain;
   }
+  chain.connect(ctx.destination);
+  sourceNode.start();
+  isPlaying = true;
+  sourceNode.onended = () => { isPlaying = false; };
+  const pc = document.getElementById("previewCard");
+  pc.style.display = "block";
+  const pa = document.getElementById("previewAudio");
+  pa.src = voiceAudio.src;
+  try { pa.currentTime = 0; pa.play(); } catch(e) {}
+}
 
-  // Noise gate: calcular RMS en ventanas de 20ms
-  const windowSize = Math.floor(sr * 0.02);
-  const gateThreshold = 0.003; // ~-50dB
-  for (let i = 0; i < len; i += windowSize) {
-    let rms = 0;
-    const end = Math.min(i + windowSize, len);
-    for (let j = i; j < end; j++) rms += output[j] * output[j];
-    rms = Math.sqrt(rms / (end - i));
-    if (rms < gateThreshold) {
-      // Fade out/in para evitar clicks
-      const fadeLen = Math.min(windowSize/4, end - i);
-      for (let j = i; j < i + fadeLen && j < len; j++) {
-        const t = (j - i) / fadeLen;
-        output[j] *= (1 - t);
-      }
-      for (let j = i + fadeLen; j < end - fadeLen && j < len; j++) output[j] = 0;
-      for (let j = Math.max(i, end - fadeLen); j < end; j++) {
-        const t = (j - (end - fadeLen)) / fadeLen;
-        output[j] *= t;
-      }
+function stopPreview() {
+  try { if (sourceNode) { sourceNode.stop(); sourceNode.disconnect(); } } catch(e) {}
+  try { document.getElementById("previewAudio").pause(); } catch(e) {}
+  isPlaying = false;
+}
+
+document.getElementById("enhanceBtn").addEventListener("click", () => {
+  if (isPlaying) { stopPreview(); return; }
+  playPreview(true);
+  toast("🔊 Preview con mejora de calidad");
+});
+
+document.getElementById("enhanceBtn2").addEventListener("click", () => {
+  if (isPlaying) { stopPreview(); return; }
+  playPreview(false);
+  toast("🔊 Preview sin efectos");
+});
+
+// ─── PRESET VOZ HIPNÓTICA ───────────────────────
+document.getElementById("hypnoticPresetBtn").addEventListener("click", () => {
+  const presets = {
+    "fxCompressor": true, "compThreshold": -30, "compRatio": 6, "compAttack": 5, "compRelease": 150,
+    "fxEQ": true, "eqLow": 4, "eqMid": -1, "eqHigh": 5,
+    "fxReverb": true, "revRoom": 75, "revDamp": 30, "revMix": 40,
+    "fxDelay": true, "delTime": 400, "delFb": 25, "delMix": 20,
+    "fxHPF": true, "hpfFreq": 60,
+    "fxDeesser": true, "deesserAmt": 50,
+    "fxGate": true, "gateThresh": -55
+  };
+  Object.entries(presets).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (el.type === "checkbox") el.checked = val;
+      else el.value = val;
+      el.dispatchEvent(new Event("input", {bubbles:true}));
+      el.dispatchEvent(new Event("change", {bubbles:true}));
     }
-  }
+  });
+  document.querySelectorAll(".effect-toggle input[type=checkbox]").forEach(cb => {
+    cb.dispatchEvent(new Event("change", {bubbles:true}));
+  });
+  switchTab("effects");
+  toast("🧘 Voz Hipnótica activada — prueba el preview");
+});
 
-  // Compresor suave
-  const threshold = 0.3;
-  const ratio = 4;
-  const makeup = 1.2;
-  for (let i = 0; i < len; i++) {
-    let sample = output[i];
-    const absSample = Math.abs(sample);
-    if (absSample > threshold) {
-      const gainReduction = threshold + (absSample - threshold) / ratio;
-      sample = (sample > 0 ? 1 : -1) * gainReduction;
-    }
-    output[i] = sample * makeup;
-    // Clip suave
-    if (output[i] > 0.99) output[i] = 0.99;
-    if (output[i] < -0.99) output[i] = -0.99;
-  }
-
-  // Crear nuevo buffer
-  const newBuf = ctx.createBuffer(audioBuf.numberOfChannels, len, sr);
-  newBuf.copyToChannel(output, 0);
-  if (audioBuf.numberOfChannels > 1) newBuf.copyToChannel(output, 1);
-
-  // Convertir a blob
-  const wavBlob = audioBufferToWav(newBuf);
-  enhancedBlob = wavBlob;
-  const url = URL.createObjectURL(wavBlob);
-  document.getElementById('voiceAudio').src = url;
-  toast('✅ Calidad mejorada — ruido eliminado');
-}
-
-function audioBufferToWav(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
-  const data = buffer.getChannelData(0);
-  const dataLength = data.length * numChannels * 2;
-  const headerLength = 44;
-  const totalLength = headerLength + dataLength;
-  const arrayBuffer = new ArrayBuffer(totalLength);
-  const view = new DataView(arrayBuffer);
-
-  function writeString(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
-  writeString(0, 'RIFF');
-  view.setUint32(4, totalLength - 8, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true);
-  view.setUint16(32, numChannels * 2, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataLength, true);
-
-  let offset = 44;
-  for (let i = 0; i < data.length; i++) {
-    const sample = Math.max(-1, Math.min(1, data[i]));
-    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-    offset += 2;
-  }
-  return new Blob([arrayBuffer], {type: 'audio/wav'});
-}
-
-document.getElementById('enhanceBtn').addEventListener('click', enhanceVoice);
-document.getElementById('enhanceBtn2').addEventListener('click', enhanceVoice);
-
-// ─── EFFECTS: Toggle visibility ─────────────────
-document.querySelectorAll('.effect-toggle input[type=checkbox]').forEach(cb => {
-  cb.addEventListener('change', function() {
-    const paramsId = this.id.replace('fx', '') + 'Params';
-    const paramsEl = document.getElementById(paramsId);
-    if (paramsEl) paramsEl.style.display = this.checked ? 'flex' : 'none';
+// ─── EFECTOS: Toggle ────────────────────────────
+document.querySelectorAll(".effect-toggle input[type=checkbox]").forEach(cb => {
+  cb.addEventListener("change", function() {
+    const paramsId = this.id.replace("fx","")+"Params";
+    const el = document.getElementById(paramsId);
+    if (el) el.style.display = this.checked ? "flex" : "none";
   });
 });
 
-// ─── SLIDER VALUE SYNC ──────────────────────────
-document.querySelectorAll('.slider-row input[type=range]').forEach(slider => {
-  slider.addEventListener('input', function() {
+// ─── SLIDER SYNC ────────────────────────────────
+document.querySelectorAll(".slider-row input[type=range]").forEach(slider => {
+  slider.addEventListener("input", function() {
     const out = this.nextElementSibling;
-    if (out && out.tagName === 'OUTPUT') {
-      const id = this.id;
-      if (id.startsWith('compThreshold')) out.textContent = this.value + 'dB';
-      else if (id.startsWith('compRatio')) out.textContent = this.value + ':1';
-      else if (id.startsWith('compAttack')) out.textContent = this.value + 'ms';
-      else if (id.startsWith('compRelease')) out.textContent = this.value + 'ms';
-      else if (id.startsWith('eqLow') || id.startsWith('eqMid') || id.startsWith('eqHigh'))
-        out.textContent = (this.value > 0 ? '+' : '') + this.value + 'dB';
-      else if (id.startsWith('revRoom') || id.startsWith('revDamp') || id.startsWith('revMix'))
-        out.textContent = this.value + '%';
-      else if (id.startsWith('delTime')) out.textContent = this.value + 'ms';
-      else if (id.startsWith('delFb') || id.startsWith('delMix')) out.textContent = this.value + '%';
-      else if (id.startsWith('distDrive') || id.startsWith('distMix')) out.textContent = this.value + '%';
-      else if (id.startsWith('chorRate')) out.textContent = this.value + 'Hz';
-      else if (id.startsWith('chorDepth') || id.startsWith('chorMix')) out.textContent = this.value + '%';
-      else if (id.startsWith('hpfFreq')) out.textContent = this.value + 'Hz';
-      else if (id.startsWith('lpfFreq')) out.textContent = (this.value >= 1000 ? this.value/1000 + 'kHz' : this.value + 'Hz');
-      else if (id.startsWith('deesserAmt')) out.textContent = this.value + '%';
-      else if (id.startsWith('gateThresh')) out.textContent = this.value + 'dB';
-      else if (id.startsWith('bin') || id.startsWith('voiceVolBin')) out.textContent = this.value + '%';
-      else if (id.startsWith('mp3')) out.textContent = this.value + ' kbps';
-      else if (id.startsWith('binauralFreq')) {
-        out.textContent = parseFloat(this.value).toFixed(1) + ' Hz';
-        document.getElementById('hzBeatDisplay').textContent = parseFloat(this.value).toFixed(1);
-        updateBinaural();
-      }
-      else out.textContent = this.value;
+    if (!out || out.tagName !== "OUTPUT") return;
+    const id = this.id;
+    if (id.includes("Threshold")||id.includes("Thresh")) out.textContent = this.value+"dB";
+    else if (id.includes("Ratio")) out.textContent = this.value+":1";
+    else if (id.includes("Attack")||id.includes("Release")) out.textContent = this.value+"ms";
+    else if (id.startsWith("eq")) out.textContent = (this.value>0?"+":"")+this.value+"dB";
+    else if (id.includes("Room")||id.includes("Damp")||id.includes("revMix")||id.includes("Fb")||id.includes("delMix")||id.includes("Drive")||id.includes("distMix")||id.includes("Depth")||id.includes("chorMix")||id.includes("esser")) out.textContent = this.value+"%";
+    else if (id.includes("delTime")) out.textContent = this.value+"ms";
+    else if (id.includes("Rate")) out.textContent = this.value+"Hz";
+    else if (id.includes("hpfFreq")||id.includes("lpfFreq")) out.textContent = this.value+(id.includes("lpf")&&this.value>=1000?this.value/1000+"kHz":"Hz");
+    else if (id.includes("mp3")) out.textContent = this.value+" kbps";
+    else if (id.includes("binauralFreq")) {
+      out.textContent = parseFloat(this.value).toFixed(1)+" Hz";
+      document.getElementById("hzBeatDisplay").textContent = parseFloat(this.value).toFixed(1);
+      updateBinaural();
     }
+    else if (id.includes("binVol")||id.includes("voiceVol")) { out.textContent = this.value+"%"; updateBinauralVol(); }
+    else out.textContent = this.value;
   });
 });
 
 // ─── BINAURAL ────────────────────────────────────
-let binauralCarrier = 200;
-let binauralBeat = 4;
-let binauralNodes = null;
-
 function updateBinauralDisplay() {
-  document.getElementById('hzBeatDisplay').textContent = parseFloat(document.getElementById('binauralFreq').value).toFixed(1);
-  document.getElementById('binauralFreqVal').textContent = parseFloat(document.getElementById('binauralFreq').value).toFixed(1) + ' Hz';
+  const v = parseFloat(document.getElementById("binauralFreq").value);
+  document.getElementById("hzBeatDisplay").textContent = v.toFixed(1);
+  document.getElementById("binauralFreqVal").textContent = v.toFixed(1)+" Hz";
 }
-
-document.getElementById('binauralFreq').addEventListener('input', updateBinauralDisplay);
-
-document.querySelectorAll('#page-binaural .bcard').forEach(card => {
-  card.addEventListener('click', function() {
-    document.querySelectorAll('#page-binaural .bcard').forEach(c => c.classList.remove('active'));
-    this.classList.add('active');
-    const freq = parseFloat(this.dataset.freq);
-    document.getElementById('binauralFreq').value = freq;
+document.getElementById("binauralFreq").addEventListener("input", updateBinauralDisplay);
+document.querySelectorAll("#page-binaural .bcard").forEach(card => {
+  card.addEventListener("click", function() {
+    document.querySelectorAll("#page-binaural .bcard").forEach(c=>c.classList.remove("active"));
+    this.classList.add("active");
+    document.getElementById("binauralFreq").value = this.dataset.freq;
     updateBinauralDisplay();
-    updateBinaural(true);
+    updateBinaural();
   });
 });
 
 function createBinaural(ctx, beatFreq) {
-  const carrFreq = 200;
-  const leftFreq = carrFreq - beatFreq / 2;
-  const rightFreq = carrFreq + beatFreq / 2;
-
-  const oscL = ctx.createOscillator();
-  const oscR = ctx.createOscillator();
-  oscL.type = 'sine';
-  oscR.type = 'sine';
-  oscL.frequency.value = leftFreq;
-  oscR.frequency.value = rightFreq;
-
-  const gainL = ctx.createGain();
-  const gainR = ctx.createGain();
-  const masterGain = ctx.createGain();
-
-  // Crossfeed suave (10% del canal opuesto)
-  const crossfeedL = ctx.createGain();
-  const crossfeedR = ctx.createGain();
-  crossfeedL.gain.value = 0.1;
-  crossfeedR.gain.value = 0.1;
-
-  // Modulación lenta (tremolo) para sonido orgánico
-  const lfo = ctx.createOscillator();
-  const lfoGain = ctx.createGain();
-  lfo.frequency.value = 0.1;
-  lfoGain.gain.value = 0.15;
-  lfo.type = 'sine';
-
-  const merger = ctx.createChannelMerger(2);
-
-  oscL.connect(gainL);
-  oscR.connect(gainR);
-
-  // Crossfeed
-  oscL.connect(crossfeedR);
-  oscR.connect(crossfeedL);
-  crossfeedR.connect(gainR);
-  crossfeedL.connect(gainL);
-
-  lfo.connect(lfoGain);
-  lfoGain.connect(masterGain.gain);
-  masterGain.gain.value = 0.5;
-
-  gainL.connect(merger, 0, 0);
-  gainR.connect(merger, 0, 1);
-  merger.connect(masterGain);
-
-  lfo.start();
-  oscL.start();
-  oscR.start();
-
-  return { oscL, oscR, lfo, gainL, gainR, masterGain, merger, stop: () => { oscL.stop(); oscR.stop(); lfo.stop(); } };
+  const lf = 200 - beatFreq/2, rf = 200 + beatFreq/2;
+  const oL = ctx.createOscillator(); oL.type="sine"; oL.frequency.value=lf;
+  const oR = ctx.createOscillator(); oR.type="sine"; oR.frequency.value=rf;
+  const gL = ctx.createGain(); const gR = ctx.createGain();
+  const m = ctx.createGain(); m.gain.value=0.3;
+  const mg = ctx.createChannelMerger(2);
+  oL.connect(gL); oR.connect(gR);
+  gL.connect(mg,0,0); gR.connect(mg,0,1);
+  mg.connect(m);
+  oL.start(); oR.start();
+  return {oscL:oL,oscR:oR,master:m,stop:()=>{try{oL.stop();oR.stop()}catch(e){}},
+    setFreq:b=>{const l=200-b/2,r=200+b/2;oL.frequency.setTargetAtTime(l,ctx.currentTime,0.05);oR.frequency.setTargetAtTime(r,ctx.currentTime,0.05)},
+    setVol:v=>{m.gain.value=v*0.3}};
 }
 
-let binauralNodesInstance = null;
+function updateBinaural() { if(binauralNodes){const b=parseFloat(document.getElementById("binauralFreq").value);binauralNodes.setFreq(b);} }
+function updateBinauralVol() { if(binauralNodes){const v=parseInt(document.getElementById("binVol").value)/100;binauralNodes.setVol(v);} }
 
-function updateBinaural(start) {
-  if (!binauralNodesInstance) return;
-  const beat = parseFloat(document.getElementById('binauralFreq').value);
-  const ctx = getAudioCtx();
-  const leftFreq = 200 - beat / 2;
-  const rightFreq = 200 + beat / 2;
-  if (binauralNodesInstance.oscL && binauralNodesInstance.oscL.frequency) {
-    binauralNodesInstance.oscL.frequency.setTargetAtTime(leftFreq, ctx.currentTime, 0.1);
-    binauralNodesInstance.oscR.frequency.setTargetAtTime(rightFreq, ctx.currentTime, 0.1);
-  }
-}
-
-document.getElementById('previewBinauralBtn').addEventListener('click', function() {
-  const ctx = getAudioCtx();
-  if (binauralNodesInstance) {
-    binauralNodesInstance.stop();
-    binauralNodesInstance = null;
-    this.textContent = '▶ Previsualizar Binaural';
-    return;
-  }
-  const beat = parseFloat(document.getElementById('binauralFreq').value);
-  binauralNodesInstance = createBinaural(ctx, beat);
-  binauralNodesInstance.masterGain.connect(ctx.destination);
-  binauralNodesInstance.masterGain.gain.value = parseFloat(document.getElementById('binVol').value) / 100 * 0.5;
-  this.textContent = '⏹ Detener';
-  toast('🔊 Binaural activo');
+document.getElementById("previewBinauralBtn").addEventListener("click", function() {
+  const ctx = getCtx();
+  if (binauralNodes) { binauralNodes.stop(); binauralNodes=null; this.textContent="▶ Previsualizar Binaural"; return; }
+  const beat = parseFloat(document.getElementById("binauralFreq").value);
+  binauralNodes = createBinaural(ctx, beat);
+  binauralNodes.master.connect(ctx.destination);
+  this.textContent = "⏹ Detener";
+  toast("🔊 Binaural activo");
 });
-
-document.getElementById('binVol').addEventListener('input', function() {
-  if (binauralNodesInstance && binauralNodesInstance.masterGain) {
-    binauralNodesInstance.masterGain.gain.value = parseFloat(this.value) / 100 * 0.5;
-  }
-});
+document.getElementById("binVol").addEventListener("input", updateBinauralVol);
 
 // ─── EXPORT MP3 ──────────────────────────────────
-document.getElementById('exportBtn').addEventListener('click', async function() {
-  if (!recordedBlob && !enhancedBlob) { toast('Primero debes grabar o subir un audio'); return; }
-
+document.getElementById("exportBtn").addEventListener("click", async function() {
+  if (!audioBuffer) { toast("Primero carga un audio"); return; }
   this.disabled = true;
-  const exportProgress = document.getElementById('exportProgress');
-  const progressFill = document.getElementById('exportProgressFill');
-  const progressText = document.getElementById('exportProgressText');
-  exportProgress.style.display = 'block';
-  progressFill.style.width = '0%';
-  progressText.textContent = 'Preparando...';
-
+  const p = document.getElementById("exportProgress");
+  const f = document.getElementById("exportProgressFill");
+  const t = document.getElementById("exportProgressText");
+  p.style.display="block"; f.style.width="0%"; t.textContent="Preparando...";
   try {
-    const ctx = getAudioCtx();
-    const audioBlob = enhancedBlob || recordedBlob;
-    const arrayBuf = await audioBlob.arrayBuffer();
-    const voiceBuf = await ctx.decodeAudioData(arrayBuf);
-    const sr = voiceBuf.sampleRate;
-    const voiceData = voiceBuf.getChannelData(0);
-    const voiceDuration = voiceData.length / sr;
-
-    const beforeSec = parseInt(document.getElementById('binauralBefore').value) || 10;
-    const afterSec = parseInt(document.getElementById('binauralAfter').value) || 15;
-    const beatFreq = parseFloat(document.getElementById('binauralFreq').value);
-    const binVol = parseFloat(document.getElementById('binVol').value) / 100;
-    const voiceVol = parseFloat(document.getElementById('voiceVolBin').value) / 100;
-
-    const totalDuration = beforeSec + voiceDuration + afterSec;
-    const totalSamples = Math.ceil(totalDuration * sr);
-    const left = new Float32Array(totalSamples);
-    const right = new Float32Array(totalSamples);
-
-    // Generar binaural puro para toda la duración
-    const carrFreq = 200;
-    for (let i = 0; i < totalSamples; i++) {
-      const t = i / sr;
-      const leftFreq = carrFreq - beatFreq / 2;
-      const rightFreq = carrFreq + beatFreq / 2;
-      // Tremolo lento
-      const tremolo = 0.85 + 0.15 * Math.sin(2 * Math.PI * 0.1 * t);
-      // Fade in/out
-      let fade = 1;
-      if (t < 2) fade = t / 2;
-      if (t > totalDuration - 2) fade = (totalDuration - t) / 2;
-      const amp = binVol * 0.3 * tremolo * fade;
-      left[i] = amp * Math.sin(2 * Math.PI * leftFreq * t);
-      right[i] = amp * Math.sin(2 * Math.PI * rightFreq * t);
-    }
-
-    // Mezclar voz en el centro (solo durante afterSec a afterSec+voiceDuration)
-    const voiceStartSample = Math.floor(beforeSec * sr);
-    for (let i = 0; i < voiceData.length && (voiceStartSample + i) < totalSamples; i++) {
-      const v = voiceData[i] * voiceVol * 0.7;
-      // Fade in/out de la voz
-      let voiceFade = 1;
-      if (i < sr * 0.5) voiceFade = i / (sr * 0.5);
-      if (i > voiceData.length - sr * 0.5) voiceFade = (voiceData.length - i) / (sr * 0.5);
-      left[voiceStartSample + i] += v * voiceFade;
-      right[voiceStartSample + i] += v * voiceFade;
-    }
-
-    // Normalizar
-    let maxAmp = 0;
-    for (let i = 0; i < totalSamples; i++) {
-      maxAmp = Math.max(maxAmp, Math.abs(left[i]), Math.abs(right[i]));
-    }
-    if (maxAmp > 1) {
-      const norm = 0.95 / maxAmp;
-      for (let i = 0; i < totalSamples; i++) { left[i] *= norm; right[i] *= norm; }
-    }
-
-    progressText.textContent = 'Generando WAV...';
-
-    // Crear buffer estéreo
-    const offlineCtx = new OfflineAudioContext(2, totalSamples, sr);
-    const bufferSource = offlineCtx.createBufferSource();
-    const stereoBuf = offlineCtx.createBuffer(2, totalSamples, sr);
-    stereoBuf.copyToChannel(left, 0);
-    stereoBuf.copyToChannel(right, 1);
-    bufferSource.buffer = stereoBuf;
-    bufferSource.connect(offlineCtx.destination);
-    bufferSource.start();
-
-    progressText.textContent = 'Renderizando mezcla...';
-    const rendered = await offlineCtx.startRendering();
-
-    progressText.textContent = 'Creando archivo...';
-
-    // Exportar como WAV (soporte nativo, sin dependencias)
-    const wavBlob = audioBufferToWav(rendered);
-
-    // Si lamejs está disponible, convertir a MP3
-    let finalBlob = wavBlob;
-    try {
-      if (typeof lamejs !== 'undefined') {
-        const mp3Data = [];
-        const mp3enc = new lamejs.Mp3Encoder(2, sr, parseInt(document.getElementById('mp3Quality').value));
-        const samplesLeft = rendered.getChannelData(0);
-        const samplesRight = rendered.getChannelData(1);
-        const sampleBlockSize = 1152;
-        for (let i = 0; i < samplesLeft.length; i += sampleBlockSize) {
-          const leftChunk = new Int16Array(sampleBlockSize);
-          const rightChunk = new Int16Array(sampleBlockSize);
-          for (let j = 0; j < sampleBlockSize; j++) {
-            const idx = i + j;
-            if (idx < samplesLeft.length) {
-              leftChunk[j] = Math.max(-32768, Math.min(32767, Math.round(samplesLeft[idx] * 32767)));
-              rightChunk[j] = Math.max(-32768, Math.min(32767, Math.round(samplesRight[idx] * 32767)));
-            }
-          }
-          const buf = mp3enc.encodeBuffer(leftChunk, rightChunk);
-          if (buf.length > 0) mp3Data.push(buf);
-        }
-        const endBuf = mp3enc.flush();
-        if (endBuf.length > 0) mp3Data.push(endBuf);
-        finalBlob = new Blob(mp3Data, {type: 'audio/mp3'});
+    const ctx = getCtx();
+    const sr = audioBuffer.sampleRate;
+    const vd = audioBuffer.getChannelData(0);
+    const vdur = vd.length/sr;
+    const bs = parseInt(document.getElementById("binauralBefore").value)||10;
+    const as = parseInt(document.getElementById("binauralAfter").value)||15;
+    const bf = parseFloat(document.getElementById("binauralFreq").value)||4;
+    const bv = parseInt(document.getElementById("binVol").value)/100;
+    const vv = parseInt(document.getElementById("voiceVolBin").value)/100;
+    const total = Math.ceil((bs+vdur+as)*sr);
+    const L=new Float32Array(total), R=new Float32Array(total);
+    t.textContent="Generando binaural...";
+    for(let i=0;i<total;i++){const t2=i/sr;const fade=t2<2?t2/2:t2>(bs+vdur+as)-2?((bs+vdur+as)-t2)/2:1;const a=bv*0.3*fade;L[i]=a*Math.sin(2*Math.PI*(200-bf/2)*t2);R[i]=a*Math.sin(2*Math.PI*(200+bf/2)*t2);}
+    t.textContent="Mezclando voz...";
+    const vs=Math.floor(bs*sr);
+    for(let i=0;i<vd.length&&(vs+i)<total;i++){const vf=i<sr*0.5?i/(sr*0.5):i>vd.length-sr*0.5?(vd.length-i)/(sr*0.5):1;const samp=vd[i]*vv*0.7*vf;L[vs+i]+=samp;R[vs+i]+=samp;}
+    let mx=0;for(let i=0;i<total;i++)mx=Math.max(mx,Math.abs(L[i]),Math.abs(R[i]));
+    if(mx>0.95){const n=0.95/mx;for(let i=0;i<total;i++){L[i]*=n;R[i]*=n;}}
+    t.textContent="Renderizando..."; f.style.width="50%";
+    const oac = new OfflineAudioContext(2,total,sr);
+    const bsrc = oac.createBufferSource();
+    const sb = oac.createBuffer(2,total,sr);
+    sb.copyToChannel(L,0); sb.copyToChannel(R,1);
+    bsrc.buffer=sb; bsrc.connect(oac.destination); bsrc.start();
+    const rend = await oac.startRendering();
+    t.textContent="Creando archivo..."; f.style.width="80%";
+    const wav = audioBufferToWav(rend);
+    let out = wav;
+    try{if(typeof lamejs!=="undefined"){
+      const enc = new lamejs.Mp3Encoder(2,sr,parseInt(document.getElementById("mp3Quality").value)||192);
+      const cL=rend.getChannelData(0),cR=rend.getChannelData(1);
+      const blk=1152; const md=[];
+      for(let i=0;i<cL.length;i+=blk){
+        const l=new Int16Array(blk),r=new Int16Array(blk);
+        for(let j=0;j<blk&&(i+j)<cL.length;j++){l[j]=Math.max(-32768,Math.min(32767,Math.round(cL[i+j]*32767)));r[j]=Math.max(-32768,Math.min(32767,Math.round(cR[i+j]*32767)));}
+        const buf=enc.encodeBuffer(l,r);if(buf.length>0)md.push(buf);
       }
-    } catch(e) {
-      console.warn('MP3 encoder not available, using WAV');
-    }
-
-    // Descargar
-    const ext = finalBlob.type.includes('mp3') ? 'mp3' : 'wav';
-    const url = URL.createObjectURL(finalBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'zenmix_hipnosis_completa.' + ext;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    progressFill.style.width = '100%';
-    progressText.textContent = '✅ Descargado como ' + ext.toUpperCase() + ' (' + (finalBlob.size > 1048576 ? (finalBlob.size/1048576).toFixed(1)+'MB' : Math.round(finalBlob.size/1024)+'KB') + ')';
-    toast('✅ Exportación completa');
-  } catch(e) {
-    console.error('Export error:', e);
-    toast('Error en exportación: ' + e.message);
-  }
-  this.disabled = false;
+      const eb=enc.flush();if(eb.length>0)md.push(eb);
+      out=new Blob(md,{type:"audio/mp3"});
+    }}catch(e){}
+    const ext=out.type.includes("mp3")?"mp3":"wav";
+    const url=URL.createObjectURL(out);
+    const a=document.createElement("a");a.href=url;a.download="zenmix_hipnosis."+ext;a.click();URL.revokeObjectURL(url);
+    f.style.width="100%"; t.textContent="✅ Descargado ("+(out.size>1048576?(out.size/1048576).toFixed(1)+"MB":Math.round(out.size/1024)+"KB")+")";
+    toast("✅ Exportación completa");
+  } catch(e) { console.error(e); toast("Error: "+e.message); }
+  this.disabled=false;
 });
 
-// ─── LOAD MP3 ENCODER ────────────────────────────
-const lameScript = document.createElement('script');
-lameScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';
-lameScript.onload = () => {
-  document.getElementById('exportBtn').disabled = false;
-  document.getElementById('exportStatus').querySelector('p').textContent = '✅ Todo listo — exporta tu sesión de hipnosis';
-};
-lameScript.onerror = () => {
-  document.getElementById('exportBtn').disabled = false;
-  document.getElementById('exportStatus').querySelector('p').textContent = '⚠️ MP3 no disponible, se exportará como WAV';
-};
-document.head.appendChild(lameScript);
-
-// ─── SYNC EXPORT TIME DISPLAY ────────────────────
-document.getElementById('binauralBefore').addEventListener('input', function() {
-  document.getElementById('exportBefore').textContent = this.value || '0';
-});
-document.getElementById('binauralAfter').addEventListener('input', function() {
-  document.getElementById('exportAfter').textContent = this.value || '0';
-});
-
-// ─── PWA Service Worker ──────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+function audioBufferToWav(buf) {
+  const nCh=buf.numberOfChannels,sr=buf.sampleRate,d=buf.getChannelData(0);
+  const len=d.length*2+44,ab=new ArrayBuffer(len),v=new DataView(ab);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  w(0,"RIFF");v.setUint32(4,len-8,true);w(8,"WAVE");w(12,"fmt ");
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nCh,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*nCh*2,true);v.setUint16(32,nCh*2,true);
+  v.setUint16(34,16,true);w(36,"data");v.setUint32(40,d.length*2,true);
+  let o=44;for(let i=0;i<d.length;i++){const s=Math.max(-1,Math.min(1,d[i]));v.setInt16(o,s<0?s*0x8000:s*0x7FFF,true);o+=2;}
+  return new Blob([ab],{type:"audio/wav"});
 }
 
-console.log('🧘 ZENMIX v5 loaded');
+// ─── LAMEJS ─────────────────────────────────────
+const ls=document.createElement("script");
+ls.src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js";
+ls.onload=ls.onerror=()=>{document.getElementById("exportBtn").disabled=false;};
+document.head.appendChild(ls);
+
+// ─── SYNC ────────────────────────────────────────
+document.getElementById("binauralBefore").addEventListener("input",function(){document.getElementById("exportBefore").textContent=this.value||"0";});
+document.getElementById("binauralAfter").addEventListener("input",function(){document.getElementById("exportAfter").textContent=this.value||"0";});
+
+// ─── PWA ─────────────────────────────────────────
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
+
+console.log("🧘 ZENMIX v5.1 loaded");
 </script>
 </body>
 </html>
