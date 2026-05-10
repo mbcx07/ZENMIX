@@ -1,79 +1,42 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
   Check, Loader2, Play, BrainCircuit, AlertCircle, Music2,
-  ChevronRight, Info, RefreshCw, Undo2, Edit3,
-  Download, Save, Clock, Trash2, Sparkles, UserRound, Wand2, Pause
+  ChevronRight, Info, RefreshCw, Undo2, Sparkles
 } from 'lucide-react';
 import { SessionData } from '../types';
-import { EDGE_VOICES, synthethizeEdgeTTS } from '../services/edgeTtsService';
+import { PUTER_VOICES, synthethizePuterTTS, previewPuterVoice, audioBufferToWav } from '../services/puterTtsService';
 
 // ── ESTILOS DE MEDITACIÓN ─────────────────────────────────────────────────────
 const MEDITATION_STYLES = [
   {
-    id: 'hypnosis',
-    name: 'Hipnosis Profunda',
-    emoji: '🧿',
-    desc: 'Voz lenta y modulada, pausas terapéuticas, sugestión hipnótica',
-    rate: 0.6,
-    pitch: -15,
-    sampleText: `Cierra los ojos... respira profundamente...
-Cada parte de tu cuerpo se relaja más y más...
-Desde la cabeza hasta los pies... una ola de calma te envuelve...
-10... más profundo... 9... más relajado... 8... suelta todo...
-7... cada pensamiento se disuelve... 6... solo existe este momento...
-5... 4... 3... 2... 1... completamente presente...`
+    id: 'hypnosis', name: 'Hipnosis Profunda', emoji: '🧿',
+    desc: 'Voz lenta, modulada, pausas terapéuticas, sugestión hipnótica',
+    rate: 0.6, pitch: -15,
+    sampleText: `Cierra los ojos... respira profundamente...\nCada parte de tu cuerpo se relaja más y más...\nDesde la cabeza hasta los pies... una ola de calma te envuelve...\n10... más profundo... 9... más relajado... 8... suelta todo...\n7... cada pensamiento se disuelve... 6... solo existe este momento...\n5... 4... 3... 2... 1... completamente presente...`
   },
   {
-    id: 'meditation',
-    name: 'Meditación Guiada',
-    emoji: '🧘',
+    id: 'meditation', name: 'Meditación Guiada', emoji: '🧘',
     desc: 'Voz cálida y pausada, visualizaciones serenas, tono acogedor',
-    rate: 0.7,
-    pitch: -5,
-    sampleText: `Siéntate cómodamente... siente el peso de tu cuerpo...
-Observa tu respiración sin juzgarla...
-Inhala paz... exhala tensión...
-Imagina un lugar tranquilo... un bosque bañado por la luz del sol...
-Cada paso que das en ese bosque te lleva más profundo... a un estado de serenidad absoluta...`
+    rate: 0.7, pitch: -5,
+    sampleText: `Siéntate cómodamente... siente el peso de tu cuerpo...\nObserva tu respiración sin juzgarla...\nInhala paz... exhala tensión...\nImagina un lugar tranquilo... un bosque bañado por la luz del sol...`
   },
   {
-    id: 'sleep',
-    name: 'Sueño Reparador',
-    emoji: '🌙',
+    id: 'sleep', name: 'Sueño Reparador', emoji: '🌙',
     desc: 'Voz muy lenta, casi susurrante, arrullo hipnótico',
-    rate: 0.5,
-    pitch: -20,
-    sampleText: `Deja que tus párpados se vuelvan pesados... muy pesados...
-Cada respiración te hunde más profundamente en el sueño...
-Tus brazos... pesados... tus piernas... pesadas...
-Flotas... ingrávido... envuelto en una suave oscuridad...
-No hay prisa... no hay tiempo... solo descanso... paz... sueño...`
+    rate: 0.5, pitch: -20,
+    sampleText: `Deja que tus párpados se vuelvan pesados... muy pesados...\nCada respiración te hunde más profundamente en el sueño...\nTus brazos... pesados... tus piernas... pesadas...\nFlotas... ingrávido... envuelto en una suave oscuridad...`
   },
   {
-    id: 'focus',
-    name: 'Enfoque y Concentración',
-    emoji: '🎯',
+    id: 'focus', name: 'Enfoque y Concentración', emoji: '🎯',
     desc: 'Voz clara y firme, ritmo constante, energía controlada',
-    rate: 0.8,
-    pitch: 0,
-    sampleText: `Centra tu atención en este momento...
-Tres respiraciones profundas... inhala... exhala...
-Tu mente se aclara como un lago en calma...
-Cada pensamiento encuentra su lugar...
-Estás aquí... presente... listo... enfocado...`
+    rate: 0.8, pitch: 0,
+    sampleText: `Centra tu atención en este momento...\nTres respiraciones profundas... inhala... exhala...\nTu mente se aclara como un lago en calma...`
   },
   {
-    id: 'healing',
-    name: 'Sanación Interior',
-    emoji: '💚',
+    id: 'healing', name: 'Sanación Interior', emoji: '💚',
     desc: 'Voz suave y compasiva, ritmo lento, tono vulnerable y empático',
-    rate: 0.65,
-    pitch: -10,
-    sampleText: `Con amor y compasión... te invito a conectar con tu interior...
-Donde hay tensión... permites que se disuelva...
-Donde hay dolor... envías luz sanadora...
-Donde hay resistencia... pones atención consciente...
-Te aceptas exactamente como eres... completo... entero... sanado...`
+    rate: 0.65, pitch: -10,
+    sampleText: `Con amor y compasión... te invito a conectar con tu interior...\nDonde hay tensión... permites que se disuelva...\nDonde hay dolor... envías luz sanadora...`
   }
 ];
 
@@ -92,9 +55,7 @@ interface AIVoiceGeneratorProps {
 const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplete }) => {
   const [inputText, setInputText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState(MEDITATION_STYLES[0]);
-  const [selectedVoice, setSelectedVoice] = useState(EDGE_VOICES[0]); // DaliaMX por defecto
-  const [customRate, setCustomRate] = useState(0);
-  const [customPitch, setCustomPitch] = useState(0);
+  const [selectedVoice, setSelectedVoice] = useState(PUTER_VOICES[0]);
 
   const [blocks, setBlocks] = useState<AudioBlock[]>([]);
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
@@ -108,19 +69,11 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
 
   const abortRef = useRef(false);
 
-  // ── Rate/pitch efectivos ────────────────────────────────────────────────────
-  const effectiveRate = selectedStyle.rate + customRate;
-  const effectivePitch = selectedStyle.pitch + customPitch;
-
-  // ── Dividir texto en bloques ────────────────────────────────────────────────
+  // ── Dividir texto en bloques (límite 3000 chars por Puter) ─────────────────
   const prepareBlocks = () => {
     if (!inputText.trim()) return;
-    if (inputText.length > 200000) {
-      alert("Texto demasiado largo. Máximo 200,000 caracteres.");
-      return;
-    }
+    if (inputText.length > 200000) { alert("Texto demasiado largo. Máximo 200,000 caracteres."); return; }
 
-    // Dividir por párrafos o por ~3000 caracteres si son muy largos
     const paragraphs = inputText.split(/\n\s*\n/);
     const newBlocks: AudioBlock[] = [];
 
@@ -128,71 +81,63 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
       const trimmed = para.trim();
       if (!trimmed) continue;
 
-      if (trimmed.length <= 3000) {
-        newBlocks.push({
-          id: `b-${Date.now()}-${newBlocks.length}`,
-          text: trimmed,
-          status: 'pending',
-          url: null,
-        });
+      if (trimmed.length <= 2800) {
+        newBlocks.push({ id: `b-${Date.now()}-${newBlocks.length}`, text: trimmed, status: 'pending', url: null });
       } else {
-        // Dividir párrafo largo en chunks de ~2500 caracteres por oración
         const sentences = trimmed.match(/[^.!?\n]+[.!?\n]*/g) || [trimmed];
         let chunk = '';
         for (const s of sentences) {
-          if ((chunk + s).length > 2500 && chunk) {
-            newBlocks.push({
-              id: `b-${Date.now()}-${newBlocks.length}`,
-              text: chunk.trim(),
-              status: 'pending',
-              url: null,
-            });
+          if ((chunk + s).length > 2800 && chunk) {
+            newBlocks.push({ id: `b-${Date.now()}-${newBlocks.length}`, text: chunk.trim(), status: 'pending', url: null });
             chunk = s;
-          } else {
-            chunk += s;
-          }
+          } else { chunk += s; }
         }
         if (chunk.trim()) {
-          newBlocks.push({
-            id: `b-${Date.now()}-${newBlocks.length}`,
-            text: chunk.trim(),
-            status: 'pending',
-            url: null,
-          });
+          newBlocks.push({ id: `b-${Date.now()}-${newBlocks.length}`, text: chunk.trim(), status: 'pending', url: null });
         }
       }
     }
 
     if (newBlocks.length === 0) {
-      newBlocks.push({
-        id: `b-${Date.now()}-0`,
-        text: inputText.trim(),
-        status: 'pending',
-        url: null,
-      });
+      newBlocks.push({ id: `b-${Date.now()}-0`, text: inputText.trim(), status: 'pending', url: null });
     }
 
     setBlocks(newBlocks);
     setActiveStep(2);
   };
 
-  // ── Generar un bloque ───────────────────────────────────────────────────────
-  const generateBlock = async (block: AudioBlock): Promise<Blob | null> => {
+  // ── Generar un bloque con Puter ─────────────────────────────────────────────
+  const generateBlock = async (text: string): Promise<{ blob: Blob | null; error?: string }> => {
     try {
-      const blob = await synthethizeEdgeTTS({
-        text: block.text,
+      const blob = await synthethizePuterTTS({
+        text,
         voice: selectedVoice.id,
-        rate: effectiveRate,
-        pitch: effectivePitch,
+        engine: selectedVoice.id === 'generative' ? 'generative' : selectedVoice.engine as any,
       });
-      return blob;
+      return { blob };
     } catch (err: any) {
-      console.error('Edge TTS error:', err);
-      return null;
+      console.error('Puter TTS error:', err);
+      return { blob: null, error: err.message || 'Error de conexión' };
     }
   };
 
-  // ── Procesar cola ───────────────────────────────────────────────────────────
+  // ── Preview de voz ──────────────────────────────────────────────────────────
+  const handlePreviewVoice = async () => {
+    try {
+      const audio = await previewPuterVoice(selectedVoice.id);
+      audio.play();
+    } catch (err) {
+      setErrorMsg('Error al reproducir preview. ¿Puter.js cargó correctamente?');
+    }
+  };
+
+  // ── Preview de bloque ───────────────────────────────────────────────────────
+  const handlePreviewBlock = (url: string) => {
+    const audio = new Audio(url);
+    audio.play();
+  };
+
+  // ── Procesar cola de bloques ────────────────────────────────────────────────
   const processQueue = async () => {
     if (blocks.length === 0) return;
     setIsProcessing(true);
@@ -209,21 +154,15 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
       setBlocks(prev => prev.map((b, idx) => idx === i ? { ...b, status: 'processing' } : b));
 
       try {
-        const blob = await generateBlock(block);
+        const { blob, error } = await generateBlock(block.text);
         const url = blob ? URL.createObjectURL(blob) : null;
 
         setBlocks(prev => prev.map((b, idx) =>
-          idx === i ? {
-            ...b,
-            status: blob ? 'completed' : 'error',
-            url,
-            errorMsg: blob ? undefined : 'No se pudo generar'
-          } : b
+          idx === i ? { ...b, status: blob ? 'completed' : 'error', url, errorMsg: error } : b
         ));
 
-        // Pausa entre bloques para no saturar
         if (i < blocks.length - 1) {
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 1500));
         }
       } catch (err: any) {
         setBlocks(prev => prev.map((b, idx) =>
@@ -236,36 +175,9 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
     setIsProcessing(false);
   };
 
-  // ── Cancelar ────────────────────────────────────────────────────────────────
-  const cancelGeneration = () => {
-    abortRef.current = true;
-  };
+  const cancelGeneration = () => { abortRef.current = true; };
 
-  // ── Preview bloque ──────────────────────────────────────────────────────────
-  const previewBlock = useCallback((url: string) => {
-    const audio = new Audio(url);
-    audio.play();
-  }, []);
-
-  // ─── PREVIEW DE VOZ RÁPIDA ──────────────────────────────────────────────────
-  const previewVoice = async () => {
-    const previewText = "Esta es mi voz. Escúchame con atención... relájate profundamente...";
-    try {
-      const blob = await synthethizeEdgeTTS({
-        text: previewText,
-        voice: selectedVoice.id,
-        rate: effectiveRate,
-        pitch: effectivePitch,
-      });
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
-    } catch (err) {
-      // Silencio
-    }
-  };
-
-  // ── Finalizar: concatenar bloques ───────────────────────────────────────────
+  // ── Unir bloques ────────────────────────────────────────────────────────────
   const finalize = async () => {
     const completed = blocks.filter(b => b.status === 'completed' && b.url);
     if (completed.length === 0) {
@@ -282,37 +194,28 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
       for (const block of completed) {
         const resp = await fetch(block.url!);
         const arrayBuf = await resp.arrayBuffer();
-        // Intentar decodificar como MP3
         try {
           const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
           buffers.push(audioBuf);
         } catch {
-          // Si falla, intentar como raw
           console.warn('No se pudo decodificar bloque, se omite');
         }
       }
 
-      if (buffers.length === 0) {
-        throw new Error('No se pudo decodificar ningún bloque de audio');
-      }
+      if (buffers.length === 0) throw new Error('No se pudo decodificar ningún bloque');
 
-      // Concatenar
       const totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
       const sampleRate = Math.max(...buffers.map(b => b.sampleRate));
       const masterBuf = audioCtx.createBuffer(2, totalLen, sampleRate);
 
       let offset = 0;
       for (const buf of buffers) {
-        // Mezclar (mono → estéreo)
         for (let ch = 0; ch < Math.min(2, buf.numberOfChannels); ch++) {
-          const srcData = buf.getChannelData(ch);
-          const dstData = masterBuf.getChannelData(ch);
-          dstData.set(srcData, offset);
+          masterBuf.getChannelData(ch).set(buf.getChannelData(ch), offset);
         }
         offset += buf.length;
       }
 
-      // Convertir a WAV
       const wavBlob = audioBufferToWav(masterBuf);
       const url = URL.createObjectURL(wavBlob);
       const duration = masterBuf.length / masterBuf.sampleRate;
@@ -322,7 +225,6 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
       setMasterDuration(duration);
       setActiveStep(3);
       audioCtx.close();
-
     } catch (err: any) {
       setErrorMsg('Error al unir: ' + err.message);
     }
@@ -331,7 +233,6 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8 animate-in fade-in max-w-5xl mx-auto w-full">
-      {/* Header */}
       <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-sage-100 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-sage-600 rounded-2xl text-white shadow-lg">
@@ -340,15 +241,12 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
           <div>
             <h3 className="text-xl font-bold text-sage-800 tracking-tight">Narración IA Profesional</h3>
             <p className="text-[10px] uppercase font-bold text-sage-400 tracking-widest">
-              Microsoft Edge TTS • Voces Neuronales • 100% Gratis
+              AWS Polly Neural + ElevenLabs • 100% Gratis • Sin API Key
             </p>
           </div>
         </div>
         {activeStep > 1 && !isProcessing && (
-          <button
-            onClick={() => setActiveStep(1)}
-            className="p-3 text-sage-400 hover:text-sage-600 transition-colors flex items-center gap-2 text-xs font-bold uppercase"
-          >
+          <button onClick={() => setActiveStep(1)} className="p-3 text-sage-400 hover:text-sage-600 flex items-center gap-2 text-xs font-bold uppercase">
             <Undo2 size={16} /> Editar Texto
           </button>
         )}
@@ -359,78 +257,41 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-[2.5rem] border border-sage-100 shadow-sm sticky top-28">
             <h4 className="text-[10px] font-bold text-sage-400 uppercase tracking-widest mb-6">
-              🆓 Edge TTS — Voces Neuronales
+              🎙️ Voz Neural (sin costo)
             </h4>
 
-            {/* Selector de voz */}
             <div className="mb-6">
-              <label className="text-[9px] font-bold text-sage-300 uppercase block mb-3">Voz Neural</label>
+              <label className="text-[9px] font-bold text-sage-300 uppercase block mb-3">Voz</label>
               <select
                 value={selectedVoice.id}
                 onChange={(e) => {
-                  const v = EDGE_VOICES.find(v => v.id === e.target.value) || EDGE_VOICES[0];
+                  const v = PUTER_VOICES.find(v => v.id === e.target.value) || PUTER_VOICES[0];
                   setSelectedVoice(v);
                 }}
                 disabled={activeStep !== 1}
-                className="w-full p-3 rounded-xl border border-sand-200 bg-sand-50 text-sage-800 text-xs font-medium outline-none focus:ring-2 focus:ring-sage-300"
+                className="w-full p-3 rounded-xl border border-sand-200 bg-sand-50 text-sage-800 text-xs font-medium focus:ring-2 focus:ring-sage-300"
               >
-                {EDGE_VOICES.map((v) => (
+                {PUTER_VOICES.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.name} — {v.description}
+                    {v.name} {v.engine === 'generative' ? '⭐' : ''} — {v.description}
                   </option>
                 ))}
               </select>
-              <p className="text-[9px] text-sage-300 mt-2">{selectedVoice.description}</p>
+              <p className="text-[9px] text-sage-300 mt-2">
+                {selectedVoice.engine === 'neural' ? '🧠 Voz Neural AWS Polly' :
+                 selectedVoice.engine === 'generative' ? '⚡ ElevenLabs vía Puter' : '🔊 Estándar'}
+              </p>
             </div>
 
-            {/* Preview rápido */}
-            <button
-              onClick={previewVoice}
-              disabled={activeStep !== 1}
-              className="w-full mb-6 p-3 bg-sage-100 text-sage-700 rounded-xl text-[10px] font-bold uppercase hover:bg-sage-200 transition-all disabled:opacity-50"
-            >
-              🎧 Escuchar Preview de Voz
-            </button>
-
-            {/* Ajustes finos */}
-            <div className="mb-6 space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="text-[9px] font-bold text-sage-300 uppercase">Velocidad</label>
-                  <span className="text-[10px] font-bold text-sage-600">
-                    {effectiveRate.toFixed(2)}x
-                    {customRate !== 0 && <span className="text-sage-400 ml-1">({customRate > 0 ? '+' : ''}{customRate.toFixed(2)})</span>}
-                  </span>
-                </div>
-                <input
-                  type="range" min="-0.3" max="0.3" step="0.05"
-                  value={customRate}
-                  onChange={(e) => setCustomRate(parseFloat(e.target.value))}
-                  disabled={activeStep !== 1}
-                  className="w-full h-2 bg-sand-200 rounded-full appearance-none cursor-pointer accent-sage-600"
-                />
-                <div className="flex justify-between mt-1 text-[8px] font-bold text-sage-300">
-                  <span>Más lento</span><span>Base</span><span>Más rápido</span>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="text-[9px] font-bold text-sage-300 uppercase">Tono</label>
-                  <span className="text-[10px] font-bold text-sage-600">
-                    {effectivePitch > 0 ? '+' : ''}{effectivePitch}Hz
-                  </span>
-                </div>
-                <input
-                  type="range" min="-30" max="30" step="5"
-                  value={customPitch}
-                  onChange={(e) => setCustomPitch(parseInt(e.target.value))}
-                  disabled={activeStep !== 1}
-                  className="w-full h-2 bg-sand-200 rounded-full appearance-none cursor-pointer accent-sage-600"
-                />
-                <div className="flex justify-between mt-1 text-[8px] font-bold text-sage-300">
-                  <span>Más grave</span><span>Base</span><span>Más agudo</span>
-                </div>
-              </div>
+            {/* Preview */}
+            <div className="mb-6">
+              <button
+                onClick={handlePreviewVoice}
+                disabled={activeStep !== 1}
+                className="w-full p-3 bg-sage-100 text-sage-700 rounded-xl text-[10px] font-bold uppercase hover:bg-sage-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Play size={14} /> Escuchar Preview de Voz
+              </button>
             </div>
 
             {/* Estilos */}
@@ -438,7 +299,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
               <h4 className="text-[10px] font-bold text-sage-400 uppercase tracking-widest mb-3">
                 Estilo de Hipnosis
               </h4>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                 {MEDITATION_STYLES.map((style) => (
                   <button
                     key={style.id}
@@ -460,44 +321,35 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
 
             {/* Info */}
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-2xl">
-              <p className="text-[10px] font-bold text-green-700 uppercase mb-1">✅ Voces Neuronales Reales</p>
+              <p className="text-[10px] font-bold text-green-700 uppercase mb-1">✅ Gratuito — Sin Registro</p>
               <p className="text-[9px] text-green-600 leading-relaxed">
-                Microsoft Edge TTS — las mismas voces que usa el navegador Edge en "Leer en voz alta".
-                Respiración natural, entonación, emociones. 100% gratis, sin API key, sin límites.
-              </p>
-              <p className="text-[9px] text-green-500 mt-2">
-                Soporta SSML: pausas, respiraciones, énfasis, susurros — todo para hipnosis profesional.
+                Usa Puter.js como puente a AWS Polly Neural, ElevenLabs y otros motores TTS premium.
+                Sin API key, sin límites, 100% gratis desde el navegador.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Main: Editor y bloques */}
+        {/* Main */}
         <div className="lg:col-span-8">
           {activeStep === 1 && (
             <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-sage-100 space-y-6">
               <div className="p-5 bg-sage-50 rounded-[1.5rem] border border-sage-100 text-[11px] text-sage-600 leading-relaxed italic">
                 <Info size={14} className="inline mr-2 mb-1" />
-                Escribe o pega tu guion de hipnosis. Usa <code className="bg-sage-200 px-1 rounded text-[10px]">...</code> para pausas,
-                {' '}<code className="bg-sage-200 px-1 rounded text-[10px]">(respira)</code> para respiración,
-                {' '}<code className="bg-sage-200 px-1 rounded text-[10px]">(énfasis)texto(énfasis)</code> para destacar,
-                {' '}<code className="bg-sage-200 px-1 rounded text-[10px]">(susurro)texto(susurro)</code> para susurro.
+                Escribe tu guion de hipnosis. Se dividirá automáticamente en bloques.
+                Usa <code className="bg-sage-200 px-1 rounded text-[10px]">...</code> para pausas.
+                Sin límite de caracteres, sin costo.
               </div>
 
-              {/* Ejemplos rápidos */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {MEDITATION_STYLES.map((style) => (
                   <button
                     key={style.id}
                     onClick={() => {
                       setSelectedStyle(style);
-                      if (!inputText) {
-                        setInputText(style.sampleText);
-                      } else {
-                        setInputText(prev => prev + '\n\n' + style.sampleText);
-                      }
+                      setInputText(prev => prev ? prev + '\n\n' + style.sampleText : style.sampleText);
                     }}
-                    className="p-3 bg-sand-50 border border-sand-200 rounded-xl text-[10px] font-bold text-sage-600 hover:bg-sage-100 transition-all text-center"
+                    className="p-3 bg-sand-50 border border-sand-200 rounded-xl text-[10px] font-bold text-sage-600 hover:bg-sage-100 text-center"
                   >
                     {style.emoji} {style.name}
                   </button>
@@ -506,22 +358,14 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
 
               <textarea
                 className="w-full min-h-[400px] p-8 bg-sand-50 border border-sand-200 rounded-[2.5rem] outline-none text-sage-800 text-sm leading-relaxed shadow-inner"
-                placeholder={`Pega tu guion de hipnosis aquí...
-
-Usa ... para pausas largas
-Usa (respira) para indicar respiración
-Usa (énfasis)texto(énfasis) para énfasis
-Usa (susurro)texto(susurro) para susurro`}
+                placeholder="Pega tu guion de hipnosis aquí..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
               />
               <div className="flex justify-between items-center px-4 flex-wrap gap-4">
                 <span className="text-[10px] font-bold text-sage-300 uppercase">{inputText.length} caracteres</span>
                 {inputText.trim() && (
-                  <button
-                    onClick={() => setInputText('')}
-                    className="text-[10px] font-bold text-sage-400 hover:text-red-400 uppercase"
-                  >
+                  <button onClick={() => setInputText('')} className="text-[10px] font-bold text-sage-400 hover:text-red-400 uppercase">
                     Limpiar
                   </button>
                 )}
@@ -529,9 +373,9 @@ Usa (susurro)texto(susurro) para susurro`}
               <button
                 onClick={prepareBlocks}
                 disabled={!inputText.trim()}
-                className="w-full py-6 bg-sage-700 text-white rounded-[2rem] font-bold text-xl shadow-xl hover:bg-sage-800 transition-all active:scale-95 disabled:bg-sand-200 disabled:cursor-not-allowed"
+                className="w-full py-6 bg-sage-700 text-white rounded-[2rem] font-bold text-xl shadow-xl hover:bg-sage-800 transition-all active:scale-95 disabled:bg-sand-200"
               >
-                Generar con {selectedVoice.name.split(' ')[0]} • Estilo {selectedStyle.emoji} {selectedStyle.name}
+                Generar con {selectedVoice.name} • {selectedStyle.emoji} {selectedStyle.name}
                 <ChevronRight size={20} className="inline ml-2" />
               </button>
             </div>
@@ -540,7 +384,7 @@ Usa (susurro)texto(susurro) para susurro`}
           {activeStep === 2 && (
             <div className="space-y-6 animate-in slide-in-from-right-10">
               <div className="bg-sage-600 p-8 rounded-[2.5rem] text-white shadow-xl">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{selectedStyle.emoji}</span>
@@ -557,47 +401,31 @@ Usa (susurro)texto(susurro) para susurro`}
                     {!isProcessing ? (
                       blocks.some(b => b.status === 'completed') ? (
                         <>
-                          <button
-                            onClick={cancelGeneration}
-                            className="px-4 py-2 bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase hover:bg-white/30"
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            onClick={() => setActiveStep(1)}
-                            className="px-4 py-2 bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase hover:bg-white/30"
-                          >
+                          <button onClick={() => setActiveStep(1)} className="px-4 py-2 bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase hover:bg-white/30">
                             Editar
+                          </button>
+                          <button onClick={processQueue} className="px-6 py-2 bg-white text-sage-700 rounded-xl text-[10px] font-bold uppercase shadow-lg hover:scale-105">
+                            Continuar
                           </button>
                         </>
                       ) : (
-                        <button
-                          onClick={processQueue}
-                          className="px-8 py-3 bg-white text-sage-700 rounded-xl text-xs font-bold uppercase shadow-lg hover:scale-105 transition-all"
-                        >
+                        <button onClick={processQueue} className="px-8 py-3 bg-white text-sage-700 rounded-xl text-xs font-bold uppercase shadow-lg hover:scale-105">
                           Iniciar Generación
                         </button>
                       )
                     ) : (
-                      <button
-                        onClick={cancelGeneration}
-                        className="px-6 py-3 bg-red-500 text-white rounded-xl text-xs font-bold uppercase shadow-lg hover:bg-red-600 transition-all"
-                      >
+                      <button onClick={cancelGeneration} className="px-6 py-3 bg-red-500 text-white rounded-xl text-xs font-bold uppercase hover:bg-red-600">
                         ⏹ Cancelar
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Barra de progreso */}
                 {isProcessing && (
                   <div className="mt-4">
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-white rounded-full transition-all duration-500"
-                        style={{
-                          width: `${(blocks.filter(b => b.status === 'completed' || b.status === 'error').length / Math.max(blocks.length, 1)) * 100}%`
-                        }}
+                      <div className="h-full bg-white rounded-full transition-all duration-500"
+                        style={{ width: `${(blocks.filter(b => b.status === 'completed' || b.status === 'error').length / Math.max(blocks.length, 1)) * 100}%` }}
                       />
                     </div>
                     <p className="text-[9px] mt-2 opacity-60">
@@ -616,35 +444,21 @@ Usa (susurro)texto(susurro) para susurro`}
 
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-3 custom-scrollbar">
                 {blocks.map((block, idx) => (
-                  <div
-                    key={block.id}
-                    className={`p-5 bg-white rounded-[1.8rem] border flex items-center gap-4 transition-all ${
-                      block.status === 'completed'
-                        ? 'border-sage-200 bg-sage-50/20'
-                        : block.status === 'error'
-                          ? 'border-red-200'
-                          : block.status === 'processing'
-                            ? 'border-amber-200 bg-amber-50/20'
-                            : 'border-sand-100 opacity-60'
-                    }`}
-                  >
+                  <div key={block.id} className={`p-5 bg-white rounded-[1.8rem] border flex items-center gap-4 transition-all ${
+                    block.status === 'completed' ? 'border-sage-200 bg-sage-50/20' :
+                    block.status === 'error' ? 'border-red-200' :
+                    block.status === 'processing' ? 'border-amber-200 bg-amber-50/20' :
+                    'border-sand-100 opacity-60'
+                  }`}>
                     <span className="text-[10px] font-bold text-sand-300 w-8">{idx + 1}</span>
-                    <p className="text-[11px] text-sage-800 italic flex-1 truncate">
-                      "{block.text.slice(0, 120)}{block.text.length > 120 ? '...' : ''}"
-                    </p>
+                    <p className="text-[11px] text-sage-800 italic flex-1 truncate">"{block.text.slice(0, 120)}{block.text.length > 120 ? '...' : ''}"</p>
                     <div className="flex items-center gap-2 shrink-0">
                       {block.status === 'completed' && (
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => block.url && previewBlock(block.url)}
-                            className="p-2 text-sage-600 hover:bg-sage-100 rounded-lg"
-                            title="Reproducir"
-                          >
+                          <button onClick={() => block.url && handlePreviewBlock(block.url)} className="p-2 text-sage-600 hover:bg-sage-100 rounded-lg">
                             <Play size={14} />
                           </button>
-                          <div className="p-1.5 bg-sage-600 text-white rounded-full">
-                            <Check size={12} />
-                          </div>
+                          <div className="p-1.5 bg-sage-600 text-white rounded-full"><Check size={12} /></div>
                         </div>
                       )}
                       {block.status === 'processing' && (
@@ -653,32 +467,17 @@ Usa (susurro)texto(susurro) para susurro`}
                           <span className="text-[8px] font-bold text-amber-500 uppercase">Generando</span>
                         </div>
                       )}
-                      {block.status === 'error' && (
-                        <span className="text-[9px] font-bold text-red-500 uppercase">Error</span>
-                      )}
-                      {block.status === 'pending' && (
-                        <span className="text-[9px] font-bold text-sand-300 uppercase">Pendiente</span>
-                      )}
+                      {block.status === 'error' && <span className="text-[9px] font-bold text-red-500 uppercase">Error</span>}
+                      {block.status === 'pending' && <span className="text-[9px] font-bold text-sand-300 uppercase">Pendiente</span>}
                     </div>
                   </div>
                 ))}
               </div>
 
               {blocks.some(b => b.status === 'completed') && !isProcessing && (
-                <div className="flex gap-4">
-                  <button
-                    onClick={processQueue}
-                    className="flex-1 py-5 bg-sage-200 text-sage-700 rounded-[2rem] font-bold text-sm shadow-lg hover:bg-sage-300 transition-all"
-                  >
-                    Regenerar Faltantes
-                  </button>
-                  <button
-                    onClick={finalize}
-                    className="flex-1 py-5 bg-sage-800 text-white rounded-[2rem] font-bold text-xl shadow-2xl hover:bg-black transition-all"
-                  >
-                    Unir y Exportar
-                  </button>
-                </div>
+                <button onClick={finalize} className="w-full py-5 bg-sage-800 text-white rounded-[2rem] font-bold text-xl shadow-2xl hover:bg-black transition-all">
+                  Unir y Exportar ({blocks.filter(b => b.status === 'completed').length} bloques)
+                </button>
               )}
             </div>
           )}
@@ -696,17 +495,11 @@ Usa (susurro)texto(susurro) para susurro`}
                 <p className="text-sage-400 text-sm font-medium">
                   {blocks.filter(b => b.status === 'completed').length} bloques • {Math.floor(masterDuration / 60)}m {Math.floor(masterDuration % 60)}s
                 </p>
-                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">
-                  ✅ Voz Neural Microsoft • Sin costo de API
-                </p>
+                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">✅ Sin costo de API</p>
               </div>
               <audio src={masterUrl} controls className="w-full max-w-md" />
               <button
-                onClick={() => onGenerationComplete({
-                  voiceBlob: masterBlob,
-                  voiceUrl: masterUrl,
-                  duration: masterDuration
-                })}
+                onClick={() => onGenerationComplete({ voiceBlob: masterBlob, voiceUrl: masterUrl, duration: masterDuration })}
                 className="w-full py-6 bg-sage-700 text-white rounded-[2rem] font-bold text-xl shadow-xl hover:bg-sage-800 transition-all"
               >
                 Importar al Mezclador
@@ -723,47 +516,5 @@ Usa (susurro)texto(susurro) para susurro`}
     </div>
   );
 };
-
-// ── Helper: AudioBuffer → WAV ─────────────────────────────────────────────────
-function audioBufferToWav(buffer: AudioBuffer): Blob {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const bitDepth = 16;
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const dataSize = buffer.length * blockAlign;
-  const headerSize = 44;
-  const totalSize = headerSize + dataSize;
-
-  const arrayBuf = new ArrayBuffer(totalSize);
-  const view = new DataView(arrayBuf);
-  const w = (offset: number, s: string) => {
-    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
-  };
-
-  w(0, 'RIFF');
-  view.setUint32(4, totalSize - 8, true);
-  w(8, 'WAVE');
-  w(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);       // PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  w(36, 'data');
-  view.setUint32(40, dataSize, true);
-
-  const channelData = buffer.getChannelData(0);
-  let offset = headerSize;
-  for (let i = 0; i < buffer.length; i++) {
-    const sample = Math.max(-1, Math.min(1, channelData[i]));
-    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-    offset += 2;
-  }
-
-  return new Blob([arrayBuf], { type: 'audio/wav' });
-}
 
 export default AIVoiceGenerator;
