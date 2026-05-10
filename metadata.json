@@ -1,0 +1,7 @@
+{
+  "name": "ZenMix: Grabador de Meditaciones Binaurales",
+  "description": "App profesional para grabar meditaciones con voz y mezclar automáticamente ondas delta y theta con pre-roll y post-roll configurables.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
