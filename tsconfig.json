@@ -25,5 +25,10 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "public/sw.js",
+    "services/audioWorker.ts",
+    "services/zenmix-processor.ts"
+  ]
 }

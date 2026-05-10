@@ -1,8 +1,8 @@
-
 import React, { useRef, useState, useEffect } from 'react';
-import { UploadCloud, FileAudio, X, Play, Pause, Check, Layers, Loader2, Music2, Plus } from 'lucide-react';
+import { UploadCloud, FileAudio, X, Play, Pause, Check, Layers, Loader2, Music2, Plus, AlertCircle, Info } from 'lucide-react';
 import { SessionData } from '../types';
 import { mergeAudioBuffers, audioBufferToWav } from '../services/audioEngine';
+import { createAudioContext, safeDecodeAudioData, formatAudioError } from '../services/audioUtils';
 
 interface AudioUploadProps {
   onUpload: (data: SessionData) => void;
@@ -13,43 +13,133 @@ interface AudioFileEntry {
   file: File;
   duration: number;
   previewUrl: string;
+  format: string;
 }
 
+// ============================================================
+// FORMAT DETECTION & SUPPORT
+// ============================================================
+const SUPPORTED_MIME_TYPES: Record<string, string> = {
+  'audio/wav':         'WAV',
+  'audio/wave':        'WAV',
+  'audio/x-wav':       'WAV',
+  'audio/mpeg':        'MP3',
+  'audio/mp3':         'MP3',
+  'audio/mp4':         'M4A / AAC',
+  'audio/m4a':         'M4A',
+  'audio/x-m4a':       'M4A',
+  'audio/aac':         'AAC',
+  'audio/ogg':         'OGG',
+  'audio/vorbis':      'OGG Vorbis',
+  'audio/opus':        'OGG Opus',
+  'audio/flac':        'FLAC',
+  'audio/x-flac':      'FLAC',
+  'audio/webm':        'WebM',
+};
+
+const SUPPORTED_EXTENSIONS: Record<string, string> = {
+  '.wav':  'WAV',
+  '.wave': 'WAV',
+  '.mp3':  'MP3',
+  '.m4a':  'M4A / AAC',
+  '.aac':  'AAC',
+  '.ogg':  'OGG',
+  '.oga':  'OGG',
+  '.opus': 'OGG Opus',
+  '.flac': 'FLAC',
+  '.webm': 'WebM',
+  '.weba': 'WebM Audio',
+};
+
+function detectFormat(file: File): string {
+  // 1) Intentar por MIME type del navegador
+  const mime = file.type.toLowerCase();
+  if (SUPPORTED_MIME_TYPES[mime]) return SUPPORTED_MIME_TYPES[mime];
+
+  // 2) Intentar por extensión del nombre
+  const name = file.name.toLowerCase();
+  for (const [ext, label] of Object.entries(SUPPORTED_EXTENSIONS)) {
+    if (name.endsWith(ext)) return label;
+  }
+
+  // 3) Magic bytes heuristic (fallback para navegadores que no reportan MIME)
+  return 'Audio (' + (mime || 'desconocido') + ')';
+}
+
+// ============================================================
+// COMPONENT
+// ============================================================
 const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<AudioFileEntry[]>([]);
   const [isMerging, setIsMerging] = useState(false);
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const entryUrlsRef = useRef<Set<string>>(new Set());
+
+  // 🔥 Cleanup all blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      entryUrlsRef.current.forEach(url => {
+        try { URL.revokeObjectURL(url); } catch {}
+      });
+      entryUrlsRef.current.clear();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Forzamos el tipado a File[] para evitar errores de inferencia
     const selectedFiles = Array.from(e.target.files || []) as File[];
     if (selectedFiles.length === 0) return;
 
     const newEntries: AudioFileEntry[] = [];
+    const errors: string[] = [];
     
     for (const file of selectedFiles) {
-      if (file.type.startsWith('audio/')) {
+      const format = detectFormat(file);
+
+      // Validar que sea un formato de audio reconocido
+      if (!file.type.startsWith('audio/') && !Object.keys(SUPPORTED_EXTENSIONS).some(ext => file.name.toLowerCase().endsWith(ext))) {
+        errors.push(`"${file.name}" no es un formato de audio reconocido.`);
+        continue;
+      }
+
+      try {
         const url = URL.createObjectURL(file);
         
-        // Obtener duración de forma asíncrona
-        const duration = await new Promise<number>((resolve) => {
+        const duration = await new Promise<number>((resolve, reject) => {
           const tempAudio = new Audio(url);
           tempAudio.onloadedmetadata = () => resolve(tempAudio.duration);
+          tempAudio.onerror = () => reject(new Error(`No se pudo leer "${file.name}". El formato puede estar corrupto o no ser soportado por el navegador.`));
+          // Timeout de 10s para archivos problemáticos
+          setTimeout(() => reject(new Error(`Timeout al leer "${file.name}".`)), 10000);
         });
 
         newEntries.push({
           id: Math.random().toString(36).substr(2, 9),
           file,
           duration,
-          previewUrl: url
+          previewUrl: url,
+          format
         });
+      } catch (err: any) {
+        errors.push(err.message || `Error al procesar "${file.name}".`);
       }
     }
 
-    setEntries(prev => [...prev, ...newEntries]);
-    // Limpiamos el valor del input para permitir seleccionar los mismos archivos de nuevo si es necesario
+    if (errors.length > 0) {
+      setWarning(errors.join('\n'));
+      setTimeout(() => setWarning(null), 8000);
+    }
+
+    if (newEntries.length > 0) {
+      setEntries(prev => [...prev, ...newEntries]);
+    }
+    
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -65,20 +155,17 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
     setIsMerging(true);
 
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtx = createAudioContext();
       
-      // Decodificar todos los archivos secuencialmente
       const buffers: AudioBuffer[] = [];
       for (const entry of entries) {
         const arrayBuffer = await entry.file.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+        const decoded = await safeDecodeAudioData(audioCtx, arrayBuffer);
         buffers.push(decoded);
       }
 
-      // Unir los buffers de audio en uno solo
       const mergedBuffer = mergeAudioBuffers(audioCtx, buffers);
       
-      // Convertir el resultado a un Blob WAV final
       const finalWavBlob = audioBufferToWav(mergedBuffer);
       const finalUrl = URL.createObjectURL(finalWavBlob);
       const totalDuration = mergedBuffer.duration;
@@ -90,7 +177,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
       });
     } catch (err) {
       console.error("Merge error:", err);
-      alert("Error al unir los fragmentos de audio.");
+      alert(formatAudioError(err));
     } finally {
       setIsMerging(false);
     }
@@ -104,6 +191,13 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
       setIsPlaying(id);
       const entry = entries.find(e => e.id === id);
       if (entry && audioRef.current) {
+        // 🔥 Revoke old src before setting new one
+        if (audioRef.current.src) {
+          const oldSrc = audioRef.current.src;
+          if (oldSrc.startsWith('blob:')) {
+            try { URL.revokeObjectURL(oldSrc); } catch {}
+          }
+        }
         audioRef.current.src = entry.previewUrl;
         audioRef.current.play();
       }
@@ -117,6 +211,14 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
   };
 
   const totalDurationSeconds = entries.reduce((acc, curr) => acc + curr.duration, 0);
+  const formatBadgeClass = (format: string) => {
+    if (format.includes('WAV')) return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (format.includes('MP3')) return 'bg-purple-50 text-purple-700 border-purple-200';
+    if (format.includes('M4A') || format.includes('AAC')) return 'bg-teal-50 text-teal-700 border-teal-200';
+    if (format.includes('OGG') || format.includes('Opus') || format.includes('Vorbis')) return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (format.includes('FLAC')) return 'bg-green-50 text-green-700 border-green-200';
+    return 'bg-sand-50 text-sage-700 border-sand-200';
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -126,6 +228,13 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
           <p className="text-[10px] text-sage-400 font-bold uppercase tracking-[0.3em]">Une múltiples grabaciones en una sola meditación continua</p>
         </div>
 
+        {warning && (
+          <div className="w-full max-w-2xl p-5 bg-amber-50 border-2 border-amber-200 rounded-[1.5rem] flex items-start gap-3 animate-in fade-in">
+            <AlertCircle size={18} className="text-amber-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-800 font-medium whitespace-pre-wrap">{warning}</p>
+          </div>
+        )}
+
         {entries.length === 0 ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
@@ -134,9 +243,16 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
             <div className="p-8 bg-sand-100 rounded-[2rem] text-sand-300 group-hover:text-sage-600 group-hover:bg-white transition-all shadow-sm">
               <UploadCloud size={64} />
             </div>
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <p className="font-black text-xl text-sage-800 uppercase italic">Selecciona uno o varios archivos</p>
-              <p className="text-[11px] text-sage-400 font-bold uppercase tracking-widest mt-2">WAV, MP3, AAC o grabaciones de móvil</p>
+              <p className="text-[11px] text-sage-400 font-bold uppercase tracking-widest">WAV • MP3 • OGG • FLAC • M4A • AAC • OPUS</p>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              {['WAV', 'MP3', 'OGG', 'FLAC', 'M4A', 'AAC'].map(f => (
+                <span key={f} className={`px-3 py-1 rounded-full text-[8px] font-bold uppercase border ${formatBadgeClass(f)}`}>
+                  {f}
+                </span>
+              ))}
             </div>
           </div>
         ) : (
@@ -160,7 +276,12 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
                         {index + 1}
                       </div>
                       <div className="truncate">
-                        <p className="font-black text-sage-800 text-xs truncate uppercase tracking-tight">{entry.file.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-black text-sage-800 text-xs truncate uppercase tracking-tight">{entry.file.name}</p>
+                          <span className={`px-2 py-0.5 rounded-full text-[7px] font-bold uppercase border ${formatBadgeClass(entry.format)}`}>
+                            {entry.format}
+                          </span>
+                        </div>
                         <p className="text-[9px] font-bold text-sage-400 uppercase tracking-widest">{formatDuration(entry.duration)} • {(entry.file.size / 1024 / 1024).toFixed(2)} MB</p>
                       </div>
                    </div>
@@ -207,9 +328,12 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
         )}
 
         <div className="bg-sage-50/80 p-6 rounded-[2rem] border-2 border-sage-100 max-w-xl">
-          <p className="text-[10px] text-sage-500 leading-relaxed font-bold uppercase italic text-center tracking-widest">
-            Asegúrate de que las partes estén en el orden correcto. Los archivos se unirán en la secuencia en la que aparecen en la lista.
-          </p>
+          <div className="flex items-start gap-3">
+            <Info size={16} className="text-sage-500 mt-0.5 shrink-0" />
+            <p className="text-[10px] text-sage-500 leading-relaxed font-bold uppercase text-center tracking-widest">
+              Asegúrate de que las partes estén en el orden correcto. Los archivos se unirán en la secuencia en la que aparecen en la lista. Formatos soportados: WAV, MP3, OGG, FLAC, M4A, AAC, OPUS.
+            </p>
+          </div>
         </div>
       </div>
       
@@ -217,7 +341,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload }) => {
       <input 
         type="file" 
         ref={fileInputRef} 
-        accept="audio/*" 
+        accept="audio/wav,audio/wave,audio/mpeg,audio/ogg,audio/flac,audio/mp4,audio/x-m4a,audio/aac,audio/webm,.wav,.mp3,.ogg,.flac,.m4a,.aac,.opus,.oga,.webm"
         multiple 
         onChange={handleFileChange} 
         className="hidden" 

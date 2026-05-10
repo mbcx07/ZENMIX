@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Play, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { SessionData } from '../types';
+import { createAudioContext, formatAudioError } from '../services/audioUtils';
 
 interface RecorderProps {
   onRecordingComplete: (data: SessionData) => void;
@@ -21,10 +22,24 @@ const Recorder: React.FC<RecorderProps> = ({ onRecordingComplete }) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const audioUrlRef = useRef<string | null>(null);
+
+  // Sync the ref so cleanup always has the latest URL
+  useEffect(() => { audioUrlRef.current = audioUrl; }, [audioUrl]);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+      // 🔥 Revoke blob URL on unmount (use ref for latest value)
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
     };
   }, []);
 
@@ -37,7 +52,7 @@ const Recorder: React.FC<RecorderProps> = ({ onRecordingComplete }) => {
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtx = createAudioContext();
       audioContextRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -81,7 +96,7 @@ const Recorder: React.FC<RecorderProps> = ({ onRecordingComplete }) => {
 
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      alert('No se pudo acceder al micrófono. Por favor permite el permiso.');
+      alert(formatAudioError(err));
     }
   };
 
@@ -96,6 +111,8 @@ const Recorder: React.FC<RecorderProps> = ({ onRecordingComplete }) => {
 
   const resetRecording = () => {
     if(confirm("¿Seguro que quieres borrar la toma actual?")) {
+      // 🔥 Revoke old blob URL before clearing
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
       setAudioUrl(null);
       setAudioBlob(null);
       setRecordingTime(0);

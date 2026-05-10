@@ -1,0 +1,24 @@
+{
+  "name": "ZenMix Studio",
+  "short_name": "ZenMix",
+  "description": "Estudio de meditaciones binaurales — graba, mezcla y exporta audio hipnótico profesional",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1a241a",
+  "theme_color": "#2d3d2d",
+  "orientation": "portrait-primary",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

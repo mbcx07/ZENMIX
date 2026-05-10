@@ -1,15 +1,76 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { memo, useState, useRef, useEffect, useCallback, startTransition } from 'react';
 import { ProjectConfig, SessionData } from '../types';
-import { BINAURAL_PRESETS } from '../constants';
-import { Volume2, Clock, Activity, Mic, Waves, Play, Pause, Sparkles, Zap, BarChart3, Settings2, Sliders, Wind, Radio, Info } from 'lucide-react';
+import { BINAURAL_PRESETS, BRAINWAVE_CATEGORIES } from '../constants';
+import { Volume2, Clock, Activity, Mic, Waves, Play, Pause, Sparkles, Zap, BarChart3, Settings2, Sliders, Wind, Radio, Info, Moon, Brain, Coffee, Eye, HelpCircle } from 'lucide-react';
 import { createPinkNoiseBuffer } from '../services/audioEngine';
+import { createAudioContext, safeDecodeAudioData, formatAudioError } from '../services/audioUtils';
+
+// ── Impulso de reverb natural para preview (versión ligera) ──
+const createPreviewReverbImpulse = (ctx: AudioContext): AudioBuffer => {
+  const sampleRate = ctx.sampleRate;
+  const duration = 2.5;
+  const rt60 = 1.3;
+  const length = Math.ceil(sampleRate * duration);
+  const impulse = ctx.createBuffer(2, length, sampleRate);
+
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    const erCount = ch === 0 ? 10 : 12;
+    // Early reflections
+    for (let e = 0; e < erCount; e++) {
+      const t = 0.005 + 0.055 * (e / erCount) + (Math.random() - 0.5) * 0.003;
+      const idx = Math.floor(t * sampleRate);
+      if (idx < length) {
+        data[idx] = (1 - e / erCount) * 0.3 * (0.7 + Math.random() * 0.3) * (e % 2 === 0 ? 1 : -1);
+      }
+    }
+    // Late reflections con filtro lowpass
+    let b0 = 0, b1 = 0;
+    const lateStart = Math.floor(0.06 * sampleRate);
+    for (let i = lateStart; i < length; i++) {
+      const t = i / sampleRate;
+      const env = Math.exp(-3 * t / rt60);
+      const noise = (Math.random() * 2 - 1) * 0.25;
+      const cutoff = 10000 * Math.exp(-t * 3);
+      const alpha = Math.exp(-2 * Math.PI * cutoff / sampleRate);
+      b0 = b0 + alpha * (noise - b0);
+      b1 = b1 + alpha * (b0 - b1);
+      data[i] = b1 * env * 0.5;
+    }
+  }
+  return impulse;
+};
 
 interface MixerProps {
   config: ProjectConfig;
   setConfig: React.Dispatch<React.SetStateAction<ProjectConfig>>;
   session: SessionData;
 }
+
+const TOOLTIPS: Record<string, string> = {
+  voiceVolume: 'Controla el nivel general de la narración. Ajusta para balancear con las ondas binaurales.',
+  binauralVolume: 'Intensidad de las ondas binaurales. Volúmenes altos pueden causar fatiga auditiva.',
+  duckingAmount: 'Reduce automáticamente el volumen binaural cuando hay voz activa. 0 = sin atenuación.',
+  usePinkNoise: 'Sonido de fondo tipo cascada o viento suave. Mejora el enmascaramiento y la relajación.',
+  noiseLevel: 'Intensidad del ruido rosa de fondo. Ajusta para un ambiente sonoro envolvente.',
+  voiceBass: 'Ecualizador shelving de graves. Valores positivos añaden calidez y cuerpo a la voz.',
+  voiceTreble: 'Ecualizador shelving de agudos. Valores positivos mejoran claridad y presencia.',
+  voiceReverb: 'Simula una sala acústica. Más espacio = mayor sensación de profundidad ambiental.',
+  carrierFreq: 'Frecuencia portadora base de las ondas binaurales (40-1000 Hz). Define el tono central.',
+  beatFreq: 'Diferencia de frecuencia entre oídos. Define el estado mental: Delta (0.5-4), Theta (4-8), Alpha (8-14), Beta (14-30).',
+  voiceEnhance: 'Filtro pasa-altos + compresor para limpiar ruido de fondo y ecualizar la voz automáticamente.',
+};
+
+// ── Tooltip component ──
+const TooltipHelp: React.FC<{ text: string }> = ({ text }) => (
+  <span className="group relative inline-flex align-middle ml-1">
+    <HelpCircle size={12} className="text-sage-400 cursor-help hover:text-sage-700 transition-colors" />
+    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 sm:w-56 p-2 bg-sage-900 text-white text-[9px] leading-relaxed rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl border border-sage-700 pointer-events-none" style={{ whiteSpace: 'normal' }}>
+      {text}
+    </span>
+  </span>
+);
 
 const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -34,9 +95,13 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
   const noiseSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const noiseGainRef = useRef<GainNode | null>(null);
 
-  const handleChange = (key: keyof ProjectConfig, value: any) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  };
+  // 🔥 Use startTransition for non-urgent config updates (sliders, knobs)
+  // This keeps the UI responsive during rapid slider changes
+  const handleChange = useCallback((key: keyof ProjectConfig, value: any) => {
+    startTransition(() => {
+      setConfig(prev => ({ ...prev, [key]: value }));
+    });
+  }, [setConfig]);
 
   const drawVisualizer = useCallback(() => {
     if (!canvasRef.current || !analyserRef.current) return;
@@ -116,33 +181,30 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
     [voiceSourceRef, leftOscRef, rightOscRef, noiseSourceRef].forEach(ref => {
       if (ref.current) { try { ref.current.stop(); } catch(e) {} ref.current = null; }
     });
+    // 🔥 Close AudioContext to free system audio resources
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+      analyserRef.current = null;
+    }
+    // 🔥 Nullify all node refs to allow GC
+    [enhanceFilterRef, compressorRef, bassFilterRef, trebleFilterRef, reverbRef, wetGainRef, dryGainRef, voiceMasterGainRef, binauralGainRef, noiseGainRef].forEach(ref => {
+      ref.current = null;
+    });
     setIsPreviewing(false);
   }, []);
-
-  const createSimpleImpulse = (ctx: AudioContext): AudioBuffer => {
-    const rate = ctx.sampleRate;
-    const len = rate * 2.5; 
-    const buf = ctx.createBuffer(2, len, rate);
-    for (let c = 0; c < 2; c++) {
-      const data = buf.getChannelData(c);
-      for (let i = 0; i < len; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.8);
-      }
-    }
-    return buf;
-  };
 
   const startPreview = async () => {
     if (isPreviewing) { stopPreview(); return; }
     if (!session.voiceBlob) return;
 
     try {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioCtxRef.current = createAudioContext();
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') await ctx.resume();
       
       const arrayBuffer = await session.voiceBlob.arrayBuffer();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const audioBuffer = await safeDecodeAudioData(ctx, arrayBuffer);
       
       const vSource = ctx.createBufferSource();
       vSource.buffer = audioBuffer;
@@ -176,7 +238,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
       trebleFilterRef.current = treble;
 
       const reverbNode = ctx.createConvolver();
-      reverbNode.buffer = createSimpleImpulse(ctx);
+      reverbNode.buffer = createPreviewReverbImpulse(ctx);
       reverbRef.current = reverbNode;
 
       const wet = ctx.createGain();
@@ -222,6 +284,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
 
       const nSource = ctx.createBufferSource();
       nSource.buffer = createPinkNoiseBuffer(ctx, 10);
+      // El pink noise ya es estéreo en la nueva implementación
       nSource.loop = true;
       const nGain = ctx.createGain();
       nGain.gain.value = config.usePinkNoise ? config.noiseLevel * 0.3 : 0;
@@ -238,7 +301,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
       drawVisualizer();
     } catch(e) {
       console.error(e);
-      alert("Error inicializando motor de audio.");
+      alert(formatAudioError(e));
     }
   };
 
@@ -267,6 +330,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                className={`px-8 py-5 rounded-2xl font-black text-xs uppercase transition-all flex items-center gap-3 border-2 ${config.voiceEnhance ? 'bg-sage-400 border-sage-200 text-sage-950 shadow-lg' : 'bg-transparent border-sage-700 text-sage-500 hover:border-sage-500'}`}
              >
                <Sparkles size={18} /> {config.voiceEnhance ? 'Limpieza ON' : 'Mejorar Ruido'}
+               <TooltipHelp text={TOOLTIPS['voiceEnhance']} />
              </button>
              <button 
                onClick={startPreview}
@@ -304,6 +368,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                         <div className="flex items-center gap-2">
                           <ctrl.icon size={14} className="text-sage-500" />
                           <label className="text-[10px] font-black uppercase text-sage-900">{ctrl.label}</label>
+                          <TooltipHelp text={TOOLTIPS[ctrl.key]} />
                         </div>
                         <span className="text-xs font-black text-sage-900 bg-sand-100 px-3 py-1 rounded-lg border-2 border-sage-800">
                           {Math.round((config[ctrl.key as keyof ProjectConfig] as number / ctrl.max) * 100)}%
@@ -319,6 +384,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                       <div className="flex items-center gap-2">
                         <Radio size={16} className={config.usePinkNoise ? 'text-sage-800' : 'text-sage-300'} />
                         <label className="text-[10px] font-black uppercase text-sage-900">Ruido Rosa (Atmosférico)</label>
+                        <TooltipHelp text={TOOLTIPS['usePinkNoise']} />
                       </div>
                       <button 
                         onClick={() => handleChange('usePinkNoise', !config.usePinkNoise)}
@@ -330,6 +396,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                    <div className={`space-y-4 transition-opacity ${config.usePinkNoise ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                       <div className="flex justify-between">
                          <span className="text-[9px] font-black text-sage-400 uppercase">Intensidad Ruido</span>
+                         <TooltipHelp text={TOOLTIPS['noiseLevel']} />
                          <span className="text-xs font-black text-sage-800">{Math.round(config.noiseLevel * 100)}%</span>
                       </div>
                       <input type="range" min="0" max="1" step="0.05" value={config.noiseLevel} onChange={(e) => handleChange('noiseLevel', parseFloat(e.target.value))} className="w-full appearance-none h-2 bg-sage-100 rounded-full border border-sage-200" />
@@ -378,7 +445,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-sage-500 uppercase tracking-widest">Frecuencia Portadora (Carrier)</label>
+                    <label className="text-[10px] font-black text-sage-500 uppercase tracking-widest">Frecuencia Portadora (Carrier) <TooltipHelp text={TOOLTIPS['carrierFreq']} /></label>
                     <div className="relative">
                        <input 
                          type="number" min="40" max="1000" 
@@ -389,7 +456,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                     </div>
                  </div>
                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-sage-500 uppercase tracking-widest">Frecuencia de Pulso (Beat)</label>
+                    <label className="text-[10px] font-black text-sage-500 uppercase tracking-widest">Frecuencia de Pulso (Beat) <TooltipHelp text={TOOLTIPS['beatFreq']} /></label>
                     <div className="relative">
                        <input 
                          type="number" min="0.5" max="40" step="0.1"
@@ -401,19 +468,74 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                  </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto pr-4 custom-scrollbar bg-sand-50 p-6 rounded-[2.5rem] border-2 border-sand-200">
-                 {BINAURAL_PRESETS.map(p => (
-                   <button 
-                    key={p.name} onClick={() => setConfig(prev => ({...prev, carrierFreq: p.carrier, beatFreq: p.beat}))}
-                    className={`p-6 rounded-[1.8rem] border-2 text-left transition-all group ${config.beatFreq === p.beat ? 'bg-sage-900 border-sage-900 text-white shadow-xl scale-[1.02]' : 'bg-white border-sage-200 text-sage-900 hover:border-sage-800 hover:shadow-md'}`}
-                   >
-                      <div className="flex justify-between items-start mb-3">
-                        <span className="font-black text-[10px] uppercase tracking-tighter leading-tight">{p.name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${config.beatFreq === p.beat ? 'bg-sage-700 text-white' : 'bg-sage-100 text-sage-800'}`}>{p.beat}Hz</span>
-                      </div>
-                      <p className={`text-[10px] leading-snug font-medium ${config.beatFreq === p.beat ? 'opacity-70' : 'text-sage-400'}`}>{p.description}</p>
-                   </button>
-                 ))}
+              <div className="max-h-[500px] overflow-y-auto pr-4 custom-scrollbar bg-sand-50 p-6 rounded-[2.5rem] border-2 border-sand-200 space-y-4">
+                 {/* ── PRESETS POR CATEGORÍA DE ONDA CEREBRAL ── */}
+                 {BRAINWAVE_CATEGORIES.map(cat => {
+                   const CategoryIcon = cat.key === 'delta' ? Moon : cat.key === 'theta' ? Brain : cat.key === 'alpha' ? Eye : Coffee;
+                   return (
+                     <div key={cat.key} className="mb-4 last:mb-0">
+                       <div className="flex items-center gap-2 mb-2 px-1">
+                         <CategoryIcon size={14} className={cat.key === 'delta' ? 'text-indigo-500' : cat.key === 'theta' ? 'text-purple-500' : cat.key === 'alpha' ? 'text-teal-500' : 'text-amber-500'} />
+                         <span className="text-[11px] font-black uppercase tracking-widest text-sage-900">{cat.label}</span>
+                         <span className="text-[9px] font-bold text-sage-400 uppercase">• {cat.sublabel}</span>
+                       </div>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                         {cat.presets.map(p => (
+                           <button
+                             key={p.name}
+                             onClick={() => setConfig(prev => ({ ...prev, carrierFreq: p.carrier, beatFreq: p.beat }))}
+                             className={`p-5 rounded-[1.5rem] border-2 text-left transition-all group ${
+                               config.beatFreq === p.beat
+                                 ? 'bg-sage-900 border-sage-900 text-white shadow-xl scale-[1.02]'
+                                 : 'bg-white border-sage-200 text-sage-900 hover:border-sage-800 hover:shadow-md'
+                             }`}
+                           >
+                             <div className="flex justify-between items-start mb-2">
+                               <span className="font-black text-[9px] uppercase tracking-tighter leading-tight">{p.name}</span>
+                               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                                 config.beatFreq === p.beat ? 'bg-sage-700 text-white' : 'bg-sage-100 text-sage-800'
+                               }`}>{p.beat}Hz</span>
+                             </div>
+                             <p className={`text-[9px] leading-snug font-medium ${
+                               config.beatFreq === p.beat ? 'opacity-70' : 'text-sage-400'
+                             }`}>{p.description}</p>
+                           </button>
+                         ))}
+                       </div>
+                     </div>
+                   );
+                 })}
+
+                 {/* ── PRESETS TERAPÉUTICOS ORIGINALES ── */}
+                 <div className="pt-4 border-t-2 border-sand-200">
+                   <div className="flex items-center gap-2 mb-2 px-1">
+                     <Sparkles size={14} className="text-sage-600" />
+                     <span className="text-[11px] font-black uppercase tracking-widest text-sage-900">Presets Terapéuticos</span>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                     {BINAURAL_PRESETS.map(p => (
+                       <button
+                         key={p.name}
+                         onClick={() => setConfig(prev => ({ ...prev, carrierFreq: p.carrier, beatFreq: p.beat }))}
+                         className={`p-5 rounded-[1.5rem] border-2 text-left transition-all group ${
+                           config.beatFreq === p.beat
+                             ? 'bg-sage-900 border-sage-900 text-white shadow-xl scale-[1.02]'
+                             : 'bg-white border-sage-200 text-sage-900 hover:border-sage-800 hover:shadow-md'
+                         }`}
+                       >
+                         <div className="flex justify-between items-start mb-2">
+                           <span className="font-black text-[9px] uppercase tracking-tighter leading-tight">{p.name}</span>
+                           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                             config.beatFreq === p.beat ? 'bg-sage-700 text-white' : 'bg-sage-100 text-sage-800'
+                           }`}>{p.beat}Hz</span>
+                         </div>
+                         <p className={`text-[9px] leading-snug font-medium ${
+                           config.beatFreq === p.beat ? 'opacity-70' : 'text-sage-400'
+                         }`}>{p.description}</p>
+                       </button>
+                     ))}
+                   </div>
+                 </div>
               </div>
            </div>
 
@@ -431,6 +553,7 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
                    <div key={ctrl.key} className="space-y-5">
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] font-black text-sage-500 uppercase">{ctrl.label}</label>
+                        <TooltipHelp text={TOOLTIPS[ctrl.key]} />
                         <span className="text-xs font-black text-sage-900 bg-sand-100 px-3 py-1 rounded-lg border-2 border-sage-800">
                           {ctrl.unit === '%' ? Math.round(config[ctrl.key as keyof ProjectConfig] as number * 100) : config[ctrl.key as keyof ProjectConfig]}{ctrl.unit}
                         </span>
@@ -448,4 +571,4 @@ const Mixer: React.FC<MixerProps> = ({ config, setConfig, session }) => {
   );
 };
 
-export default Mixer;
+export default memo(Mixer);
