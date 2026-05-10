@@ -1,4 +1,4 @@
-const SW_VERSION = 'v1';
+const SW_VERSION = 'v4-edge-tts';
 const CACHE_NAME = `zenmix-${SW_VERSION}`;
 
 // ── Install: pre-cache static shell ──────────────────────────────────────────
