@@ -1,9 +1,9 @@
-// ── PROXY: /api/clonevoice/generate ─────────────────────────────────────────
-// Genera audio TTS desde CloneVoice API (POST)
-// ─────────────────────────────────────────────────────────────────────────────
+# ── PROXY: /api/clonevoice/generate ─────────────────────────────────────────
+# Genera audio TTS usando edge-tts (Azure Neural) vía servidor en Render
+# ─────────────────────────────────────────────────────────────────────────────
 
-const CLONEVOICE_API_KEY = 'sk_8e2mlFaYTPZqYlOvS4ioTb33LfHmtMfJ';
-const CLONEVOICE_API = 'https://voiceclone.cloud/v1';
+// URL del servidor edge-tts en Render
+const TTS_SERVER = 'https://zenmix-tts.onrender.com';
 
 export async function onRequest(context) {
   const { request } = context;
@@ -27,13 +27,17 @@ export async function onRequest(context) {
 
   try {
     const body = await request.json();
-    const resp = await fetch(`${CLONEVOICE_API}/generate`, {
+    
+    // Reenviar al servidor edge-tts
+    const resp = await fetch(`${TTS_SERVER}/generate`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CLONEVOICE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: body.text,
+        voice_id: body.voice_id || 'es-MX-DaliaNeural',
+        speed: body.speed || 0.85,
+        pitch: body.pitch || 0,
+      }),
     });
 
     if (!resp.ok) {
@@ -53,6 +57,7 @@ export async function onRequest(context) {
         ...cors,
       },
     });
+
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
