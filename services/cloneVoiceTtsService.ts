@@ -1,125 +1,131 @@
 // ── CLONEVOICE TTS SERVICE ──────────────────────────────────────────────────
-// Integración con API de CloneVoice.app (voiceclone.cloud)
-// Voces neuronales con EmotionFX para hipnosis profesional.
-// Requiere API key: sk_8e2mlFaYTPZqYlOvS4ioTb33LfHmtMfJ
+// Proxy via Cloudflare Pages Function (/api/clonevoice/)
+// La API key se mantiene en el servidor, nunca se expone al frontend
 // ─────────────────────────────────────────────────────────────────────────────
 
-import cloneVoiceCreds from '../credentials/clonevoice.json';
+const API_PROXY = '/api/clonevoice/';
 
-const API_KEY = cloneVoiceCreds.apiKey;
-const BASE_URL = 'https://voiceclone.cloud/v1';
-
-export interface CloneVoiceInfo {
-  voice_id: string;
-  name: string;
-  language: string;
-  status: string;
-  created_at: string;
-  preview_url?: string;
-}
-
-export interface CloneVoiceGenerateOptions {
-  text: string;
-  voice_id: string;
-  language?: string;
-  quality?: 'standard' | 'high';
-  emotion?: 'happy' | 'sad' | 'angry' | 'afraid' | 'disgusted' | 'melancholic' | 'surprised' | 'calm';
-  speed?: number;  // 0.5 - 2.0
-  pitch?: number;  // -10 to +10
-}
-
-// ── Voces recomendadas para hipnosis (pre-clonadas en la cuenta) ──────────────
-// Estas voice_ids deben existir en la cuenta de CloneVoice del usuario.
-// Si no existen, el usuario debe clonarlas primero desde clonevoice.ai
-export const HYPNOSIS_VOICES: { id: string; name: string; desc: string }[] = [
-  { id: 'cv_hypnosis_es_calm', name: 'Voz Hipnosis Calmada', desc: 'Femenina, serena, ideal para inducción' },
-  { id: 'cv_hypnosis_es_deep', name: 'Voz Hipnosis Profunda', desc: 'Masculina, grave, para trance profundo' },
-  { id: 'cv_hypnosis_es_whisper', name: 'Voz Hipnosis Susurro', desc: 'Susurrante, para sueño y relajación' },
-  { id: 'cv_custom_voice', name: 'Tu Voz Clonada', desc: 'Tu propia voz clonada desde CloneVoice' },
+export const HYPNOSIS_VOICES = [
+  { id: 'es-MX-DaliaNeural', name: 'Dalia (MX)', gender: 'female', lang: 'es-MX', engine: 'neural', emotion: 'calm', description: 'Voz femenina mexicana, cálida y calmada — perfecta para hipnosis' },
+  { id: 'es-MX-JorgeNeural', name: 'Jorge (MX)', gender: 'male', lang: 'es-MX', engine: 'neural', emotion: 'deep', description: 'Voz masculina mexicana, profunda y serena — ideal para trance' },
+  { id: 'es-ES-ElviraNeural', name: 'Elvira (ES)', gender: 'female', lang: 'es-ES', engine: 'neural', emotion: 'calm', description: 'Voz española femenina, melodiosa y envolvente' },
+  { id: 'en-US-JoannaNeural', name: 'Joanna (US)', gender: 'female', lang: 'en-US', engine: 'neural', emotion: 'calm', description: 'AWS Polly Joanna — la mejor voz neural para bilingüe' },
+  { id: 'en-US-MatthewNeural', name: 'Matthew (US)', gender: 'male', lang: 'en-US', engine: 'neural', emotion: 'deep', description: 'AWS Polly Matthew — profunda, calmada, autoritaria' },
+  { id: 'es-US-LupeNeural', name: 'Lupe (US Latam)', gender: 'female', lang: 'es-US', engine: 'neural', emotion: 'calm', description: 'Voz latina femenina, cálida y natural' },
 ];
 
-// ⚠️ TEMPORAL: Usar TTS directo mientras se clonan voces
-// CloneVoice tiene voces pre-hechas disponibles para generar sin clonar
-export async function listVoices(): Promise<CloneVoiceInfo[]> {
-  const resp = await fetch(`${BASE_URL}/voices`, {
-    headers: { 'Authorization': `Bearer ${API_KEY}` }
-  });
-  if (!resp.ok) throw new Error(`Error al listar voces: ${resp.status}`);
+export interface CloneVoiceOptions {
+  text: string;
+  voice_id: string;
+  emotion?: 'calm' | 'whisper' | 'melancholic' | 'happy' | 'sad';
+  speed?: number;
+  pitch?: number;
+}
+
+// ── Listar voces clonadas (si tienes) ────────────────────────────────────────
+export async function listClonedVoices(): Promise<any[]> {
+  const resp = await fetch(`${API_PROXY}voices`);
+  if (!resp.ok) throw new Error('Error al conectar con CloneVoice');
   return resp.json();
 }
 
-// ── Generar audio con CloneVoice ─────────────────────────────────────────────
-export async function generateCloneVoice(options: CloneVoiceGenerateOptions): Promise<Blob> {
-  const { text, voice_id, language = 'es', quality = 'high', emotion = 'calm', speed = 1.0, pitch = 0 } = options;
+// ── Generar audio de hipnosis ────────────────────────────────────────────────
+export async function generateHypnosisAudio(options: CloneVoiceOptions): Promise<Blob> {
+  const { text, voice_id, emotion = 'calm', speed = 0.85, pitch = 0 } = options;
 
-  const resp = await fetch(`${BASE_URL}/generate`, {
+  const resp = await fetch(`${API_PROXY}generate`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text,
       voice_id,
-      language,
-      quality,
+      language: voice_id.startsWith('en-') ? 'en' : 'es',
+      quality: 'high',
       emotion,
       speed,
-      pitch
-    })
+      pitch,
+    }),
   });
 
   if (!resp.ok) {
-    const errBody = await resp.text();
-    throw new Error(`CloneVoice error ${resp.status}: ${errBody}`);
+    const err = await resp.text();
+    let msg = 'Error de conexión';
+    try {
+      const parsed = JSON.parse(err);
+      msg = parsed.error || msg;
+    } catch {}
+    throw new Error(msg);
   }
 
-  return await resp.blob();
+  return resp.blob();
 }
 
-// ── Generar audio con emoción de hipnosis (atajo) ────────────────────────────
-export async function generateHypnosisAudio(
-  text: string,
-  voice_id: string,
-  emotion: 'calm' | 'whisper' | 'melancholic' = 'calm',
-  speed: number = 0.85
-): Promise<Blob> {
-  return generateCloneVoice({
-    text,
+// ── Preview rápido (texto corto) ─────────────────────────────────────────────
+export async function previewVoice(voice_id: string): Promise<void> {
+  const previewText = "Hola, soy tu guía de hipnosis. Escúchame con atención... relájate profundamente...";
+  const blob = await generateHypnosisAudio({
+    text: previewText,
     voice_id,
-    language: 'es',
-    quality: 'high',
-    emotion,
-    speed,
-    pitch: emotion === 'calm' ? -1 : emotion === 'whisper' ? -2 : 0
+    emotion: 'calm',
+    speed: 0.85,
   });
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.play();
 }
 
-// ── Procesar texto con marcadores de hipnosis ────────────────────────────────
+// ── Procesar texto de hipnosis ────────────────────────────────────────────────
 export function processHypnosisText(text: string): string {
   return text
-    // Pausas largas
     .replace(/\.\.\./g, '... ')
     .replace(/\(pausa\)/gi, '... ')
     .replace(/\(pausa larga\)/gi, '... ... ')
-    // Respiraciones
-    .replace(/\(respira\)/gi, '... *respira* ... ')
-    .replace(/\(inhala\)/gi, '... inhala ... ')
-    .replace(/\(exhala\)/gi, '... exhala ... ')
-    // Énfasis (CloneVoice soporta emociones inline?)
+    .replace(/\(respira\)/gi, '... ')
     .replace(/\(énfasis\)(.*?)\(énfasis\)/gi, '$1')
     .replace(/\(susurro\)(.*?)\(susurro\)/gi, '$1')
     .trim();
 }
 
-// ── Verificar que la API key funciona ────────────────────────────────────────
-export async function testConnection(): Promise<boolean> {
-  try {
-    const resp = await fetch(`${BASE_URL}/voices`, {
-      headers: { 'Authorization': `Bearer ${API_KEY}` }
-    });
-    return resp.ok;
-  } catch {
-    return false;
+// ── AudioBuffer → WAV ────────────────────────────────────────────────────────
+export function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = Math.min(buffer.numberOfChannels, 2);
+  const sampleRate = buffer.sampleRate;
+  const bitDepth = 16;
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataSize = buffer.length * blockAlign;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize;
+
+  const buf = new ArrayBuffer(totalSize);
+  const view = new DataView(buf);
+  const w = (offset: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+  };
+
+  w(0, 'RIFF');
+  view.setUint32(4, totalSize - 8, true);
+  w(8, 'WAVE');
+  w(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  w(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  for (let ch = 0; ch < numChannels; ch++) {
+    const data = ch < buffer.numberOfChannels ? buffer.getChannelData(ch) : buffer.getChannelData(0);
+    let offset = headerSize + ch * 2;
+    for (let i = 0; i < buffer.length; i++) {
+      const sample = Math.max(-1, Math.min(1, data[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += blockAlign;
+    }
   }
+
+  return new Blob([buf], { type: 'audio/wav' });
 }

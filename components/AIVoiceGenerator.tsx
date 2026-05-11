@@ -1,45 +1,39 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   Check, Loader2, Play, BrainCircuit, AlertCircle, Music2,
-  ChevronRight, Info, Undo2
+  ChevronRight, Info, RefreshCw, Undo2, Sparkles
 } from 'lucide-react';
 import { SessionData } from '../types';
 import {
-  getAvailableVoices, mapToZenVoices, ZenVoice,
-  synthesizeWithCapture, previewVoiceSimple, audioBufferToWav, webmToAudioBuffer
-} from '../services/zenmixTtsService';
+  HYPNOSIS_VOICES, generateHypnosisAudio, previewVoice, audioBufferToWav
+} from '../services/cloneVoiceTtsService';
 
 const MEDITATION_STYLES = [
   {
     id: 'hypnosis', name: 'Hipnosis Profunda', emoji: '🧿',
-    desc: 'Voz lenta, pausas terapéuticas, sugestión hipnótica',
-    rate: 0.55, pitch: 0.8,
-    sampleText: `Cierra los ojos... respira profundamente...\nCada parte de tu cuerpo se relaja más y más...\n10... más profundo... 9... más relajado... 8... suelta todo...\n7... cada pensamiento se disuelve... 6... solo existe este momento...`
-  },
-  {
-    id: 'meditation', name: 'Meditación Guiada', emoji: '🧘',
-    desc: 'Voz cálida y pausada, visualizaciones serenas',
-    rate: 0.7, pitch: 1.0,
-    sampleText: `Siéntate cómodamente... siente el peso de tu cuerpo...\nObserva tu respiración sin juzgarla...\nInhala paz... exhala tensión...`
+    desc: 'Voz lenta, modulada, pausas terapéuticas',
+    emotion: 'calm', speed: 0.8, sampleText: `Cierra los ojos... respira profundamente...\nCada parte de tu cuerpo se relaja más y más...\nDesde la cabeza hasta los pies... una ola de calma te envuelve...\n10... más profundo... 9... más relajado... 8... suelta todo...`
   },
   {
     id: 'sleep', name: 'Sueño Reparador', emoji: '🌙',
-    desc: 'Voz muy lenta, arrullo hipnótico',
-    rate: 0.45, pitch: 0.7,
-    sampleText: `Deja que tus párpados se vuelvan pesados...\nCada respiración te hunde más profundamente...\nFlotas... ingrávido... envuelto en una suave oscuridad...`
+    desc: 'Voz muy lenta, susurrante, arrullo hipnótico',
+    emotion: 'whisper', speed: 0.7, sampleText: `Deja que tus párpados se vuelvan pesados...\nCada respiración te hunde más profundamente en el sueño...\nTus brazos... pesados... tus piernas... pesadas...\nFlotas... ingrávido... envuelto en una suave oscuridad...`
   },
   {
-    id: 'focus', name: 'Enfoque', emoji: '🎯',
-    desc: 'Voz clara y firme, ritmo constante',
-    rate: 0.75, pitch: 1.0,
-    sampleText: `Centra tu atención en este momento...\nTres respiraciones profundas...\nTu mente se aclara como un lago en calma...`
+    id: 'meditation', name: 'Meditación Guiada', emoji: '🧘',
+    desc: 'Voz cálida, pausada, visualizaciones serenas',
+    emotion: 'calm', speed: 0.85, sampleText: `Siéntate cómodamente... siente el peso de tu cuerpo...\nObserva tu respiración sin juzgarla...\nInhala paz... exhala tensión...`
   },
   {
     id: 'healing', name: 'Sanación Interior', emoji: '💚',
-    desc: 'Voz suave y compasiva, ritmo lento',
-    rate: 0.6, pitch: 0.9,
-    sampleText: `Con amor y compasión... te invito a conectar con tu interior...\nDonde hay tensión... permites que se disuelva...`
-  }
+    desc: 'Voz suave y compasiva, tono vulnerable y empático',
+    emotion: 'melancholic', speed: 0.75, sampleText: `Con amor y compasión... te invito a conectar con tu interior...\nDonde hay tensión... permites que se disuelva...\nDonde hay dolor... envías luz sanadora...`
+  },
+  {
+    id: 'focus', name: 'Enfoque y Concentración', emoji: '🎯',
+    desc: 'Voz clara y firme, energía controlada',
+    emotion: 'calm', speed: 0.9, sampleText: `Centra tu atención en este momento...\nTres respiraciones profundas...\nTu mente se aclara como un lago en calma...`
+  },
 ];
 
 interface AudioBlock {
@@ -57,9 +51,7 @@ interface AIVoiceGeneratorProps {
 const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplete }) => {
   const [inputText, setInputText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState(MEDITATION_STYLES[0]);
-  const [voices, setVoices] = useState<ZenVoice[]>([]);
-  const [rawVoices, setRawVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceIdx, setSelectedVoiceIdx] = useState(0);
+  const [selectedVoice, setSelectedVoice] = useState(HYPNOSIS_VOICES[0]);
 
   const [blocks, setBlocks] = useState<AudioBlock[]>([]);
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
@@ -74,54 +66,35 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
   const abortRef = useRef(false);
   const previewingRef = useRef(false);
 
-  // ── Cargar voces ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    getAvailableVoices().then((sysVoices) => {
-      setRawVoices(sysVoices);
-      setVoices(mapToZenVoices(sysVoices));
-    });
-  }, []);
-
-  const selectedVoice = rawVoices[selectedVoiceIdx];
-  const effectiveRate = selectedStyle.rate;
-  const effectivePitch = selectedStyle.pitch;
-
   // ── Preview de voz ─────────────────────────────────────────────────────────
   const handlePreview = async () => {
-    if (!selectedVoice || previewingRef.current) return;
+    if (previewingRef.current) return;
     previewingRef.current = true;
     try {
-      await previewVoiceSimple(
-        `Hola, soy ${selectedVoice.name}. Escúchame con atención...`,
-        selectedVoice,
-        effectiveRate,
-        effectivePitch
-      );
+      await previewVoice(selectedVoice.id);
     } catch (err: any) {
-      setErrorMsg(`Preview: ${err.message}`);
+      setErrorMsg(`Error en preview: ${err.message}`);
     }
     previewingRef.current = false;
   };
 
-  // ── Dividir texto ───────────────────────────────────────────────────────────
+  // ── Dividir texto en bloques ────────────────────────────────────────────────
   const prepareBlocks = () => {
     if (!inputText.trim()) return;
-    if (inputText.length > 200000) { alert("Texto demasiado largo."); return; }
 
-    // Dividir por párrafos, máx ~2000 chars por bloque para evitar cortes
     const paragraphs = inputText.split(/\n\s*\n/);
     const newBlocks: AudioBlock[] = [];
 
     for (const para of paragraphs) {
       const trimmed = para.trim();
       if (!trimmed) continue;
-      if (trimmed.length <= 2000) {
+      if (trimmed.length <= 3000) {
         newBlocks.push({ id: `b-${Date.now()}-${newBlocks.length}`, text: trimmed, status: 'pending', url: null });
       } else {
         const sentences = trimmed.match(/[^.!?\n]+[.!?\n]*/g) || [trimmed];
         let chunk = '';
         for (const s of sentences) {
-          if ((chunk + s).length > 2000 && chunk) {
+          if ((chunk + s).length > 3000 && chunk) {
             newBlocks.push({ id: `b-${Date.now()}-${newBlocks.length}`, text: chunk.trim(), status: 'pending', url: null });
             chunk = s;
           } else { chunk += s; }
@@ -140,17 +113,19 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
     setActiveStep(2);
   };
 
-  // ── Generar un bloque ──────────────────────────────────────────────────────
-  const generateBlock = async (text: string): Promise<Blob | null> => {
-    if (!selectedVoice) {
-      throw new Error('No hay voz seleccionada');
-    }
-    return await synthesizeWithCapture(text, selectedVoice, effectiveRate, effectivePitch);
+  // ── Generar bloque ─────────────────────────────────────────────────────────
+  const generateBlock = async (text: string): Promise<Blob> => {
+    return await generateHypnosisAudio({
+      text,
+      voice_id: selectedVoice.id,
+      emotion: selectedStyle.emotion as any,
+      speed: selectedStyle.speed,
+    });
   };
 
-  // ── Producir cola ──────────────────────────────────────────────────────────
+  // ── Procesar cola ──────────────────────────────────────────────────────────
   const processQueue = async () => {
-    if (blocks.length === 0 || !selectedVoice) return;
+    if (blocks.length === 0) return;
     setIsProcessing(true);
     setErrorMsg(null);
     abortRef.current = false;
@@ -165,40 +140,33 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
 
       try {
         const blob = await generateBlock(block.text);
-        const url = blob ? URL.createObjectURL(blob) : null;
+        const url = URL.createObjectURL(blob);
         setBlocks(prev => prev.map((b, idx) =>
-          idx === i ? { ...b, status: blob ? 'completed' : 'error', url, errorMsg: blob ? undefined : 'Audio vacío' } : b
+          idx === i ? { ...b, status: 'completed', url } : b
         ));
-        // Pausa para no saturar
-        if (i < blocks.length - 1 && blob) {
-          // Esperar duración estimada del audio + buffer
-          const wordCount = block.text.split(' ').length;
-          const estimatedDuration = (wordCount / (180 * effectiveRate)) * 1000 + 1500;
-          await new Promise(r => setTimeout(r, estimatedDuration));
+        if (i < blocks.length - 1) {
+          await new Promise(r => setTimeout(r, 2000));
         }
       } catch (err: any) {
         setBlocks(prev => prev.map((b, idx) =>
-          idx === i ? { ...b, status: 'error', errorMsg: err.message || 'Error desconocido' } : b
+          idx === i ? { ...b, status: 'error', errorMsg: err.message } : b
         ));
       }
     }
 
-    setProgressMsg(abortRef.current ? '⏹ Cancelado' : '✅ Finalizado');
+    setProgressMsg(abortRef.current ? '⏹ Cancelado' : '✅ Todos generados');
     setIsProcessing(false);
   };
 
-  const cancelGeneration = () => {
-    abortRef.current = true;
-    window.speechSynthesis.cancel();
-  };
+  const cancelGeneration = () => { abortRef.current = true; };
 
   // ── Preview bloque ─────────────────────────────────────────────────────────
-  const previewBlock = (url: string) => {
+  const playBlock = useCallback((url: string) => {
     const audio = new Audio(url);
     audio.play();
-  };
+  }, []);
 
-  // ── Unir ───────────────────────────────────────────────────────────────────
+  // ── Unir bloques ───────────────────────────────────────────────────────────
   const finalize = async () => {
     const completed = blocks.filter(b => b.status === 'completed' && b.url);
     if (completed.length === 0) {
@@ -207,7 +175,6 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
     }
 
     setProgressMsg('Uniendo bloques...');
-
     try {
       const buffers: AudioBuffer[] = [];
       let sampleRate = 48000;
@@ -216,18 +183,15 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
         const resp = await fetch(block.url!);
         const arrayBuf = await resp.arrayBuffer();
         try {
-          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
-          sampleRate = audioBuf.sampleRate;
-          buffers.push(audioBuf);
-          audioCtx.close();
-        } catch {
-          // Intentar como raw
-          console.warn('Skip bloque no decodificable');
-        }
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const buf = await ctx.decodeAudioData(arrayBuf);
+          sampleRate = buf.sampleRate;
+          buffers.push(buf);
+          ctx.close();
+        } catch { /* skip */ }
       }
 
-      if (buffers.length === 0) throw new Error('No se pudo decodificar ningún bloque');
+      if (buffers.length === 0) throw new Error('No se pudieron decodificar los bloques');
 
       const totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
       const masterCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -263,9 +227,9 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
             <BrainCircuit size={24} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-sage-800 tracking-tight">Narrador de Meditación</h3>
+            <h3 className="text-xl font-bold text-sage-800 tracking-tight">Narración IA Profesional</h3>
             <p className="text-[10px] uppercase font-bold text-sage-400 tracking-widest">
-              Voz Local del Sistema • 100% Gratis • Offline
+              CloneVoice • Voces Neurales • Con Emociones
             </p>
           </div>
         </div>
@@ -277,42 +241,44 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-[2.5rem] border border-sage-100 shadow-sm sticky top-28">
             <h4 className="text-[10px] font-bold text-sage-400 uppercase tracking-widest mb-4">
-              🎤 Voz Local
+              🎤 Voz Neural CloneVoice
             </h4>
 
-            <div className="mb-4">
-              <label className="text-[9px] font-bold text-sage-300 uppercase block mb-2">Voz del sistema ({voices.length} disponibles)</label>
+            <div className="mb-6">
+              <label className="text-[9px] font-bold text-sage-300 uppercase block mb-2">Voz</label>
               <select
-                value={selectedVoiceIdx}
-                onChange={(e) => setSelectedVoiceIdx(parseInt(e.target.value))}
+                value={selectedVoice.id}
+                onChange={(e) => {
+                  const v = HYPNOSIS_VOICES.find(v => v.id === e.target.value) || HYPNOSIS_VOICES[0];
+                  setSelectedVoice(v);
+                }}
                 disabled={isProcessing}
-                className="w-full p-3 rounded-xl border border-sand-200 bg-sand-50 text-sage-800 text-xs font-medium mb-1"
+                className="w-full p-3 rounded-xl border border-sand-200 bg-sand-50 text-sage-800 text-xs font-medium"
               >
-                {voices.map((v, i) => (
-                  <option key={v.id} value={i}>{v.name} {v.description}</option>
+                {HYPNOSIS_VOICES.map(v => (
+                  <option key={v.id} value={v.id}>{v.name} — {v.description}</option>
                 ))}
               </select>
-              {selectedVoice && (
-                <p className="text-[9px] text-sage-400">{selectedVoice.lang} {selectedVoice.localService ? '📦 Local' : '☁️'}</p>
-              )}
+              <p className="text-[9px] text-sage-400 mt-1">
+                {selectedVoice.engine === 'neural' ? '🧠 Voz Neural con EmotionFX' : '🎤 Voz Clonada'}
+              </p>
             </div>
 
             <button
               onClick={handlePreview}
-              disabled={!selectedVoice || isProcessing || previewingRef.current}
+              disabled={isProcessing || previewingRef.current}
               className="w-full mb-6 p-3 bg-sage-100 text-sage-700 rounded-xl text-[10px] font-bold uppercase hover:bg-sage-200 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Play size={14} /> {previewingRef.current ? 'Reproduciendo...' : '🎧 Escuchar Preview'}
+              <Play size={14} /> {previewingRef.current ? 'Cargando...' : '🎧 Escuchar Preview'}
             </button>
 
             <div className="pt-4 border-t border-sand-100">
               <h4 className="text-[10px] font-bold text-sage-400 uppercase tracking-widest mb-3">Estilo de Hipnosis</h4>
               <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-                {MEDITATION_STYLES.map((style) => (
+                {MEDITATION_STYLES.map(style => (
                   <button
                     key={style.id}
                     onClick={() => activeStep === 1 && setSelectedStyle(style)}
@@ -326,29 +292,29 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                     <span className="text-sm mr-2">{style.emoji}</span>
                     <span className="font-bold text-xs">{style.name}</span>
                     <p className="text-[9px] mt-1 opacity-70">{style.desc}</p>
+                    <p className="text-[8px] mt-1 opacity-50 uppercase tracking-wider">
+                      Emoción: {style.emotion === 'calm' ? '😌 Calmado' : style.emotion === 'whisper' ? '🤫 Susurro' : '🥺 Melancólico'}
+                    </p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-2xl">
-              <p className="text-[10px] font-bold text-green-700 uppercase mb-1">✅ 100% Gratuito</p>
+              <p className="text-[10px] font-bold text-green-700 uppercase mb-1">✅ Voz Neural Profesional</p>
               <p className="text-[9px] text-green-600 leading-relaxed">
-                Usa el sintetizador de voz nativo de tu dispositivo. Sin API keys, sin cuentas, sin límites. Funciona offline.
-              </p>
-              <p className="text-[9px] text-amber-600 mt-2">
-                💡 Para mejor calidad, instala voces premium en la configuración de accesibilidad de tu sistema.
+                Voces neuronales con EmotionFX — cada palabra tiene la emoción adecuada para hipnosis.
+                Con tecnología CloneVoice, con tu membresía activa.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Main */}
         <div className="lg:col-span-8">
           {activeStep === 1 && (
             <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-sage-100 space-y-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {MEDITATION_STYLES.map((style) => (
+                {MEDITATION_STYLES.map(style => (
                   <button
                     key={style.id}
                     onClick={() => {
@@ -364,7 +330,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
 
               <textarea
                 className="w-full min-h-[400px] p-8 bg-sand-50 border border-sand-200 rounded-[2.5rem] outline-none text-sage-800 text-sm leading-relaxed shadow-inner"
-                placeholder="Pega tu guion de meditación aquí..."
+                placeholder="Pega tu guion de hipnosis aquí..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
               />
@@ -376,17 +342,12 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                   </button>
                 )}
               </div>
-              {!selectedVoice && voices.length === 0 && (
-                <p className="text-xs text-amber-600 text-center">
-                  ⏳ Cargando voces del sistema...
-                </p>
-              )}
               <button
                 onClick={prepareBlocks}
-                disabled={!inputText.trim() || !selectedVoice}
+                disabled={!inputText.trim()}
                 className="w-full py-6 bg-sage-700 text-white rounded-[2rem] font-bold text-xl shadow-xl hover:bg-sage-800 disabled:bg-sand-200"
               >
-                Generar Narración
+                Generar con {selectedVoice.name} • {selectedStyle.emoji} {selectedStyle.name}
                 <ChevronRight size={20} className="inline ml-2" />
               </button>
             </div>
@@ -400,48 +361,32 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{selectedStyle.emoji}</span>
                       <h4 className="font-bold text-lg">{selectedStyle.name}</h4>
-                      <span className="text-[9px] bg-white/20 px-2 py-1 rounded-lg uppercase">
-                        {selectedVoice?.name || 'Voz'}
-                      </span>
+                      <span className="text-[9px] bg-white/20 px-2 py-1 rounded-lg uppercase">{selectedVoice.name}</span>
+                      <span className="text-[8px] bg-white/10 px-2 py-1 rounded-lg uppercase">😌 {selectedStyle.emotion}</span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase opacity-70">
-                      {progressMsg || `${blocks.length} bloques`}
-                    </span>
+                    <span className="text-[10px] font-bold uppercase opacity-70">{progressMsg || `${blocks.length} bloques`}</span>
                   </div>
                   <div className="flex gap-2">
                     {!isProcessing ? (
                       blocks.some(b => b.status === 'completed') ? (
                         <>
-                          <button onClick={() => setActiveStep(1)} className="px-4 py-2 bg-white/20 rounded-xl text-[10px] font-bold uppercase hover:bg-white/30">
-                            Editar
-                          </button>
-                          <button onClick={processQueue} className="px-6 py-2 bg-white text-sage-700 rounded-xl text-[10px] font-bold uppercase shadow-lg hover:scale-105">
-                            Continuar
-                          </button>
+                          <button onClick={() => setActiveStep(1)} className="px-4 py-2 bg-white/20 rounded-xl text-[10px] font-bold uppercase hover:bg-white/30">Editar</button>
+                          <button onClick={processQueue} className="px-6 py-2 bg-white text-sage-700 rounded-xl text-[10px] font-bold uppercase shadow-lg hover:scale-105">Continuar</button>
                         </>
                       ) : (
-                        <button onClick={processQueue} className="px-8 py-3 bg-white text-sage-700 rounded-xl text-xs font-bold uppercase shadow-lg hover:scale-105">
-                          {blocks.length > 0 ? 'Iniciar Generación' : 'No hay bloques'}
-                        </button>
+                        <button onClick={processQueue} className="px-8 py-3 bg-white text-sage-700 rounded-xl text-xs font-bold uppercase shadow-lg hover:scale-105">Iniciar Generación</button>
                       )
                     ) : (
-                      <button onClick={cancelGeneration} className="px-6 py-3 bg-red-500 text-white rounded-xl text-xs font-bold uppercase hover:bg-red-600">
-                        ⏹ Cancelar
-                      </button>
+                      <button onClick={cancelGeneration} className="px-6 py-3 bg-red-500 text-white rounded-xl text-xs font-bold uppercase hover:bg-red-600">⏹ Cancelar</button>
                     )}
                   </div>
                 </div>
-
                 {isProcessing && (
                   <div className="mt-4">
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full transition-all"
-                        style={{ width: `${(blocks.filter(b => b.status === 'completed' || b.status === 'error').length / Math.max(blocks.length, 1)) * 100}%` }}
-                      />
+                      <div className="h-full bg-white rounded-full transition-all" style={{ width: `${(blocks.filter(b => b.status === 'completed' || b.status === 'error').length / Math.max(blocks.length, 1)) * 100}%` }} />
                     </div>
-                    <p className="text-[9px] mt-2 opacity-60">
-                      {blocks.filter(b => b.status === 'completed').length} de {blocks.length} bloques
-                    </p>
+                    <p className="text-[9px] mt-2 opacity-60">{blocks.filter(b => b.status === 'completed').length} de {blocks.length} bloques</p>
                   </div>
                 )}
               </div>
@@ -449,15 +394,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
               {errorMsg && (
                 <div className="p-5 bg-red-50 border-2 border-red-200 rounded-[1.5rem] flex items-start gap-3">
                   <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-red-700 font-medium">{errorMsg}</p>
-                    {errorMsg.includes('conexión') && (
-                      <p className="text-[10px] text-red-500 mt-1">Verifica tu conexión a internet e intenta de nuevo.</p>
-                    )}
-                    {errorMsg.includes('voz') && (
-                      <p className="text-[10px] text-red-500 mt-1">Prueba seleccionando otra voz del sistema.</p>
-                    )}
-                  </div>
+                  <p className="text-xs text-red-700 font-medium">{errorMsg}</p>
                 </div>
               )}
 
@@ -470,19 +407,11 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                     'border-sand-100 opacity-60'
                   }`}>
                     <span className="text-[10px] font-bold text-sand-300 w-6 shrink-0">{idx + 1}</span>
-                    <p className="text-[11px] text-sage-800 italic flex-1 truncate">
-                      "{block.text.slice(0, 100)}{block.text.length > 100 ? '...' : ''}"
-                    </p>
+                    <p className="text-[11px] text-sage-800 italic flex-1 truncate">"{block.text.slice(0, 120)}{block.text.length > 120 ? '...' : ''}"</p>
                     <div className="flex items-center gap-2 shrink-0">
                       {block.status === 'completed' && (
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => block.url && previewBlock(block.url)}
-                            className="p-2 text-sage-600 hover:bg-sage-100 rounded-lg"
-                            title="Reproducir"
-                          >
-                            <Play size={14} />
-                          </button>
+                          <button onClick={() => block.url && playBlock(block.url)} className="p-2 text-sage-600 hover:bg-sage-100 rounded-lg"><Play size={14} /></button>
                           <Check size={14} className="text-sage-600" />
                         </div>
                       )}
@@ -492,14 +421,8 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                           <span className="text-[8px] font-bold text-amber-500 uppercase">Generando</span>
                         </div>
                       )}
-                      {block.status === 'error' && (
-                        <span className="text-[9px] font-bold text-red-500 uppercase" title={block.errorMsg}>
-                          Error {block.errorMsg ? '⚠' : ''}
-                        </span>
-                      )}
-                      {block.status === 'pending' && (
-                        <span className="text-[9px] font-bold text-sand-300 uppercase">—</span>
-                      )}
+                      {block.status === 'error' && <span className="text-[9px] font-bold text-red-500 uppercase">Error</span>}
+                      {block.status === 'pending' && <span className="text-[9px] font-bold text-sand-300 uppercase">—</span>}
                     </div>
                   </div>
                 ))}
@@ -520,21 +443,13 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
               </div>
               <div className="text-center space-y-2">
                 <h2 className="text-3xl font-bold text-sage-800">Narración Lista 🎧</h2>
-                <p className="text-sage-400 text-sm">
-                  {selectedStyle.emoji} {selectedStyle.name}
-                </p>
-                <p className="text-sage-400 text-sm">
-                  {blocks.filter(b => b.status === 'completed').length} bloques • {Math.floor(masterDuration / 60)}m {Math.floor(masterDuration % 60)}s
-                </p>
-                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">✅ Sin costo</p>
+                <p className="text-sage-400 text-sm">{selectedVoice.name} • {selectedStyle.emoji} {selectedStyle.name}</p>
+                <p className="text-sage-400 text-sm">{blocks.filter(b => b.status === 'completed').length} bloques • {Math.floor(masterDuration / 60)}m {Math.floor(masterDuration % 60)}s</p>
+                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">✅ Voz Neural CloneVoice</p>
               </div>
               <audio src={masterUrl} controls className="w-full max-w-md" />
               <button
-                onClick={() => onGenerationComplete({
-                  voiceBlob: masterBlob,
-                  voiceUrl: masterUrl,
-                  duration: masterDuration
-                })}
+                onClick={() => onGenerationComplete({ voiceBlob: masterBlob, voiceUrl: masterUrl, duration: masterDuration })}
                 className="w-full py-6 bg-sage-700 text-white rounded-[2rem] font-bold text-xl shadow-xl hover:bg-sage-800"
               >
                 Importar al Mezclador
