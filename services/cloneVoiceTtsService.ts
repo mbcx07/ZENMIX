@@ -12,6 +12,7 @@ export const HYPNOSIS_VOICES = [
   { id: 'en-US-JoannaNeural', name: 'Joanna (US)', gender: 'female', lang: 'en-US', engine: 'neural', emotion: 'calm', description: 'AWS Polly Joanna — la mejor voz neural para bilingüe' },
   { id: 'en-US-MatthewNeural', name: 'Matthew (US)', gender: 'male', lang: 'en-US', engine: 'neural', emotion: 'deep', description: 'AWS Polly Matthew — profunda, calmada, autoritaria' },
   { id: 'es-US-LupeNeural', name: 'Lupe (US Latam)', gender: 'female', lang: 'es-US', engine: 'neural', emotion: 'calm', description: 'Voz latina femenina, cálida y natural' },
+  { id: 'piper-es', name: 'Piper (Local CPU)', gender: 'neutral', lang: 'es', engine: 'local', emotion: 'calm', description: '🧠 TTS local en CPU — sin internet, sin límites, gratis' },
 ];
 
 export interface CloneVoiceOptions {
@@ -32,6 +33,28 @@ export async function listClonedVoices(): Promise<any[]> {
 // ── Generar audio de hipnosis ────────────────────────────────────────────────
 export async function generateHypnosisAudio(options: CloneVoiceOptions): Promise<Blob> {
   const { text, voice_id, emotion = 'calm', speed = 0.85, pitch = 0 } = options;
+
+  // 🔥 Piper TTS local — no necesita internet, corre en CPU
+  if (voice_id === 'piper-es') {
+    // Detecta si estamos en localhost o en producción
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // En producción, usa el tunnel de Cloudflare (configurable)
+    const piperEndpoint = isLocal
+      ? `${window.location.protocol}//${window.location.hostname}:5000/tts-slow`
+      : `${window.location.protocol}//${window.location.hostname}/api/piper-tts`;
+    
+    const resp = await fetch(piperEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        speed: Math.max(0.5, 2.0 - speed), // invert speed: higher = slower in Piper
+      }),
+    });
+    
+    if (!resp.ok) throw new Error('Piper TTS local no disponible');
+    return resp.blob();
+  }
 
   const resp = await fetch(`${API_PROXY}generate`, {
     method: 'POST',
