@@ -1,6 +1,6 @@
-# ── PROXY: /api/clonevoice/generate ─────────────────────────────────────────
-# Genera audio TTS usando edge-tts (Azure Neural) vía servidor en Render
-# ─────────────────────────────────────────────────────────────────────────────
+// ── PROXY: /api/clonevoice/generate ─────────────────────────────────────────
+// Genera audio TTS usando edge-tts (Azure Neural) vía servidor en Render
+// ─────────────────────────────────────────────────────────────────────────────
 
 // URL del servidor edge-tts en Render
 const TTS_SERVER = 'https://zenmix-tts.onrender.com';

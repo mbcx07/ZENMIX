@@ -1,6 +1,6 @@
-# ── PROXY: /api/clonevoice/voices ──────────────────────────────────────────
-# Lista de voces disponibles
-# ───────────────────────────────────────────────────────────────────────────
+// ── PROXY: /api/clonevoice/voices ──────────────────────────────────────────
+// Lista de voces disponibles
+// ───────────────────────────────────────────────────────────────────────────
 
 const VOICES = [
   { id: 'es-MX-DaliaNeural', name: 'Dalia (MX)', gender: 'female', lang: 'es-MX', description: 'Voz femenina mexicana, cálida y calmada — perfecta para hipnosis' },
@@ -8,6 +8,7 @@ const VOICES = [
   { id: 'es-ES-ElviraNeural', name: 'Elvira (ES)', gender: 'female', lang: 'es-ES', description: 'Voz española femenina, melodiosa y envolvente' },
   { id: 'en-US-JennyNeural', name: 'Jenny (US)', gender: 'female', lang: 'en-US', description: 'Voz americana femenina, muy natural y versátil' },
   { id: 'en-US-GuyNeural', name: 'Guy (US)', gender: 'male', lang: 'en-US', description: 'Voz americana masculina, profunda y calmada' },
+  { id: 'piper-es', name: 'Piper (Local CPU)', gender: 'neutral', lang: 'es', description: '🧠 TTS local en CPU — sin internet, sin límites, gratis' },
 ];
 
 export async function onRequest(context) {
