@@ -1,112 +1,67 @@
-// ── CLONEVOICE TTS SERVICE ──────────────────────────────────────────────────
-// Proxy via Cloudflare Pages Function (/api/clonevoice/)
-// La API key se mantiene en el servidor, nunca se expone al frontend
+// ── GOOGLE TTS SERVICE — voz principal de ZENMIX ────────────────────────────
+// Google Cloud Text-to-Speech Neural2 — calidad profesional para hipnosis
+// API key configurada en el servidor local (/api/tts)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_PROXY = '/api/clonevoice/';
-
 export const HYPNOSIS_VOICES = [
-  { id: 'es-MX-DaliaNeural', name: 'Dalia (MX)', gender: 'female', lang: 'es-MX', engine: 'neural', emotion: 'calm', description: 'Voz femenina mexicana, cálida y calmada — perfecta para hipnosis' },
-  { id: 'es-MX-JorgeNeural', name: 'Jorge (MX)', gender: 'male', lang: 'es-MX', engine: 'neural', emotion: 'deep', description: 'Voz masculina mexicana, profunda y serena — ideal para trance' },
-  { id: 'es-ES-ElviraNeural', name: 'Elvira (ES)', gender: 'female', lang: 'es-ES', engine: 'neural', emotion: 'calm', description: 'Voz española femenina, melodiosa y envolvente' },
-  { id: 'en-US-JoannaNeural', name: 'Joanna (US)', gender: 'female', lang: 'en-US', engine: 'neural', emotion: 'calm', description: 'AWS Polly Joanna — la mejor voz neural para bilingüe' },
-  { id: 'en-US-MatthewNeural', name: 'Matthew (US)', gender: 'male', lang: 'en-US', engine: 'neural', emotion: 'deep', description: 'AWS Polly Matthew — profunda, calmada, autoritaria' },
-  { id: 'es-US-LupeNeural', name: 'Lupe (US Latam)', gender: 'female', lang: 'es-US', engine: 'neural', emotion: 'calm', description: 'Voz latina femenina, cálida y natural' },
-  { id: 'piper-es', name: 'Piper (Local CPU)', gender: 'neutral', lang: 'es', engine: 'local', emotion: 'calm', description: '🧠 TTS local en CPU — sin internet, sin límites, gratis' },
+  { id: 'google-tts', name: 'Google Neural2', gender: 'female', lang: 'es', engine: 'cloud', emotion: 'calm', description: '☁️ Voz neural de Google — calidad profesional para hipnosis' },
+  { id: 'piper-es', name: 'Piper (Local CPU)', gender: 'neutral', lang: 'es', engine: 'local', emotion: 'calm', description: '🧠 TTS local en CPU — sin internet, sin límites' },
 ];
 
-export interface CloneVoiceOptions {
+export interface TTSOptions {
   text: string;
   voice_id: string;
-  emotion?: 'calm' | 'whisper' | 'melancholic' | 'happy' | 'sad';
   speed?: number;
-  pitch?: number;
 }
 
-// ── Listar voces clonadas (si tienes) ────────────────────────────────────────
-export async function listClonedVoices(): Promise<any[]> {
-  const resp = await fetch(`${API_PROXY}voices`);
-  if (!resp.ok) throw new Error('Error al conectar con CloneVoice');
-  return resp.json();
-}
+// ── Generar audio con Google TTS o Piper ────────────────────────────────────
+export async function generateHypnosisAudio(options: TTSOptions): Promise<Blob> {
+  const { text, voice_id, speed = 0.85 } = options;
 
-// ── Generar audio de hipnosis ────────────────────────────────────────────────
-export async function generateHypnosisAudio(options: CloneVoiceOptions): Promise<Blob> {
-  const { text, voice_id, emotion = 'calm', speed = 0.85, pitch = 0 } = options;
-
-  // 🔥 Piper TTS local — no necesita internet, corre en CPU
+  // Piper local
   if (voice_id === 'piper-es') {
-    // Detecta si estamos en localhost o en producción
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    // En producción, usa el tunnel de Cloudflare (configurable)
-    const piperEndpoint = isLocal
-      ? `${window.location.protocol}//${window.location.hostname}:5000/tts-slow`
-      : `${window.location.protocol}//${window.location.hostname}/api/piper-tts`;
-    
-    const resp = await fetch(piperEndpoint, {
+    const resp = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
-        speed: Math.max(0.5, 2.0 - speed), // invert speed: higher = slower in Piper
+        voice: 'piper-es',
+        reverb: 50,
+        echo: 0,
+        bass: 30,
       }),
     });
-    
-    if (!resp.ok) throw new Error('Piper TTS local no disponible');
+    if (!resp.ok) throw new Error('Piper: servidor local no disponible');
     return resp.blob();
   }
 
-  const resp = await fetch(`${API_PROXY}generate`, {
+  // Google TTS (voz por defecto)
+  const resp = await fetch('/api/tts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text,
-      voice_id,
-      language: voice_id.startsWith('en-') ? 'en' : 'es',
-      quality: 'high',
-      emotion,
-      speed,
-      pitch,
+      voice: 'google-tts',
+      speed: speed,
+      reverb: 50,
+      echo: 0,
+      bass: 30,
     }),
   });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    let msg = 'Error de conexión';
-    try {
-      const parsed = JSON.parse(err);
-      msg = parsed.error || msg;
-    } catch {}
-    throw new Error(msg);
-  }
-
+  if (!resp.ok) throw new Error('Google TTS: error al generar audio');
   return resp.blob();
 }
 
-// ── Preview rápido (texto corto) ─────────────────────────────────────────────
-export async function previewVoice(voice_id: string): Promise<void> {
-  const previewText = "Hola, soy tu guía de hipnosis. Escúchame con atención... relájate profundamente...";
+// ── Preview rápido ───────────────────────────────────────────────────────────
+export async function previewVoice(): Promise<void> {
   const blob = await generateHypnosisAudio({
-    text: previewText,
-    voice_id,
-    emotion: 'calm',
-    speed: 0.85,
+    text: "Hola... soy tu guía de hipnosis... relájate profundamente...",
+    voice_id: 'google-tts',
+    speed: 0.8,
   });
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
   audio.play();
-}
-
-// ── Procesar texto de hipnosis ────────────────────────────────────────────────
-export function processHypnosisText(text: string): string {
-  return text
-    .replace(/\.\.\./g, '... ')
-    .replace(/\(pausa\)/gi, '... ')
-    .replace(/\(pausa larga\)/gi, '... ... ')
-    .replace(/\(respira\)/gi, '... ')
-    .replace(/\(énfasis\)(.*?)\(énfasis\)/gi, '$1')
-    .replace(/\(susurro\)(.*?)\(susurro\)/gi, '$1')
-    .trim();
 }
 
 // ── AudioBuffer → WAV ────────────────────────────────────────────────────────

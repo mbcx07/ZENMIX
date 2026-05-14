@@ -2,7 +2,7 @@
 // Genera audio TTS usando edge-tts (Azure Neural) vía servidor en Render
 // ─────────────────────────────────────────────────────────────────────────────
 
-// URL del servidor edge-tts en Render
+// URL del servidor edge-tts en Render (temporalmente caído)
 const TTS_SERVER = 'https://zenmix-tts.onrender.com';
 
 export async function onRequest(context) {
@@ -28,15 +28,18 @@ export async function onRequest(context) {
   try {
     const body = await request.json();
     
-    // Reenviar al servidor edge-tts
-    const resp = await fetch(`${TTS_SERVER}/generate`, {
+    // Reenviar al tunnel local (ZENMIX server que maneja Piper + edge-tts)
+    const resp = await fetch(`${TTS_SERVER}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: body.text,
-        voice_id: body.voice_id || 'es-MX-DaliaNeural',
-        speed: body.speed || 0.85,
-        pitch: body.pitch || 0,
+        voice: body.voice_id || 'es-MX-JorgeNeural',
+        rate: '-40%',
+        pitch: '-12Hz',
+        reverb: 50,
+        echo: 0,
+        bass: 30,
       }),
     });
 

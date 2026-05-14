@@ -486,8 +486,25 @@ export const audioBufferToWav = (buffer: AudioBuffer): Blob => {
 
 // ── BUFFER → MP3 (192kbps) ─────────────────────────────────────────────────────
 export const audioBufferToMp3 = async (buffer: AudioBuffer): Promise<Blob> => {
-  const channels = buffer.numberOfChannels;
+  const channels = Math.min(buffer.numberOfChannels, 2);
   const sampleRate = buffer.sampleRate;
+
+  // Sanitize: replace NaN/Infinity with 0
+  const sanitize = (data: Float32Array) => {
+    for (let i = 0; i < data.length; i++) {
+      if (!isFinite(data[i])) data[i] = 0;
+    }
+  };
+
+  const left = buffer.getChannelData(0);
+  sanitize(left);
+  let right: Float32Array;
+  if (channels > 1) {
+    right = buffer.getChannelData(1);
+    sanitize(right);
+  } else {
+    right = left;
+  }
 
   const Mp3Encoder = (lamejs as any).Mp3Encoder || (window as any).lamejs?.Mp3Encoder;
   if (!Mp3Encoder) throw new Error('Lamejs not found');
@@ -495,15 +512,17 @@ export const audioBufferToMp3 = async (buffer: AudioBuffer): Promise<Blob> => {
   const mp3encoder = new Mp3Encoder(channels, sampleRate, 192);
   const mp3Data: Uint8Array[] = [];
 
-  const left = buffer.getChannelData(0);
-  const right = channels > 1 ? buffer.getChannelData(1) : left;
+  // If buffer is empty, throw early
+  if (left.length === 0) throw new Error('Audio buffer vacío');
 
   const l = new Int16Array(left.length);
   const r = new Int16Array(right.length);
 
   for (let i = 0; i < left.length; i++) {
-    l[i] = left[i] < 0 ? left[i] * 0x8000 : left[i] * 0x7fff;
-    r[i] = right[i] < 0 ? right[i] * 0x8000 : right[i] * 0x7fff;
+    const s = Math.max(-1, Math.min(1, left[i]));
+    l[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    const t = Math.max(-1, Math.min(1, right[i]));
+    r[i] = t < 0 ? t * 0x8000 : t * 0x7fff;
   }
 
   const sampleBlockSize = 1152;

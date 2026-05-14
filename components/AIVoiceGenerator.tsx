@@ -229,7 +229,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
           <div>
             <h3 className="text-xl font-bold text-sage-800 tracking-tight">Narración IA Profesional</h3>
             <p className="text-[10px] uppercase font-bold text-sage-400 tracking-widest">
-              CloneVoice • Voces Neurales • Con Emociones
+              Google Cloud • Neural2 • Voz Profesional
             </p>
           </div>
         </div>
@@ -244,7 +244,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-[2.5rem] border border-sage-100 shadow-sm sticky top-28">
             <h4 className="text-[10px] font-bold text-sage-400 uppercase tracking-widest mb-4">
-              🎤 Voz Neural CloneVoice
+              🎤 Voice Engine
             </h4>
 
             <div className="mb-6">
@@ -263,7 +263,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                 ))}
               </select>
               <p className="text-[9px] text-sage-400 mt-1">
-                {selectedVoice.engine === 'neural' ? '🧠 Voz Neural con EmotionFX' : '🎤 Voz Clonada'}
+                {selectedVoice.engine === 'cloud' ? '☁️ Google Cloud Neural2 — calidad profesional' : selectedVoice.engine === 'local' ? '🧠 Local CPU — sin internet' : '🎤 Voz Clonada'}
               </p>
             </div>
 
@@ -304,7 +304,8 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
               <p className="text-[10px] font-bold text-green-700 uppercase mb-1">✅ Voz Neural Profesional</p>
               <p className="text-[9px] text-green-600 leading-relaxed">
                 Voces neuronales con EmotionFX — cada palabra tiene la emoción adecuada para hipnosis.
-                Con tecnología CloneVoice, con tu membresía activa.
+                Voz generada con Google Cloud Text-to-Speech Neural2.
+                Calidad profesional para hipnosis. Pago por uso (~$4 por 4h).
               </p>
             </div>
           </div>
@@ -445,7 +446,7 @@ const AIVoiceGenerator: React.FC<AIVoiceGeneratorProps> = ({ onGenerationComplet
                 <h2 className="text-3xl font-bold text-sage-800">Narración Lista 🎧</h2>
                 <p className="text-sage-400 text-sm">{selectedVoice.name} • {selectedStyle.emoji} {selectedStyle.name}</p>
                 <p className="text-sage-400 text-sm">{blocks.filter(b => b.status === 'completed').length} bloques • {Math.floor(masterDuration / 60)}m {Math.floor(masterDuration % 60)}s</p>
-                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">✅ Voz Neural CloneVoice</p>
+                <p className="text-[10px] font-bold text-green-600 uppercase mt-2">✅ Google Cloud TTS</p>
               </div>
               <audio src={masterUrl} controls className="w-full max-w-md" />
               <button

@@ -70,8 +70,13 @@ const App: React.FC = () => {
       setRenderProgress(80);
 
       if (exportFormats.mp3) {
-        const mp3Blob = await audioBufferToMp3(mixedBuffer);
-        setFinalMp3Url(URL.createObjectURL(mp3Blob));
+        try {
+          const mp3Blob = await audioBufferToMp3(mixedBuffer);
+          setFinalMp3Url(URL.createObjectURL(mp3Blob));
+        } catch (mp3Err) {
+          console.error('MP3 export failed (non-fatal):', mp3Err);
+          alert('MP3: ' + formatAudioError(mp3Err) + '\n\nSe descargará solo la versión WAV.');
+        }
       }
 
       setRenderProgress(100);
